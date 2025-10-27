@@ -1,10 +1,38 @@
+definitions:
+  helpers.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: integer
+      validation:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
 info:
   contact: {}
-paths: {}
+paths:
+  /test:
+    get:
+      description: Test JWT
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Test Endpoint
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.
     in: header
-    name: Helpdesk App Authorization
+    name: Authorization
     type: apiKey
 swagger: "2.0"
