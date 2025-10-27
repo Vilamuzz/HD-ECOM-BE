@@ -22,14 +22,14 @@ func init() {
 
 // @securityDefinitions.apikey	BearerAuth
 // @in							header
-// @name						Helpdesk App Authorization
+// @name						Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
 	docs.SwaggerInfo.Title = "Helpdesk E-Commerce API"
 	docs.SwaggerInfo.Description = "Api documentation for Helpdesk E-Commerce Application"
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Host = "localhost:" + os.Getenv("APP_PORT")
-	docs.SwaggerInfo.BasePath = "/"
+	docs.SwaggerInfo.BasePath = "/api"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
 	db := helpers.ConnectDB()
