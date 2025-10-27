@@ -1,0 +1,10 @@
+info:
+  contact: {}
+paths: {}
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Helpdesk App Authorization
+    type: apiKey
+swagger: "2.0"
