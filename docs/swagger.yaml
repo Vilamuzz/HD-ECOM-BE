@@ -11,9 +11,147 @@ definitions:
           type: string
         type: object
     type: object
+  models.ChatMessage:
+    properties:
+      attachment_url:
+        type: string
+      conversation_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_read:
+        type: boolean
+      message_text:
+        type: string
+      read_at:
+        type: string
+      sender_id:
+        type: integer
+    type: object
+  models.Conversation:
+    properties:
+      agent_id:
+        type: integer
+      costumer_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      last_message_at:
+        type: string
+      status:
+        description: open, closed, pending
+        type: string
+      updated_at:
+        type: string
+    type: object
+  requests.CreateConversationRequest:
+    properties:
+      agent_id:
+        example: 123
+        type: integer
+    type: object
 info:
   contact: {}
 paths:
+  /conversations:
+    get:
+      description: Get all conversations for the current user (admin/agent sees all,
+        customer sees their own)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Conversation'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get conversations
+      tags:
+      - conversations
+    post:
+      consumes:
+      - application/json
+      description: Create a new conversation with optional agent assignment
+      parameters:
+      - description: Conversation Data
+        in: body
+        name: conversation
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateConversationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Conversation'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new conversation
+      tags:
+      - conversations
+  /conversations/{id}/messages:
+    get:
+      description: Get all messages for a specific conversation
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.ChatMessage'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get conversation messages
+      tags:
+      - conversations
   /test:
     get:
       description: Test JWT
