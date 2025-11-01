@@ -6,26 +6,28 @@ import (
 )
 
 type Hub struct {
-	Clients    map[string]*Client
-	Broadcast  chan *Message
-	Register   chan *Client
-	Unregister chan *Client
-	Mu         sync.RWMutex
+	// Map of conversationID -> map of userID -> Client
+	Conversations map[string]map[string]*Client
+	Broadcast     chan *Message
+	Register      chan *Client
+	Unregister    chan *Client
+	Mu            sync.RWMutex
 }
 
 type Message struct {
 	ConversationID string      `json:"conversation_id"`
-	Recipients     []string    `json:"-"`
+	Recipients     []string    `json:"-"` // Keep for backward compatibility
 	Data           interface{} `json:"data"`
 }
 
 type Client struct {
-	Hub        *Hub
-	Conn       WebSocketConnection
-	Send       chan []byte
-	UserID     string
-	Name       string
-	Repository AppRepository
+	Hub             *Hub
+	Conn            WebSocketConnection
+	Send            chan []byte
+	UserID          string
+	Name            string
+	Repository      AppRepository
+	ConversationIDs map[string]bool
 }
 
 type WebSocketConnection interface {
@@ -45,4 +47,5 @@ type HubService interface {
 	UnregisterClient(client *Client)
 	BroadcastMessage(message *Message)
 	SendToRecipients(message *Message)
+	JoinConversation(client *Client, conversationID string)
 }

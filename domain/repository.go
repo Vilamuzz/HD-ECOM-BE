@@ -14,6 +14,8 @@ type AppRepository interface {
 	GetAllConversations() ([]models.Conversation, error)
 	GetUserConversations(userID int64) ([]models.Conversation, error)
 	AssignConversationToAgent(conversationID int64, agentID int64) error
+	FindActiveConversationForCustomer(customerID int64) (*models.Conversation, error)
+	UpdateConversationLastMessage(conversationID int64) error
 
 	// Chat message operations
 	SaveChatMessage(message *models.ChatMessage) (*models.ChatMessage, error)

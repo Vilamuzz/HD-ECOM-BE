@@ -4,6 +4,7 @@ import (
 	"app/domain/models"
 	"log"
 	"strconv"
+	"time"
 )
 
 func (r *appRepository) GetConversation(id int64) (*models.Conversation, error) {
@@ -20,9 +21,23 @@ func (r *appRepository) GetConversationParticipants(conversationID int64) ([]int
 	}
 
 	participants := []int64{conversation.CostumerID}
+
 	if conversation.AgentID != 0 {
+		// If agent is assigned, include them
 		participants = append(participants, conversation.AgentID)
+	} else {
+		// If no agent assigned, include all admins and agents
+		var users []models.User
+		err := r.Conn.Where("role IN ?", []string{"admin", "agent"}).Find(&users).Error
+		if err == nil {
+			for _, user := range users {
+				participants = append(participants, user.ID)
+			}
+		}
 	}
+
+	log.Printf("[REPO] GetConversationParticipants - ConversationID: %d, CustomerID: %d, AgentID: %d, Participants: %v",
+		conversationID, conversation.CostumerID, conversation.AgentID, participants)
 
 	return participants, nil
 }
@@ -69,4 +84,25 @@ func (r *appRepository) GetChatMessagesByConversationID(conversationID string) (
 		return nil, err
 	}
 	return r.GetChatMessages(id)
+}
+
+func (r *appRepository) FindActiveConversationForCustomer(customerID int64) (*models.Conversation, error) {
+	var conversation models.Conversation
+	err := r.Conn.Where("costumer_id = ? AND status = ?", customerID, "open").
+		Order("last_message_at DESC").
+		First(&conversation).Error
+
+	if err != nil {
+		log.Printf("[REPO] FindActiveConversationForCustomer: No active conversation found for customer %d: %v", customerID, err)
+		return nil, err
+	}
+
+	log.Printf("[REPO] FindActiveConversationForCustomer: Found conversation %d for customer %d", conversation.ID, customerID)
+	return &conversation, nil
+}
+
+func (r *appRepository) UpdateConversationLastMessage(conversationID int64) error {
+	return r.Conn.Model(&models.Conversation{}).
+		Where("id = ?", conversationID).
+		Update("last_message_at", time.Now()).Error
 }

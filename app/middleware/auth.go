@@ -111,9 +111,9 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		} else if r, ok := claims["role"].(float64); ok {
 			// Convert numeric role to string
 			roleMap := map[float64]string{
-				1: "admin",
-				2: "customer",
-				3: "agent",
+				0: "admin",
+				1: "seller",
+				2: "buyer",
 			}
 			if roleStr, exists := roleMap[r]; exists {
 				role = roleStr
