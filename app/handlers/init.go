@@ -31,7 +31,6 @@ func App(service domain.AppService, repo domain.AppRepository, route *gin.Engine
 		HubService: hubService,
 	}
 
-	handler.TestRoute("/")
 	handler.WebSocketRoute("/ws")
 	handler.ConversationRoute("/conversations")
 }
