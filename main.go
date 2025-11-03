@@ -10,7 +10,9 @@ import (
 	"app/helpers"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -36,9 +38,22 @@ func main() {
 	helpers.MigrateDB(db, domain.GetAllModels()...)
 	repo := repositories.NewAppRepository(db)
 	service := services.NewAppService(repo)
-	middleware := middleware.NewAppMiddleware()
+	middleware := middleware.NewAppMiddleware(repo)
 	ginEngine := gin.Default()
-	handlers.App(service, ginEngine, middleware)
+
+	// Add CORS middleware
+	ginEngine.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowWebSockets:  true, // Important for WebSocket
+		MaxAge:           12 * time.Hour,
+	}))
+
+	handlers.App(service, repo, ginEngine, middleware)
+
 	ginEngine.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, map[string]any{
 			"message": "Hello World!",
