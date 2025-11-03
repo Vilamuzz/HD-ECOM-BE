@@ -90,8 +90,8 @@ func sendInitialData(client *domain.Client, user models.User, repo domain.AppRep
 
 	userID, _ := strconv.ParseInt(client.UserID, 10, 64)
 
-	if user.Role == "admin" || user.Role == "agent" {
-		// Admin/Agent: Load all conversations they're involved in
+	if user.Role == "admin" {
+		// Admin: Load all conversations they're involved in
 		conversations, err := repo.GetUserConversations(userID)
 		if err != nil {
 			log.Printf("[WS] Error loading conversations for admin/agent %s: %v", client.UserID, err)

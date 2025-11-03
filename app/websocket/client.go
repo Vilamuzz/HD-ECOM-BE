@@ -19,15 +19,6 @@ const (
 	maxMessageSize = 512 * 1024
 )
 
-type Client struct {
-	Hub        *domain.Hub
-	Conn       *websocket.Conn
-	Send       chan []byte
-	UserID     string
-	Name       string
-	Repository domain.AppRepository
-}
-
 type IncomingMessage struct {
 	Type    string                 `json:"type"`
 	Payload map[string]interface{} `json:"payload"`
@@ -52,8 +43,7 @@ func readPump(c *domain.Client) {
 		log.Printf("[WS] Pong received from user %s", c.UserID)
 		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
-	})
-
+	})        
 	for {
 		var msg IncomingMessage
 		err := c.Conn.ReadJSON(&msg)
