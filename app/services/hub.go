@@ -1,4 +1,4 @@
-package websocket
+package services
 
 import (
 	"app/domain"
@@ -36,29 +36,25 @@ func NewHub() *domain.Hub {
 	}
 }
 
-func NewHubService(hub *domain.Hub) domain.HubService {
-	return &hubService{hub: hub}
-}
-
-func (h *hubService) Run() {
+func (s *appService) Run() {
 	log.Println("[HUB] Hub service started")
 	for {
 		select {
-		case client := <-h.hub.Register:
-			h.RegisterClient(client)
+		case client := <-s.hub.Register:
+			s.RegisterClient(client)
 
-		case client := <-h.hub.Unregister:
-			h.UnregisterClient(client)
+		case client := <-s.hub.Unregister:
+			s.UnregisterClient(client)
 
-		case message := <-h.hub.Broadcast:
-			h.SendToRecipients(message)
+		case message := <-s.hub.Broadcast:
+			s.SendToRecipients(message)
 		}
 	}
 }
 
-func (h *hubService) RegisterClient(client *domain.Client) {
-	h.hub.Mu.Lock()
-	defer h.hub.Mu.Unlock()
+func (s *appService) RegisterClient(client *domain.Client) {
+	s.hub.Mu.Lock()
+	defer s.hub.Mu.Unlock()
 
 	// Initialize ConversationIDs map if needed
 	if client.ConversationIDs == nil {
@@ -66,35 +62,35 @@ func (h *hubService) RegisterClient(client *domain.Client) {
 	}
 
 	log.Printf("[HUB] User %s (Name: %s) connected. Total unique clients: %d",
-		client.UserID, client.Name, h.countUniqueClients())
+		client.UserID, client.Name, s.countUniqueClients())
 }
 
-func (h *hubService) UnregisterClient(client *domain.Client) {
-	h.hub.Mu.Lock()
-	defer h.hub.Mu.Unlock()
+func (s *appService) UnregisterClient(client *domain.Client) {
+	s.hub.Mu.Lock()
+	defer s.hub.Mu.Unlock()
 
 	// Remove client from all conversations they're in
 	for convID := range client.ConversationIDs {
-		if clients, exists := h.hub.Conversations[convID]; exists {
+		if clients, exists := s.hub.Conversations[convID]; exists {
 			delete(clients, client.UserID)
 			if len(clients) == 0 {
-				delete(h.hub.Conversations, convID)
+				delete(s.hub.Conversations, convID)
 			}
 		}
 	}
 
 	close(client.Send)
 	log.Printf("[HUB] User %s disconnected. Total unique clients: %d",
-		client.UserID, h.countUniqueClients())
+		client.UserID, s.countUniqueClients())
 }
 
-func (h *hubService) BroadcastMessage(message *domain.Message) {
-	h.hub.Broadcast <- message
+func (s *appService) BroadcastMessage(message *domain.Message) {
+	s.hub.Broadcast <- message
 }
 
-func (h *hubService) SendToRecipients(message *domain.Message) {
-	h.hub.Mu.RLock()
-	defer h.hub.Mu.RUnlock()
+func (s *appService) SendToRecipients(message *domain.Message) {
+	s.hub.Mu.RLock()
+	defer s.hub.Mu.RUnlock()
 
 	log.Printf("[HUB] Broadcasting message - ConversationID: %s, Data: %+v",
 		message.ConversationID, message.Data)
@@ -106,7 +102,7 @@ func (h *hubService) SendToRecipients(message *domain.Message) {
 	}
 
 	// Get clients in this specific conversation
-	clients, exists := h.hub.Conversations[message.ConversationID]
+	clients, exists := s.hub.Conversations[message.ConversationID]
 	if !exists || len(clients) == 0 {
 		log.Printf("[HUB] No clients connected to conversation %s", message.ConversationID)
 		return
@@ -121,7 +117,7 @@ func (h *hubService) SendToRecipients(message *domain.Message) {
 		default:
 			log.Printf("[HUB] Channel full for user %s, closing connection", userID)
 			go func(c *domain.Client) {
-				h.hub.Unregister <- c
+				s.hub.Unregister <- c
 			}(client)
 		}
 	}
@@ -130,9 +126,9 @@ func (h *hubService) SendToRecipients(message *domain.Message) {
 		sentCount, len(clients))
 }
 
-func (h *hubService) countUniqueClients() int {
+func (s *appService) countUniqueClients() int {
 	uniqueUsers := make(map[string]bool)
-	for _, clients := range h.hub.Conversations {
+	for _, clients := range s.hub.Conversations {
 		for userID := range clients {
 			uniqueUsers[userID] = true
 		}
@@ -141,17 +137,17 @@ func (h *hubService) countUniqueClients() int {
 }
 
 // Add helper method to join a conversation
-func (h *hubService) JoinConversation(client *domain.Client, conversationID string) {
-	h.hub.Mu.Lock()
-	defer h.hub.Mu.Unlock()
+func (s *appService) JoinConversation(client *domain.Client, conversationID string) {
+	s.hub.Mu.Lock()
+	defer s.hub.Mu.Unlock()
 
-	if h.hub.Conversations[conversationID] == nil {
-		h.hub.Conversations[conversationID] = make(map[string]*domain.Client)
+	if s.hub.Conversations[conversationID] == nil {
+		s.hub.Conversations[conversationID] = make(map[string]*domain.Client)
 	}
 
-	h.hub.Conversations[conversationID][client.UserID] = client
+	s.hub.Conversations[conversationID][client.UserID] = client
 	client.ConversationIDs[conversationID] = true
 
 	log.Printf("[HUB] User %s joined conversation %s. Conversation has %d participants",
-		client.UserID, conversationID, len(h.hub.Conversations[conversationID]))
+		client.UserID, conversationID, len(s.hub.Conversations[conversationID]))
 }

@@ -37,7 +37,9 @@ func main() {
 	db := helpers.ConnectDB()
 	helpers.MigrateDB(db, domain.GetAllModels()...)
 	repo := repositories.NewAppRepository(db)
-	service := services.NewAppService(repo)
+	hub := services.NewHub()
+	service := services.NewAppService(repo, hub)
+	go service.Run()
 	middleware := middleware.NewAppMiddleware(repo)
 	ginEngine := gin.Default()
 

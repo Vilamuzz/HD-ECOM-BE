@@ -39,13 +39,3 @@ type WebSocketConnection interface {
 	SetPongHandler(h func(appData string) error)
 	Close() error
 }
-
-// HubService interface for hub operations
-type HubService interface {
-	Run()
-	RegisterClient(client *Client)
-	UnregisterClient(client *Client)
-	BroadcastMessage(message *Message)
-	SendToRecipients(message *Message)
-	JoinConversation(client *Client, conversationID string)
-}

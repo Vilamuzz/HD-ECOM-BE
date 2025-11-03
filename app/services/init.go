@@ -4,8 +4,9 @@ import "app/domain"
 
 type appService struct {
 	repo domain.AppRepository
+	hub  *domain.Hub
 }
 
-func NewAppService(repo domain.AppRepository) domain.AppService {
-	return &appService{repo: repo}
+func NewAppService(repo domain.AppRepository, hub *domain.Hub) domain.AppService {
+	return &appService{repo: repo, hub: hub}
 }

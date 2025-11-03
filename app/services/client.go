@@ -1,4 +1,4 @@
-package websocket
+package services
 
 import (
 	"encoding/json"
@@ -25,12 +25,12 @@ type IncomingMessage struct {
 }
 
 // StartClientPumps starts both read and write pumps for a client
-func StartClientPumps(client *domain.Client) {
+func (s *appService) StartClientPumps(client *domain.Client) {
 	go writePump(client)
-	go readPump(client)
+	go s.readPump(client)
 }
 
-func readPump(c *domain.Client) {
+func (s *appService) readPump(c *domain.Client) {
 	defer func() {
 		log.Printf("[WS] ReadPump closing for user %s", c.UserID)
 		c.Hub.Unregister <- c
@@ -43,7 +43,7 @@ func readPump(c *domain.Client) {
 		log.Printf("[WS] Pong received from user %s", c.UserID)
 		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
-	})        
+	})
 	for {
 		var msg IncomingMessage
 		err := c.Conn.ReadJSON(&msg)
@@ -59,7 +59,7 @@ func readPump(c *domain.Client) {
 		log.Printf("[WS] Received message from user %s: Type=%s, Payload=%+v", c.UserID, msg.Type, msg.Payload)
 
 		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
-		handleMessage(c, &msg)
+		s.handleMessage(c, &msg)
 	}
 }
 
@@ -95,12 +95,12 @@ func writePump(c *domain.Client) {
 	}
 }
 
-func handleMessage(c *domain.Client, msg *IncomingMessage) {
+func (s *appService) handleMessage(c *domain.Client, msg *IncomingMessage) {
 	log.Printf("[WS] Handling message type: %s for user %s", msg.Type, c.UserID)
 
 	switch msg.Type {
 	case "send_message":
-		handleSendMessage(c, msg.Payload)
+		s.handleSendMessage(c, msg.Payload)
 	default:
 		log.Printf("[WS] Unknown message type: %s from user %s", msg.Type, c.UserID)
 	}
@@ -121,7 +121,7 @@ func sendErrorToClient(c *domain.Client, errorMsg string) {
 	}
 }
 
-func handleSendMessage(c *domain.Client, payload map[string]interface{}) {
+func (s *appService) handleSendMessage(c *domain.Client, payload map[string]interface{}) {
 	log.Printf("[WS] handleSendMessage - User: %s, Payload: %+v", c.UserID, payload)
 
 	var conversationID int64
@@ -203,8 +203,7 @@ func handleSendMessage(c *domain.Client, payload map[string]interface{}) {
 
 		// Join the newly created conversation
 		convIDStr := strconv.FormatInt(conversationID, 10)
-		hubSvc := NewHubService(c.Hub)
-		hubSvc.JoinConversation(c, convIDStr)
+		s.JoinConversation(c, convIDStr)
 
 		// Send conversation_id back to client so they can use it in future messages
 		convResponse := map[string]interface{}{
@@ -222,8 +221,7 @@ func handleSendMessage(c *domain.Client, payload map[string]interface{}) {
 		// Ensure user is in the conversation
 		convIDStr := strconv.FormatInt(conversationID, 10)
 		if !c.ConversationIDs[convIDStr] {
-			hubSvc := NewHubService(c.Hub)
-			hubSvc.JoinConversation(c, convIDStr)
+			s.JoinConversation(c, convIDStr)
 		}
 	}
 
