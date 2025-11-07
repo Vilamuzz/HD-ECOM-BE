@@ -16,4 +16,11 @@ type AppService interface {
 	GetTicketPriorityByID(id int) (*models.TicketPriority, error)
 	UpdateTicketPriority(priority *models.TicketPriority) error
 	DeleteTicketPriority(id int) error
+
+	// Ticket Status
+	CreateTicketStatus(status *models.TicketStatus) error
+	GetTicketStatuses() ([]models.TicketStatus, error)
+	GetTicketStatusByID(id int) (*models.TicketStatus, error)
+	UpdateTicketStatus(status *models.TicketStatus) error
+	DeleteTicketStatus(id int) error
 }

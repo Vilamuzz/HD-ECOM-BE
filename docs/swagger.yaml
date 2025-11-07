@@ -458,6 +458,125 @@ paths:
       summary: Update a ticket priority
       tags:
       - ticket-priorities
+  /ticket-statuses:
+    get:
+      description: Get a list of all ticket statuses
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketStatus'
+                  type: array
+              type: object
+      summary: Get all ticket statuses
+      tags:
+      - ticket-statuses
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket status
+      parameters:
+      - description: Ticket Status Data
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketStatus'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketStatus'
+              type: object
+      summary: Create a new ticket status
+      tags:
+      - ticket-statuses
+  /ticket-statuses/{id}:
+    delete:
+      description: Delete a ticket status by its ID
+      parameters:
+      - description: Status ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket status
+      tags:
+      - ticket-statuses
+    get:
+      description: Get a ticket status by its ID
+      parameters:
+      - description: Status ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketStatus'
+              type: object
+      summary: Get a ticket status by ID
+      tags:
+      - ticket-statuses
+    put:
+      consumes:
+      - application/json
+      description: Update a ticket status by its ID
+      parameters:
+      - description: Status ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Status Data
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketStatus'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketStatus'
+              type: object
+      summary: Update a ticket status
+      tags:
+      - ticket-statuses
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.
