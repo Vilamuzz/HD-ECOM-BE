@@ -37,4 +37,26 @@ type AppService interface {
 	GetTicketAssignmentByID(id int) (*models.TicketAssignment, error)
 	UpdateTicketAssignment(assignment *models.TicketAssignment) error
 	DeleteTicketAssignment(id int) error
+
+	// Ticket Attachment
+	CreateTicketAttachment(attachment *models.TicketAttachment) error
+	GetTicketAttachments() ([]models.TicketAttachment, error)
+	GetTicketAttachmentByID(id int) (*models.TicketAttachment, error)
+	GetTicketAttachmentsByTicketID(ticketID int) ([]models.TicketAttachment, error)
+	UpdateTicketAttachment(attachment *models.TicketAttachment) error
+	DeleteTicketAttachment(id int) error
+
+	// Ticket Comment
+	CreateTicketComment(comment *models.TicketComment) error
+	GetTicketComments() ([]models.TicketComment, error)
+	GetTicketCommentByID(id int) (*models.TicketComment, error)
+	GetTicketCommentsByTicketID(ticketID int) ([]models.TicketComment, error)
+	UpdateTicketComment(comment *models.TicketComment) error
+	DeleteTicketComment(id int) error
+
+	// Ticket Log
+	CreateTicketLog(log *models.TicketLog) error
+	GetTicketLogs() ([]models.TicketLog, error)
+	GetTicketLogByID(id int) (*models.TicketLog, error)
+	GetTicketLogsByTicketID(ticketID int) ([]models.TicketLog, error)
 }

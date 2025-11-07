@@ -429,6 +429,172 @@ paths:
       summary: Update a ticket assignment
       tags:
       - ticket-assignments
+  /ticket-attachments:
+    get:
+      description: Get a list of all ticket attachments
+      parameters:
+      - description: Filter by ticket ID
+        in: query
+        name: ticket_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketAttachment'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get all ticket attachments
+      tags:
+      - ticket-attachments
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new ticket attachment
+      parameters:
+      - description: Ticket ID
+        in: formData
+        name: id_ticket
+        required: true
+        type: integer
+      - description: Attachment file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketAttachment'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Create a new ticket attachment
+      tags:
+      - ticket-attachments
+  /ticket-attachments/{id}:
+    delete:
+      description: Delete a ticket attachment by its ID
+      parameters:
+      - description: Attachment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket attachment
+      tags:
+      - ticket-attachments
+    get:
+      description: Get a ticket attachment by its ID
+      parameters:
+      - description: Attachment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketAttachment'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get a ticket attachment by ID
+      tags:
+      - ticket-attachments
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update a ticket attachment by its ID
+      parameters:
+      - description: Attachment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Ticket ID
+        in: formData
+        name: id_ticket
+        type: integer
+      - description: New attachment file
+        in: formData
+        name: file
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketAttachment'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Update a ticket attachment
+      tags:
+      - ticket-attachments
   /ticket-categories:
     get:
       description: Get a list of all ticket categories
@@ -548,6 +714,249 @@ paths:
       summary: Update a ticket category
       tags:
       - ticket-categories
+  /ticket-comments:
+    get:
+      description: Get all comments, optionally filtered by ticket ID
+      parameters:
+      - description: Filter by Ticket ID
+        in: query
+        name: ticket_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketComment'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get all ticket comments
+      tags:
+      - ticket-comments
+    post:
+      consumes:
+      - application/json
+      description: Create a new comment on a ticket
+      parameters:
+      - description: Comment Data
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketComment'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketComment'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Create a new ticket comment
+      tags:
+      - ticket-comments
+  /ticket-comments/{id}:
+    delete:
+      description: Delete an existing comment
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket comment
+      tags:
+      - ticket-comments
+    get:
+      description: Get a specific comment by its ID
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketComment'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get a ticket comment by ID
+      tags:
+      - ticket-comments
+    put:
+      consumes:
+      - application/json
+      description: Update an existing comment
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Comment Data
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketComment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketComment'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Update a ticket comment
+      tags:
+      - ticket-comments
+  /ticket-logs:
+    get:
+      description: Get all activity logs, optionally filtered by ticket ID
+      parameters:
+      - description: Filter by Ticket ID
+        in: query
+        name: ticket_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketLog'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get all ticket logs
+      tags:
+      - ticket-logs
+    post:
+      consumes:
+      - application/json
+      description: Create a new activity log for a ticket
+      parameters:
+      - description: Log Data
+        in: body
+        name: log
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketLog'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketLog'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Create a new ticket log
+      tags:
+      - ticket-logs
+  /ticket-logs/{id}:
+    get:
+      description: Get a specific log entry by its ID
+      parameters:
+      - description: Log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketLog'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get a ticket log by ID
+      tags:
+      - ticket-logs
   /ticket-priorities:
     get:
       description: Get a list of all ticket priorities
