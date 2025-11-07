@@ -226,6 +226,204 @@
                     }
                 }
             }
+        },
+        "/ticket-priorities": {
+            "get": {
+                "description": "Get a list of all ticket priorities",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-priorities"
+                ],
+                "summary": "Get all ticket priorities",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.TicketPriority"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new ticket priority",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-priorities"
+                ],
+                "summary": "Create a new ticket priority",
+                "parameters": [
+                    {
+                        "description": "Ticket Priority Data",
+                        "name": "priority",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.TicketPriority"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.TicketPriority"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/ticket-priorities/{id}": {
+            "get": {
+                "description": "Get a ticket priority by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-priorities"
+                ],
+                "summary": "Get a ticket priority by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Priority ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.TicketPriority"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update a ticket priority by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-priorities"
+                ],
+                "summary": "Update a ticket priority",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Priority ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated Priority Data",
+                        "name": "priority",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.TicketPriority"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.TicketPriority"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a ticket priority by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-priorities"
+                ],
+                "summary": "Delete a ticket priority",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Priority ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -498,6 +696,18 @@
         "models.User": {
             "type": "object",
             "properties": {
+                "assigned_tickets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TicketAssignment"
+                    }
+                },
+                "comments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TicketComment"
+                    }
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -507,11 +717,27 @@
                 "id": {
                     "type": "integer"
                 },
+                "id_user": {
+                    "type": "integer"
+                },
+                "logs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TicketLog"
+                    }
+                },
+                "nama": {
+                    "type": "string"
+                },
                 "role": {
                     "type": "string"
                 },
-                "updated_at": {
-                    "type": "string"
+                "tickets": {
+                    "description": "Relasi",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Ticket"
+                    }
                 },
                 "username": {
                     "type": "string"

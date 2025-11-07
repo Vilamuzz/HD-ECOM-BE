@@ -170,16 +170,35 @@ definitions:
     type: object
   models.User:
     properties:
+      assigned_tickets:
+        items:
+          $ref: '#/definitions/models.TicketAssignment'
+        type: array
+      comments:
+        items:
+          $ref: '#/definitions/models.TicketComment'
+        type: array
       created_at:
         type: string
       email:
         type: string
       id:
         type: integer
+      id_user:
+        type: integer
+      logs:
+        items:
+          $ref: '#/definitions/models.TicketLog'
+        type: array
+      nama:
+        type: string
       role:
         type: string
-      updated_at:
-        type: string
+      tickets:
+        description: Relasi
+        items:
+          $ref: '#/definitions/models.Ticket'
+        type: array
       username:
         type: string
     type: object
@@ -320,6 +339,125 @@ paths:
       summary: Update a ticket category
       tags:
       - ticket-categories
+  /ticket-priorities:
+    get:
+      description: Get a list of all ticket priorities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketPriority'
+                  type: array
+              type: object
+      summary: Get all ticket priorities
+      tags:
+      - ticket-priorities
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket priority
+      parameters:
+      - description: Ticket Priority Data
+        in: body
+        name: priority
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketPriority'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketPriority'
+              type: object
+      summary: Create a new ticket priority
+      tags:
+      - ticket-priorities
+  /ticket-priorities/{id}:
+    delete:
+      description: Delete a ticket priority by its ID
+      parameters:
+      - description: Priority ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket priority
+      tags:
+      - ticket-priorities
+    get:
+      description: Get a ticket priority by its ID
+      parameters:
+      - description: Priority ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketPriority'
+              type: object
+      summary: Get a ticket priority by ID
+      tags:
+      - ticket-priorities
+    put:
+      consumes:
+      - application/json
+      description: Update a ticket priority by its ID
+      parameters:
+      - description: Priority ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Priority Data
+        in: body
+        name: priority
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketPriority'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketPriority'
+              type: object
+      summary: Update a ticket priority
+      tags:
+      - ticket-priorities
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

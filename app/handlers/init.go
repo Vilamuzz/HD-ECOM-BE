@@ -22,4 +22,5 @@ func App(service domain.AppService, route *gin.Engine, middleware middleware.App
 
 	handler.TestRoute("/")
 	handler.TicketCategoryRoutes(handler.Route)
+	handler.TicketPriorityRoutes(handler.Route)
 }
