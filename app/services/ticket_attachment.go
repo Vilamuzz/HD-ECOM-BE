@@ -1,6 +1,9 @@
 package services
 
-import "app/domain/models"
+import (
+       "os"
+       "app/domain/models"
+)
 
 func (s *appService) CreateTicketAttachment(attachment *models.TicketAttachment) error {
 	return s.repo.CreateTicketAttachment(attachment)
@@ -23,5 +26,19 @@ func (s *appService) UpdateTicketAttachment(attachment *models.TicketAttachment)
 }
 
 func (s *appService) DeleteTicketAttachment(id int) error {
-	return s.repo.DeleteTicketAttachment(id)
+       // Get the attachment first
+       attachment, err := s.repo.GetTicketAttachmentByID(id)
+       if err != nil {
+	       return err
+       }
+       // Delete from DB
+       err = s.repo.DeleteTicketAttachment(id)
+       if err != nil {
+	       return err
+       }
+       // Delete file from disk
+       if attachment != nil && attachment.FilePath != "" {
+	       _ = os.Remove(attachment.FilePath) // Ignore error if file doesn't exist
+       }
+       return nil
 }
