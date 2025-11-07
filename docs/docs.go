@@ -658,7 +658,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/models.Ticket"
+                                                "$ref": "#/definitions/requests.TicketResponse"
                                             }
                                         }
                                     }
@@ -687,7 +687,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Ticket"
+                            "$ref": "#/definitions/requests.TicketCreateRequest"
                         }
                     }
                 ],
@@ -703,7 +703,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.Ticket"
+                                            "$ref": "#/definitions/requests.TicketResponse"
                                         }
                                     }
                                 }
@@ -744,7 +744,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.Ticket"
+                                            "$ref": "#/definitions/requests.TicketResponse"
                                         }
                                     }
                                 }
@@ -779,7 +779,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Ticket"
+                            "$ref": "#/definitions/requests.TicketCreateRequest"
                         }
                     }
                 ],
@@ -795,7 +795,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.Ticket"
+                                            "$ref": "#/definitions/requests.TicketResponse"
                                         }
                                     }
                                 }
@@ -1147,6 +1147,86 @@ const docTemplate = `{
                     }
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.TicketCreateRequest": {
+            "type": "object",
+            "properties": {
+                "deskripsi": {
+                    "type": "string",
+                    "example": "Saya tidak bisa login ke akun saya."
+                },
+                "id_category": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id_priority": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id_status": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id_user": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "judul": {
+                    "type": "string",
+                    "example": "Tidak bisa login"
+                },
+                "kode_tiket": {
+                    "type": "string",
+                    "example": "TCKT-001"
+                },
+                "tipe_pengaduan": {
+                    "description": "Allowed: pelanggan, penjual",
+                    "type": "string",
+                    "enum": [
+                        "pelanggan",
+                        "penjual"
+                    ],
+                    "example": "pelanggan"
+                }
+            }
+        },
+        "requests.TicketResponse": {
+            "type": "object",
+            "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "id_category": {
+                    "type": "integer"
+                },
+                "id_priority": {
+                    "type": "integer"
+                },
+                "id_status": {
+                    "type": "integer"
+                },
+                "id_ticket": {
+                    "type": "integer"
+                },
+                "id_user": {
+                    "type": "integer"
+                },
+                "judul": {
+                    "type": "string"
+                },
+                "kode_tiket": {
+                    "type": "string"
+                },
+                "tanggal_dibuat": {
+                    "type": "string"
+                },
+                "tanggal_diperbarui": {
+                    "type": "string"
+                },
+                "tipe_pengaduan": {
                     "type": "string"
                 }
             }

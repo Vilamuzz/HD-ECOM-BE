@@ -202,6 +202,62 @@ definitions:
       username:
         type: string
     type: object
+  requests.TicketCreateRequest:
+    properties:
+      deskripsi:
+        example: Saya tidak bisa login ke akun saya.
+        type: string
+      id_category:
+        example: 1
+        type: integer
+      id_priority:
+        example: 1
+        type: integer
+      id_status:
+        example: 1
+        type: integer
+      id_user:
+        example: 1
+        type: integer
+      judul:
+        example: Tidak bisa login
+        type: string
+      kode_tiket:
+        example: TCKT-001
+        type: string
+      tipe_pengaduan:
+        description: 'Allowed: pelanggan, penjual'
+        enum:
+        - pelanggan
+        - penjual
+        example: pelanggan
+        type: string
+    type: object
+  requests.TicketResponse:
+    properties:
+      deskripsi:
+        type: string
+      id_category:
+        type: integer
+      id_priority:
+        type: integer
+      id_status:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      judul:
+        type: string
+      kode_tiket:
+        type: string
+      tanggal_dibuat:
+        type: string
+      tanggal_diperbarui:
+        type: string
+      tipe_pengaduan:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -591,7 +647,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/models.Ticket'
+                    $ref: '#/definitions/requests.TicketResponse'
                   type: array
               type: object
       summary: Get all tickets
@@ -607,7 +663,7 @@ paths:
         name: ticket
         required: true
         schema:
-          $ref: '#/definitions/models.Ticket'
+          $ref: '#/definitions/requests.TicketCreateRequest'
       produces:
       - application/json
       responses:
@@ -618,7 +674,7 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/models.Ticket'
+                  $ref: '#/definitions/requests.TicketResponse'
               type: object
       summary: Create a new ticket
       tags:
@@ -660,7 +716,7 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/models.Ticket'
+                  $ref: '#/definitions/requests.TicketResponse'
               type: object
       summary: Get a ticket by ID
       tags:
@@ -680,7 +736,7 @@ paths:
         name: ticket
         required: true
         schema:
-          $ref: '#/definitions/models.Ticket'
+          $ref: '#/definitions/requests.TicketCreateRequest'
       produces:
       - application/json
       responses:
@@ -691,7 +747,7 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/models.Ticket'
+                  $ref: '#/definitions/requests.TicketResponse'
               type: object
       summary: Update a ticket
       tags:

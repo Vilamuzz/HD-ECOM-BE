@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"app/domain/requests"
 	"app/domain/models"
 	"app/helpers"
 	"net/http"
@@ -24,15 +25,26 @@ func (r *appRoute) TicketRoutes(rg *gin.RouterGroup) {
 // @Tags tickets
 // @Accept json
 // @Produce json
-// @Param ticket body models.Ticket true "Ticket Data"
-// @Success 201 {object} helpers.Response{data=models.Ticket}
+// @Param ticket body requests.TicketCreateRequest true "Ticket Data"
+// @Success 201 {object} helpers.Response{data=requests.TicketResponse}
 // @Router /tickets [post]
 func (r *appRoute) createTicket(c *gin.Context) {
-	var ticket models.Ticket
-	if err := c.ShouldBindJSON(&ticket); err != nil {
+	var req requests.TicketCreateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		response := helpers.NewResponse(http.StatusBadRequest, "Invalid request body", nil, nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
+	}
+
+	ticket := models.Ticket{
+		KodeTiket:     req.KodeTiket,
+		IDUser:        req.IDUser,
+		Judul:         req.Judul,
+		Deskripsi:     req.Deskripsi,
+		IDCategory:    req.IDCategory,
+		IDPriority:    req.IDPriority,
+		IDStatus:      req.IDStatus,
+		TipePengaduan: req.TipePengaduan,
 	}
 
 	if err := r.Service.CreateTicket(&ticket); err != nil {
@@ -41,7 +53,21 @@ func (r *appRoute) createTicket(c *gin.Context) {
 		return
 	}
 
-	response := helpers.NewResponse(http.StatusCreated, "Ticket created successfully", nil, ticket)
+	resp := requests.TicketResponse{
+		IDTicket:      ticket.IDTicket,
+		KodeTiket:     ticket.KodeTiket,
+		IDUser:        ticket.IDUser,
+		Judul:         ticket.Judul,
+		Deskripsi:     ticket.Deskripsi,
+		IDCategory:    ticket.IDCategory,
+		IDPriority:    ticket.IDPriority,
+		IDStatus:      ticket.IDStatus,
+		TipePengaduan: ticket.TipePengaduan,
+		TanggalDibuat: ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
+		TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
+	}
+
+	response := helpers.NewResponse(http.StatusCreated, "Ticket created successfully", nil, resp)
 	c.JSON(http.StatusCreated, response)
 }
 
@@ -50,7 +76,7 @@ func (r *appRoute) createTicket(c *gin.Context) {
 // @Description Get a list of all tickets
 // @Tags tickets
 // @Produce json
-// @Success 200 {object} helpers.Response{data=[]models.Ticket}
+// @Success 200 {object} helpers.Response{data=[]requests.TicketResponse}
 // @Router /tickets [get]
 func (r *appRoute) getTickets(c *gin.Context) {
 	tickets, err := r.Service.GetTickets()
@@ -60,7 +86,24 @@ func (r *appRoute) getTickets(c *gin.Context) {
 		return
 	}
 
-	response := helpers.NewResponse(http.StatusOK, "Tickets retrieved successfully", nil, tickets)
+	var resp []requests.TicketResponse
+	for _, ticket := range tickets {
+		resp = append(resp, requests.TicketResponse{
+			IDTicket:      ticket.IDTicket,
+			KodeTiket:     ticket.KodeTiket,
+			IDUser:        ticket.IDUser,
+			Judul:         ticket.Judul,
+			Deskripsi:     ticket.Deskripsi,
+			IDCategory:    ticket.IDCategory,
+			IDPriority:    ticket.IDPriority,
+			IDStatus:      ticket.IDStatus,
+			TipePengaduan: ticket.TipePengaduan,
+			TanggalDibuat: ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
+			TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
+		})
+	}
+
+	response := helpers.NewResponse(http.StatusOK, "Tickets retrieved successfully", nil, resp)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -70,7 +113,7 @@ func (r *appRoute) getTickets(c *gin.Context) {
 // @Tags tickets
 // @Produce json
 // @Param id path int true "Ticket ID"
-// @Success 200 {object} helpers.Response{data=models.Ticket}
+// @Success 200 {object} helpers.Response{data=requests.TicketResponse}
 // @Router /tickets/{id} [get]
 func (r *appRoute) getTicketByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -87,7 +130,21 @@ func (r *appRoute) getTicketByID(c *gin.Context) {
 		return
 	}
 
-	response := helpers.NewResponse(http.StatusOK, "Ticket retrieved successfully", nil, ticket)
+	resp := requests.TicketResponse{
+		IDTicket: ticket.IDTicket,
+		KodeTiket: ticket.KodeTiket,
+		IDUser: ticket.IDUser,
+		Judul: ticket.Judul,
+		Deskripsi: ticket.Deskripsi,
+		IDCategory: ticket.IDCategory,
+		IDPriority: ticket.IDPriority,
+		IDStatus: ticket.IDStatus,
+		TipePengaduan: ticket.TipePengaduan,
+		TanggalDibuat: ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
+		TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
+	}
+
+	response := helpers.NewResponse(http.StatusOK, "Ticket retrieved successfully", nil, resp)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -98,8 +155,8 @@ func (r *appRoute) getTicketByID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Ticket ID"
-// @Param ticket body models.Ticket true "Updated Ticket Data"
-// @Success 200 {object} helpers.Response{data=models.Ticket}
+// @Param ticket body requests.TicketCreateRequest true "Updated Ticket Data"
+// @Success 200 {object} helpers.Response{data=requests.TicketResponse}
 // @Router /tickets/{id} [put]
 func (r *appRoute) updateTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -109,21 +166,46 @@ func (r *appRoute) updateTicket(c *gin.Context) {
 		return
 	}
 
-	var ticket models.Ticket
-	if err := c.ShouldBindJSON(&ticket); err != nil {
+	var req requests.TicketCreateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		response := helpers.NewResponse(http.StatusBadRequest, "Invalid request body", nil, nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	ticket.IDTicket = id
+	ticket := models.Ticket{
+		IDTicket: id,
+		KodeTiket: req.KodeTiket,
+		IDUser: req.IDUser,
+		Judul: req.Judul,
+		Deskripsi: req.Deskripsi,
+		IDCategory: req.IDCategory,
+		IDPriority: req.IDPriority,
+		IDStatus: req.IDStatus,
+		TipePengaduan: req.TipePengaduan,
+	}
+
 	if err := r.Service.UpdateTicket(&ticket); err != nil {
 		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update ticket", nil, nil)
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	response := helpers.NewResponse(http.StatusOK, "Ticket updated successfully", nil, ticket)
+	resp := requests.TicketResponse{
+		IDTicket: ticket.IDTicket,
+		KodeTiket: ticket.KodeTiket,
+		IDUser: ticket.IDUser,
+		Judul: ticket.Judul,
+		Deskripsi: ticket.Deskripsi,
+		IDCategory: ticket.IDCategory,
+		IDPriority: ticket.IDPriority,
+		IDStatus: ticket.IDStatus,
+		TipePengaduan: ticket.TipePengaduan,
+		TanggalDibuat: ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
+		TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
+	}
+
+	response := helpers.NewResponse(http.StatusOK, "Ticket updated successfully", nil, resp)
 	c.JSON(http.StatusOK, response)
 }
 
