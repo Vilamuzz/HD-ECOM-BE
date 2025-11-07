@@ -32,7 +32,6 @@ func (s *appService) StartClientPumps(client *domain.Client) {
 
 func (s *appService) readPump(c *domain.Client) {
 	defer func() {
-		log.Printf("[WS] ReadPump closing for user %s", c.UserID)
 		c.Hub.Unregister <- c
 		c.Conn.Close()
 	}()
@@ -40,24 +39,12 @@ func (s *appService) readPump(c *domain.Client) {
 	c.Conn.SetReadLimit(maxMessageSize)
 	c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.Conn.SetPongHandler(func(string) error {
-		log.Printf("[WS] Pong received from user %s", c.UserID)
 		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
 	for {
 		var msg IncomingMessage
-		err := c.Conn.ReadJSON(&msg)
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("[WS] WebSocket unexpected close error for user %s: %v", c.UserID, err)
-			} else {
-				log.Printf("[WS] WebSocket read error for user %s: %v", c.UserID, err)
-			}
-			break
-		}
-
-		log.Printf("[WS] Received message from user %s: Type=%s, Payload=%+v", c.UserID, msg.Type, msg.Payload)
-
+		c.Conn.ReadJSON(&msg)
 		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		s.handleMessage(c, &msg)
 	}
@@ -80,11 +67,8 @@ func writePump(c *domain.Client) {
 			}
 
 			if err := c.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
-				log.Printf("[WS] Error writing message to user %s: %v", c.UserID, err)
 				return
 			}
-
-			log.Printf("[WS] Message written to user %s", c.UserID)
 
 		case <-ticker.C:
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
@@ -96,14 +80,11 @@ func writePump(c *domain.Client) {
 }
 
 func (s *appService) handleMessage(c *domain.Client, msg *IncomingMessage) {
-	log.Printf("[WS] Handling message type: %s for user %s", msg.Type, c.UserID)
-
-	switch msg.Type {
-	case "send_message":
-		s.handleSendMessage(c, msg.Payload)
-	default:
-		log.Printf("[WS] Unknown message type: %s from user %s", msg.Type, c.UserID)
+	if msg.Type != "send_message" {
+		sendErrorToClient(c, "Unknown message type "+msg.Type)
+		return
 	}
+	s.handleSendMessage(c, msg.Payload)
 }
 
 // Add error response helper
@@ -115,76 +96,38 @@ func sendErrorToClient(c *domain.Client, errorMsg string) {
 	jsonData, _ := json.Marshal(errorResponse)
 	select {
 	case c.Send <- jsonData:
-		log.Printf("[WS] Error sent to client %s: %s", c.UserID, errorMsg)
-	default:
-		log.Printf("[WS] Could not send error to client %s", c.UserID)
+	case <-time.After(5 * time.Second):
+		log.Println("Timeout sending message")
 	}
 }
 
 func (s *appService) handleSendMessage(c *domain.Client, payload map[string]interface{}) {
-	log.Printf("[WS] handleSendMessage - User: %s, Payload: %+v", c.UserID, payload)
-
-	var conversationID int64
+	var conversationID uint64
 	var err error
 
-	// Check if conversation_id is provided
-	convIDRaw, hasConvID := payload["conversation_id"]
-	log.Printf("[WS] Checking conversation_id - hasConvID: %v, raw value: %+v (type: %T)", hasConvID, convIDRaw, convIDRaw)
+	_, ok := payload["conversation_id"]
 
-	if hasConvID {
-		// Try to parse conversation_id from different types
-		switch v := convIDRaw.(type) {
-		case string:
-			log.Printf("[WS] conversation_id is string: '%s'", v)
-			if v != "" {
-				conversationID, err = strconv.ParseInt(v, 10, 64)
-				if err != nil {
-					log.Printf("[WS] Error parsing string conversation_id '%s': %v", v, err)
-					sendErrorToClient(c, "Invalid conversation_id format")
-					return
-				}
-				log.Printf("[WS] Parsed conversation_id from string: %d", conversationID)
-			} else {
-				log.Println("[WS] conversation_id is empty string")
-				hasConvID = false
-			}
-		case float64:
-			conversationID = int64(v)
-			log.Printf("[WS] conversation_id is number: %d", conversationID)
-		case int64:
-			conversationID = v
-			log.Printf("[WS] conversation_id is int64: %d", conversationID)
-		case int:
-			conversationID = int64(v)
-			log.Printf("[WS] conversation_id is int: %d", conversationID)
-		default:
-			log.Printf("[WS] conversation_id has unexpected type: %T, value: %+v", v, v)
-			hasConvID = false
-		}
-	}
-
-	userID, err := strconv.ParseInt(c.UserID, 10, 64)
+	userID, err := strconv.ParseUint(c.UserID, 10, 64)
 	if err != nil {
-		log.Printf("[WS] Error parsing user ID '%s': %v", c.UserID, err)
 		sendErrorToClient(c, "Invalid user ID")
 		return
 	}
 
 	// Find or create conversation
-	if !hasConvID || conversationID == 0 {
-		log.Printf("[WS] No conversation_id provided, finding or creating active conversation for user %d", userID)
-
-		// Try to find existing open conversation for this customer
+	if !ok || conversationID == 0 {
 		existingConv, err := c.Repository.FindActiveConversationForCustomer(userID)
 		if err == nil && existingConv != nil {
 			conversationID = existingConv.ID
-			log.Printf("[WS] Found existing active conversation %d for user %d", conversationID, userID)
 		} else {
-			// Create new conversation
-			log.Printf("[WS] Creating new conversation for user %d", userID)
+			admin, err := c.Repository.GetAdminWithLeastConversations()
+			var adminID uint64
+			if err == nil && admin != nil {
+				adminID = admin.ID
+			}
+
 			conversation := &models.Conversation{
-				CostumerID:    userID,
-				Status:        "open",
+				UserID:        userID,
+				AdminID:       adminID,
 				LastMessageAt: time.Now(),
 				CreatedAt:     time.Now(),
 				UpdatedAt:     time.Now(),
@@ -192,17 +135,19 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 
 			savedConv, err := c.Repository.CreateConversation(conversation)
 			if err != nil {
-				log.Printf("[WS] Error creating conversation: %v", err)
 				sendErrorToClient(c, "Failed to create conversation")
 				return
 			}
 
 			conversationID = savedConv.ID
-			log.Printf("[WS] Created new conversation %d for user %d", conversationID, userID)
+
+			// If admin was assigned, join them to the conversation
+			if adminID != 0 {
+				s.notifyAdminOfNewConversation(adminID, conversationID)
+			}
 		}
 
-		// Join the newly created conversation
-		convIDStr := strconv.FormatInt(conversationID, 10)
+		convIDStr := strconv.FormatUint(conversationID, 10)
 		s.JoinConversation(c, convIDStr)
 
 		// Send conversation_id back to client so they can use it in future messages
@@ -213,13 +158,11 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 		jsonData, _ := json.Marshal(convResponse)
 		select {
 		case c.Send <- jsonData:
-			log.Printf("[WS] Sent conversation_id %d to client %s", conversationID, c.UserID)
-		default:
-			log.Printf("[WS] Could not send conversation_id to client %s", c.UserID)
+		case <-time.After(5 * time.Second):
+			log.Println("Timeout sending message")
 		}
 	} else {
-		// Ensure user is in the conversation
-		convIDStr := strconv.FormatInt(conversationID, 10)
+		convIDStr := strconv.FormatUint(conversationID, 10)
 		if !c.ConversationIDs[convIDStr] {
 			s.JoinConversation(c, convIDStr)
 		}
@@ -228,61 +171,75 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 	// Extract message text
 	text, ok := payload["text"].(string)
 	if !ok || text == "" {
-		log.Printf("[WS] Missing or invalid text in payload: %+v", payload)
 		sendErrorToClient(c, "Message text is required")
 		return
 	}
-	log.Printf("[WS] Message text: '%s'", text)
 
 	// Create chat message
 	chatMessage := &models.ChatMessage{
 		ConversationID: conversationID,
 		SenderID:       userID,
 		MessageText:    text,
-		IsRead:         false,
 		CreatedAt:      time.Now(),
 	}
 
-	log.Printf("[WS] Saving chat message: ConversationID=%d, SenderID=%d, Text='%s'",
-		chatMessage.ConversationID, chatMessage.SenderID, chatMessage.MessageText)
-
 	savedMessage, err := c.Repository.SaveChatMessage(chatMessage)
 	if err != nil {
-		log.Printf("[WS] Error saving message: %v", err)
 		sendErrorToClient(c, "Failed to save message")
 		return
 	}
 
-	log.Printf("[WS] Message saved with ID: %d", savedMessage.ID)
-
 	// Update conversation's last_message_at
 	err = c.Repository.UpdateConversationLastMessage(conversationID)
 	if err != nil {
-		log.Printf("[WS] Warning: Failed to update conversation last_message_at: %v", err)
+		sendErrorToClient(c, "Failed to update conversation")
 	}
 
 	// Get conversation participants
 	recipients, err := c.Repository.GetConversationParticipants(conversationID)
 	if err != nil {
-		log.Printf("[WS] Error getting conversation participants for conversation %d: %v", conversationID, err)
 		sendErrorToClient(c, "Failed to get conversation participants")
 		return
 	}
 
-	log.Printf("[WS] Conversation %d participants: %+v", conversationID, recipients)
-
 	recipientIDs := make([]string, len(recipients))
 	for i, id := range recipients {
-		recipientIDs[i] = strconv.FormatInt(id, 10)
+		recipientIDs[i] = strconv.FormatUint(id, 10)
 	}
-
-	log.Printf("[WS] Broadcasting message to recipients: %+v", recipientIDs)
 
 	// Broadcast to conversation participants only
 	c.Hub.Broadcast <- &domain.Message{
-		ConversationID: strconv.FormatInt(conversationID, 10),
+		ConversationID: strconv.FormatUint(conversationID, 10),
 		Data:           savedMessage,
 	}
+}
 
-	log.Printf("[WS] Message broadcast complete for conversation %d", conversationID)
+// Add helper function to notify admin
+func (s *appService) notifyAdminOfNewConversation(adminID uint64, conversationID uint64) {
+	s.hub.Mu.RLock()
+	defer s.hub.Mu.RUnlock()
+
+	adminIDStr := strconv.FormatUint(adminID, 10)
+	convIDStr := strconv.FormatUint(conversationID, 10)
+
+	// Find admin's client in any conversation
+	for _, clients := range s.hub.Conversations {
+		if adminClient, exists := clients[adminIDStr]; exists {
+			// Join admin to new conversation
+			s.JoinConversation(adminClient, convIDStr)
+
+			// Notify admin
+			notification := map[string]interface{}{
+				"type":            "new_conversation_assigned",
+				"conversation_id": conversationID,
+				"message":         "A new conversation has been assigned to you",
+			}
+			jsonData, _ := json.Marshal(notification)
+			select {
+			case adminClient.Send <- jsonData:
+			default:
+			}
+			break
+		}
+	}
 }

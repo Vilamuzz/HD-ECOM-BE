@@ -3,7 +3,8 @@ package middleware
 import (
 	"app/domain/models"
 	"app/helpers"
-	"log"
+	jwt_helpers "app/helpers/jwt"
+	"errors"
 	"net/http"
 	"os"
 	"strconv"
@@ -23,8 +24,6 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		// If not in header, try query parameter (for WebSocket)
 		if requestToken == "" {
 			requestToken = c.Query("token")
-		} else {
-			log.Printf("[AUTH] Token from Authorization header: %s", requestToken)
 		}
 
 		if requestToken == "" {
@@ -38,52 +37,56 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		}
 
 		// Parse and validate JWT
-		token, err := jwt.Parse(requestToken, func(token *jwt.Token) (any, error) {
+		token, err := jwt.ParseWithClaims(requestToken, &jwt_helpers.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid token", nil, nil))
-			return
+		if !token.Valid {
+			if errors.Is(err, jwt.ErrTokenSignatureInvalid) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid token signature", nil, nil))
+				return
+			}
+
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Token expired", nil, nil))
+				return
+			}
+
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, err.Error(), nil, nil))
+				return
+			}
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
+		claims, ok := token.Claims.(*jwt_helpers.JWTClaims)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid token claims", nil, nil))
 			return
 		}
 
-		// Check expiration
-		exp, _ := claims["exp"].(float64)
-		if float64(time.Now().Unix()) > exp {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Token expired", nil, nil))
-			return
-		}
-
-		userID, err := strconv.ParseInt(claims["user_id"].(string), 10, 64)
+		userID, err := strconv.ParseInt(claims.UserID, 10, 64)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid user_id format", nil, nil))
 			return
 		}
 
 		// Extract other user info
-		username, _ := claims["username"].(string)
-		email, _ := claims["email"].(string)
+		username := claims.Username
+		email := claims.Email
 
 		// Handle role as either string or number
 		var role string
-		if r, ok := claims["role"].(int16); ok {
-			// Convert numeric role to string
-			roleMap := map[int16]string{
-				0: "admin",
-				1: "seller",
-				2: "customer",
-			}
-			if roleStr, exists := roleMap[r]; exists {
-				role = roleStr
-			} else {
-				role = "customer"
-			}
+		r := claims.Role
+		// Convert numeric role to string
+		roleMap := map[uint8]string{
+			0: "admin",
+			1: "seller",
+			2: "customer",
+		}
+		if roleStr, exists := roleMap[r]; exists {
+			role = roleStr
+		} else {
+			role = "customer"
 		}
 
 		// Try to get user from database
@@ -92,7 +95,7 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 			if err == gorm.ErrRecordNotFound {
 				// User doesn't exist, create new user
 				newUser := &models.User{
-					ID:        userID,
+					ID:        uint64(userID),
 					Username:  username,
 					Email:     email,
 					Role:      role,
@@ -101,6 +104,11 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 				}
 
 				err = m.repository.CreateUser(newUser)
+				if newUser.Role == "admin" {
+					err = m.repository.CreateAdminAvailability(&models.AdminAvailability{
+						AdminID: uint8(newUser.ID),
+					})
+				}
 				if err != nil {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create user", nil, nil))
 					return
@@ -113,9 +121,7 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 			}
 		}
 
-		// Set user in context
-		c.Set("currentUser", *user)
-		c.Set("userID", userID)
+		c.Set("userData", *user)
 		c.Next()
 	}
 }

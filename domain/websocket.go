@@ -6,7 +6,6 @@ import (
 )
 
 type Hub struct {
-	// Map of conversationID -> map of userID -> Client
 	Conversations map[string]map[string]*Client
 	Broadcast     chan *Message
 	Register      chan *Client
@@ -16,7 +15,7 @@ type Hub struct {
 
 type Message struct {
 	ConversationID string      `json:"conversation_id"`
-	Recipients     []string    `json:"-"` // Keep for backward compatibility
+	Recipients     []string    `json:"-"`
 	Data           interface{} `json:"data"`
 }
 

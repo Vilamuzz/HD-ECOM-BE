@@ -1,6 +1,8 @@
 package services
 
-import "app/domain"
+import (
+	"app/domain"
+)
 
 type appService struct {
 	repo domain.AppRepository

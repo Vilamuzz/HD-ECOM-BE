@@ -3,13 +3,11 @@ package services
 import (
 	"app/domain"
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
 
-// WebSocketConnectionWrapper wraps gorilla websocket to implement the interface
 type WebSocketConnectionWrapper struct {
 	*websocket.Conn
 }
@@ -22,11 +20,6 @@ func (w *WebSocketConnectionWrapper) SetWriteDeadline(t time.Time) error {
 	return w.Conn.SetWriteDeadline(t)
 }
 
-// hubService implements the HubService interface
-type hubService struct {
-	hub *domain.Hub
-}
-
 func NewHub() *domain.Hub {
 	return &domain.Hub{
 		Conversations: make(map[string]map[string]*domain.Client),
@@ -37,7 +30,6 @@ func NewHub() *domain.Hub {
 }
 
 func (s *appService) Run() {
-	log.Println("[HUB] Hub service started")
 	for {
 		select {
 		case client := <-s.hub.Register:
@@ -60,9 +52,6 @@ func (s *appService) RegisterClient(client *domain.Client) {
 	if client.ConversationIDs == nil {
 		client.ConversationIDs = make(map[string]bool)
 	}
-
-	log.Printf("[HUB] User %s (Name: %s) connected. Total unique clients: %d",
-		client.UserID, client.Name, s.countUniqueClients())
 }
 
 func (s *appService) UnregisterClient(client *domain.Client) {
@@ -80,8 +69,6 @@ func (s *appService) UnregisterClient(client *domain.Client) {
 	}
 
 	close(client.Send)
-	log.Printf("[HUB] User %s disconnected. Total unique clients: %d",
-		client.UserID, s.countUniqueClients())
 }
 
 func (s *appService) BroadcastMessage(message *domain.Message) {
@@ -92,48 +79,28 @@ func (s *appService) SendToRecipients(message *domain.Message) {
 	s.hub.Mu.RLock()
 	defer s.hub.Mu.RUnlock()
 
-	log.Printf("[HUB] Broadcasting message - ConversationID: %s, Data: %+v",
-		message.ConversationID, message.Data)
-
 	jsonData, err := json.Marshal(message.Data)
 	if err != nil {
-		log.Printf("[HUB] Error marshaling message: %v", err)
 		return
 	}
 
 	// Get clients in this specific conversation
 	clients, exists := s.hub.Conversations[message.ConversationID]
 	if !exists || len(clients) == 0 {
-		log.Printf("[HUB] No clients connected to conversation %s", message.ConversationID)
 		return
 	}
 
 	sentCount := 0
-	for userID, client := range clients {
+	for _, client := range clients {
 		select {
 		case client.Send <- jsonData:
 			sentCount++
-			log.Printf("[HUB] Message sent to user %s in conversation %s", userID, message.ConversationID)
 		default:
-			log.Printf("[HUB] Channel full for user %s, closing connection", userID)
 			go func(c *domain.Client) {
 				s.hub.Unregister <- c
 			}(client)
 		}
 	}
-
-	log.Printf("[HUB] Message broadcast complete: %d/%d recipients received message",
-		sentCount, len(clients))
-}
-
-func (s *appService) countUniqueClients() int {
-	uniqueUsers := make(map[string]bool)
-	for _, clients := range s.hub.Conversations {
-		for userID := range clients {
-			uniqueUsers[userID] = true
-		}
-	}
-	return len(uniqueUsers)
 }
 
 // Add helper method to join a conversation
@@ -147,7 +114,4 @@ func (s *appService) JoinConversation(client *domain.Client, conversationID stri
 
 	s.hub.Conversations[conversationID][client.UserID] = client
 	client.ConversationIDs[conversationID] = true
-
-	log.Printf("[HUB] User %s joined conversation %s. Conversation has %d participants",
-		client.UserID, conversationID, len(s.hub.Conversations[conversationID]))
 }

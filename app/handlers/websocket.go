@@ -10,6 +10,5 @@ func (r *appRoute) WebSocketRoute(path string) {
 }
 
 func (r *appRoute) ServeWebSocket(c *gin.Context) {
-	response := r.Service.ServeWebSocket(c)
-	c.JSON(response.Status, response)
+	r.Service.ServeWebSocket(c)
 }

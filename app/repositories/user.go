@@ -1,6 +1,8 @@
 package repositories
 
-import "app/domain/models"
+import (
+	"app/domain/models"
+)
 
 func (r *appRepository) GetUserByID(id int64) (*models.User, error) {
 	var user models.User
