@@ -27,9 +27,6 @@ func ConnectDB() *gorm.DB {
 }
 
 func MigrateDB(db *gorm.DB, models ...interface{}) {
-	err := db.AutoMigrate(models...)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Database migrated successfully!")
+	// Skip migration since we're using existing database
+	fmt.Println("Using existing database schema")
 }

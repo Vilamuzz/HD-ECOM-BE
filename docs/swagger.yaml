@@ -11,6 +11,178 @@ definitions:
           type: string
         type: object
     type: object
+  models.Ticket:
+    properties:
+      assignments:
+        items:
+          $ref: '#/definitions/models.TicketAssignment'
+        type: array
+      attachments:
+        items:
+          $ref: '#/definitions/models.TicketAttachment'
+        type: array
+      category:
+        $ref: '#/definitions/models.TicketCategory'
+      comments:
+        items:
+          $ref: '#/definitions/models.TicketComment'
+        type: array
+      deskripsi:
+        type: string
+      id_category:
+        type: integer
+      id_priority:
+        type: integer
+      id_status:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      judul:
+        type: string
+      kode_tiket:
+        type: string
+      logs:
+        items:
+          $ref: '#/definitions/models.TicketLog'
+        type: array
+      priority:
+        $ref: '#/definitions/models.TicketPriority'
+      status:
+        $ref: '#/definitions/models.TicketStatus'
+      tanggal_dibuat:
+        type: string
+      tanggal_diperbarui:
+        type: string
+      tipe_pengaduan:
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: Relasi
+    type: object
+  models.TicketAssignment:
+    properties:
+      admin:
+        $ref: '#/definitions/models.User'
+      id_admin:
+        type: integer
+      id_assignment:
+        type: integer
+      id_ticket:
+        type: integer
+      tanggal_ditugaskan:
+        type: string
+      ticket:
+        allOf:
+        - $ref: '#/definitions/models.Ticket'
+        description: Relasi
+    type: object
+  models.TicketAttachment:
+    properties:
+      file_path:
+        type: string
+      id_attachment:
+        type: integer
+      id_ticket:
+        type: integer
+      ticket:
+        allOf:
+        - $ref: '#/definitions/models.Ticket'
+        description: Relasi
+      uploaded_at:
+        type: string
+    type: object
+  models.TicketCategory:
+    properties:
+      id_category:
+        type: integer
+      nama_category:
+        type: string
+      tickets:
+        description: Relasi
+        items:
+          $ref: '#/definitions/models.Ticket'
+        type: array
+    type: object
+  models.TicketComment:
+    properties:
+      id_comment:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
+      ticket:
+        allOf:
+        - $ref: '#/definitions/models.Ticket'
+        description: Relasi
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  models.TicketLog:
+    properties:
+      aktivitas:
+        type: string
+      id_log:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      ticket:
+        allOf:
+        - $ref: '#/definitions/models.Ticket'
+        description: Relasi
+      user:
+        $ref: '#/definitions/models.User'
+      waktu:
+        type: string
+    type: object
+  models.TicketPriority:
+    properties:
+      id_priority:
+        type: integer
+      nama_priority:
+        type: string
+      tickets:
+        description: Relasi
+        items:
+          $ref: '#/definitions/models.Ticket'
+        type: array
+    type: object
+  models.TicketStatus:
+    properties:
+      id_status:
+        type: integer
+      nama_status:
+        type: string
+      tickets:
+        description: Relasi
+        items:
+          $ref: '#/definitions/models.Ticket'
+        type: array
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      role:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -29,6 +201,125 @@ paths:
       summary: Test Endpoint
       tags:
       - users
+  /ticket-categories:
+    get:
+      description: Get a list of all ticket categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketCategory'
+                  type: array
+              type: object
+      summary: Get all ticket categories
+      tags:
+      - ticket-categories
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket category
+      parameters:
+      - description: Ticket Category Data
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketCategory'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketCategory'
+              type: object
+      summary: Create a new ticket category
+      tags:
+      - ticket-categories
+  /ticket-categories/{id}:
+    delete:
+      description: Delete a ticket category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket category
+      tags:
+      - ticket-categories
+    get:
+      description: Get a ticket category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketCategory'
+              type: object
+      summary: Get a ticket category by ID
+      tags:
+      - ticket-categories
+    put:
+      consumes:
+      - application/json
+      description: Update a ticket category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Category Data
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketCategory'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketCategory'
+              type: object
+      summary: Update a ticket category
+      tags:
+      - ticket-categories
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.
