@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"app/domain/requests"
 	"app/domain/models"
+	"app/domain/requests"
 	"app/helpers"
 	"net/http"
 	"strconv"
@@ -54,16 +54,16 @@ func (r *appRoute) createTicket(c *gin.Context) {
 	}
 
 	resp := requests.TicketResponse{
-		IDTicket:      ticket.IDTicket,
-		KodeTiket:     ticket.KodeTiket,
-		IDUser:        ticket.IDUser,
-		Judul:         ticket.Judul,
-		Deskripsi:     ticket.Deskripsi,
-		IDCategory:    ticket.IDCategory,
-		IDPriority:    ticket.IDPriority,
-		IDStatus:      ticket.IDStatus,
-		TipePengaduan: ticket.TipePengaduan,
-		TanggalDibuat: ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
+		IDTicket:          ticket.IDTicket,
+		KodeTiket:         ticket.KodeTiket,
+		IDUser:            ticket.IDUser,
+		Judul:             ticket.Judul,
+		Deskripsi:         ticket.Deskripsi,
+		IDCategory:        ticket.IDCategory,
+		IDPriority:        ticket.IDPriority,
+		IDStatus:          ticket.IDStatus,
+		TipePengaduan:     ticket.TipePengaduan,
+		TanggalDibuat:     ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
 		TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
 	}
 
@@ -89,16 +89,16 @@ func (r *appRoute) getTickets(c *gin.Context) {
 	var resp []requests.TicketResponse
 	for _, ticket := range tickets {
 		resp = append(resp, requests.TicketResponse{
-			IDTicket:      ticket.IDTicket,
-			KodeTiket:     ticket.KodeTiket,
-			IDUser:        ticket.IDUser,
-			Judul:         ticket.Judul,
-			Deskripsi:     ticket.Deskripsi,
-			IDCategory:    ticket.IDCategory,
-			IDPriority:    ticket.IDPriority,
-			IDStatus:      ticket.IDStatus,
-			TipePengaduan: ticket.TipePengaduan,
-			TanggalDibuat: ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
+			IDTicket:          ticket.IDTicket,
+			KodeTiket:         ticket.KodeTiket,
+			IDUser:            ticket.IDUser,
+			Judul:             ticket.Judul,
+			Deskripsi:         ticket.Deskripsi,
+			IDCategory:        ticket.IDCategory,
+			IDPriority:        ticket.IDPriority,
+			IDStatus:          ticket.IDStatus,
+			TipePengaduan:     ticket.TipePengaduan,
+			TanggalDibuat:     ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
 			TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
 		})
 	}
@@ -131,16 +131,16 @@ func (r *appRoute) getTicketByID(c *gin.Context) {
 	}
 
 	resp := requests.TicketResponse{
-		IDTicket: ticket.IDTicket,
-		KodeTiket: ticket.KodeTiket,
-		IDUser: ticket.IDUser,
-		Judul: ticket.Judul,
-		Deskripsi: ticket.Deskripsi,
-		IDCategory: ticket.IDCategory,
-		IDPriority: ticket.IDPriority,
-		IDStatus: ticket.IDStatus,
-		TipePengaduan: ticket.TipePengaduan,
-		TanggalDibuat: ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
+		IDTicket:          ticket.IDTicket,
+		KodeTiket:         ticket.KodeTiket,
+		IDUser:            ticket.IDUser,
+		Judul:             ticket.Judul,
+		Deskripsi:         ticket.Deskripsi,
+		IDCategory:        ticket.IDCategory,
+		IDPriority:        ticket.IDPriority,
+		IDStatus:          ticket.IDStatus,
+		TipePengaduan:     ticket.TipePengaduan,
+		TanggalDibuat:     ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
 		TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
 	}
 
@@ -174,14 +174,14 @@ func (r *appRoute) updateTicket(c *gin.Context) {
 	}
 
 	ticket := models.Ticket{
-		IDTicket: id,
-		KodeTiket: req.KodeTiket,
-		IDUser: req.IDUser,
-		Judul: req.Judul,
-		Deskripsi: req.Deskripsi,
-		IDCategory: req.IDCategory,
-		IDPriority: req.IDPriority,
-		IDStatus: req.IDStatus,
+		IDTicket:      id,
+		KodeTiket:     req.KodeTiket,
+		IDUser:        req.IDUser,
+		Judul:         req.Judul,
+		Deskripsi:     req.Deskripsi,
+		IDCategory:    req.IDCategory,
+		IDPriority:    req.IDPriority,
+		IDStatus:      req.IDStatus,
 		TipePengaduan: req.TipePengaduan,
 	}
 
@@ -192,16 +192,16 @@ func (r *appRoute) updateTicket(c *gin.Context) {
 	}
 
 	resp := requests.TicketResponse{
-		IDTicket: ticket.IDTicket,
-		KodeTiket: ticket.KodeTiket,
-		IDUser: ticket.IDUser,
-		Judul: ticket.Judul,
-		Deskripsi: ticket.Deskripsi,
-		IDCategory: ticket.IDCategory,
-		IDPriority: ticket.IDPriority,
-		IDStatus: ticket.IDStatus,
-		TipePengaduan: ticket.TipePengaduan,
-		TanggalDibuat: ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
+		IDTicket:          ticket.IDTicket,
+		KodeTiket:         ticket.KodeTiket,
+		IDUser:            ticket.IDUser,
+		Judul:             ticket.Judul,
+		Deskripsi:         ticket.Deskripsi,
+		IDCategory:        ticket.IDCategory,
+		IDPriority:        ticket.IDPriority,
+		IDStatus:          ticket.IDStatus,
+		TipePengaduan:     ticket.TipePengaduan,
+		TanggalDibuat:     ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
 		TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
 	}
 

@@ -29,6 +29,204 @@
                 }
             }
         },
+        "/ticket-assignments": {
+            "get": {
+                "description": "Get a list of all ticket assignments",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-assignments"
+                ],
+                "summary": "Get all ticket assignments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new ticket assignment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-assignments"
+                ],
+                "summary": "Create a new ticket assignment",
+                "parameters": [
+                    {
+                        "description": "Ticket Assignment Data",
+                        "name": "assignment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.TicketAssignment"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/ticket-assignments/{id}": {
+            "get": {
+                "description": "Get a ticket assignment by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-assignments"
+                ],
+                "summary": "Get a ticket assignment by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Assignment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update a ticket assignment by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-assignments"
+                ],
+                "summary": "Update a ticket assignment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Assignment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated Assignment Data",
+                        "name": "assignment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.TicketAssignment"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a ticket assignment by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-assignments"
+                ],
+                "summary": "Delete a ticket assignment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Assignment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/ticket-categories": {
             "get": {
                 "description": "Get a list of all ticket categories",
@@ -1140,6 +1338,30 @@
                 }
             }
         },
+        "requests.TicketAssignmentResponse": {
+            "description": "TicketAssignmentResponse represents a ticket assignment with related ticket and admin info (no null fields)",
+            "type": "object",
+            "properties": {
+                "admin": {
+                    "$ref": "#/definitions/requests.UserSimpleResponse"
+                },
+                "id_admin": {
+                    "type": "integer"
+                },
+                "id_assignment": {
+                    "type": "integer"
+                },
+                "id_ticket": {
+                    "type": "integer"
+                },
+                "tanggal_ditugaskan": {
+                    "type": "string"
+                },
+                "ticket": {
+                    "$ref": "#/definitions/requests.TicketResponse"
+                }
+            }
+        },
         "requests.TicketCreateRequest": {
             "type": "object",
             "properties": {
@@ -1216,6 +1438,30 @@
                     "type": "string"
                 },
                 "tipe_pengaduan": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.UserSimpleResponse": {
+            "description": "UserSimpleResponse represents a minimal user info for assignment admin",
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id_user": {
+                    "type": "integer"
+                },
+                "nama": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

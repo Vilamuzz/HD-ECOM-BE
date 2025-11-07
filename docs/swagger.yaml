@@ -202,6 +202,23 @@ definitions:
       username:
         type: string
     type: object
+  requests.TicketAssignmentResponse:
+    description: TicketAssignmentResponse represents a ticket assignment with related
+      ticket and admin info (no null fields)
+    properties:
+      admin:
+        $ref: '#/definitions/requests.UserSimpleResponse'
+      id_admin:
+        type: integer
+      id_assignment:
+        type: integer
+      id_ticket:
+        type: integer
+      tanggal_ditugaskan:
+        type: string
+      ticket:
+        $ref: '#/definitions/requests.TicketResponse'
+    type: object
   requests.TicketCreateRequest:
     properties:
       deskripsi:
@@ -258,6 +275,23 @@ definitions:
       tipe_pengaduan:
         type: string
     type: object
+  requests.UserSimpleResponse:
+    description: UserSimpleResponse represents a minimal user info for assignment
+      admin
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id_user:
+        type: integer
+      nama:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -276,6 +310,125 @@ paths:
       summary: Test Endpoint
       tags:
       - users
+  /ticket-assignments:
+    get:
+      description: Get a list of all ticket assignments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/requests.TicketAssignmentResponse'
+                  type: array
+              type: object
+      summary: Get all ticket assignments
+      tags:
+      - ticket-assignments
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket assignment
+      parameters:
+      - description: Ticket Assignment Data
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketAssignment'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketAssignmentResponse'
+              type: object
+      summary: Create a new ticket assignment
+      tags:
+      - ticket-assignments
+  /ticket-assignments/{id}:
+    delete:
+      description: Delete a ticket assignment by its ID
+      parameters:
+      - description: Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket assignment
+      tags:
+      - ticket-assignments
+    get:
+      description: Get a ticket assignment by its ID
+      parameters:
+      - description: Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketAssignmentResponse'
+              type: object
+      summary: Get a ticket assignment by ID
+      tags:
+      - ticket-assignments
+    put:
+      consumes:
+      - application/json
+      description: Update a ticket assignment by its ID
+      parameters:
+      - description: Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Assignment Data
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketAssignment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketAssignmentResponse'
+              type: object
+      summary: Update a ticket assignment
+      tags:
+      - ticket-assignments
   /ticket-categories:
     get:
       description: Get a list of all ticket categories

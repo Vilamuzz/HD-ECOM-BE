@@ -30,4 +30,11 @@ type AppRepository interface {
 	GetTicketByID(id int) (*models.Ticket, error)
 	UpdateTicket(ticket *models.Ticket) error
 	DeleteTicket(id int) error
+
+	// Ticket Assignment
+	CreateTicketAssignment(assignment *models.TicketAssignment) error
+	GetTicketAssignments() ([]models.TicketAssignment, error)
+	GetTicketAssignmentByID(id int) (*models.TicketAssignment, error)
+	UpdateTicketAssignment(assignment *models.TicketAssignment) error
+	DeleteTicketAssignment(id int) error
 }
