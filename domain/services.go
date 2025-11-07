@@ -23,4 +23,11 @@ type AppService interface {
 	GetTicketStatusByID(id int) (*models.TicketStatus, error)
 	UpdateTicketStatus(status *models.TicketStatus) error
 	DeleteTicketStatus(id int) error
+
+	// Ticket
+	CreateTicket(ticket *models.Ticket) error
+	GetTickets() ([]models.Ticket, error)
+	GetTicketByID(id int) (*models.Ticket, error)
+	UpdateTicket(ticket *models.Ticket) error
+	DeleteTicket(id int) error
 }

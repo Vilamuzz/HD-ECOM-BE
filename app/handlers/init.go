@@ -24,4 +24,5 @@ func App(service domain.AppService, route *gin.Engine, middleware middleware.App
 	handler.TicketCategoryRoutes(handler.Route)
 	handler.TicketPriorityRoutes(handler.Route)
 	handler.TicketStatusRoutes(handler.Route)
+	handler.TicketRoutes(handler.Route)
 }
