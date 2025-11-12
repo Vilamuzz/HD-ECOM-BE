@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"app/domain/models"
+	jwt_helpers "app/helpers/jwt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,8 +11,25 @@ func (r *appRoute) ConversationRoute(path string) {
 	api.Use(r.Middleware.Auth())
 	{
 		api.GET("", r.GetConversations)
-		api.GET("/:id/messages", r.GetConversationMessages)
+		api.POST("", r.CreateCustomerConversation)
 	}
+}
+
+// CreateCustomerConversation godoc
+// @Summary      Create conversation
+// @Description  Create a new conversation between a customer and an admin
+// @Security 	 BearerAuth
+// @Tags         conversations
+// @Produce      json
+// @Success      200  {object}   helpers.Response{data=models.Conversation}
+// @Failure      500  {object}   helpers.Response
+// @Router       /conversations [post]
+func (r *appRoute) CreateCustomerConversation(c *gin.Context) {
+	ctx := c.Request.Context()
+	claim, _ := c.MustGet("userData").(jwt_helpers.Claims)
+
+	response := r.Service.CreateCustomerConversation(ctx, claim)
+	c.JSON(response.Status, response)
 }
 
 // GetConversations godoc
@@ -25,26 +42,8 @@ func (r *appRoute) ConversationRoute(path string) {
 // @Failure      500  {object}   helpers.Response
 // @Router       /conversations [get]
 func (r *appRoute) GetConversations(c *gin.Context) {
-	userData, _ := c.Get("userData")
-	user := userData.(models.User)
+	claim, _ := c.MustGet("userData").(jwt_helpers.Claims)
 
-	response := r.Service.GetConversations(user)
-	c.JSON(response.Status, response)
-}
-
-// GetConversationMessages godoc
-// @Summary      Get conversation messages
-// @Description  Get all messages for a specific conversation
-// @Security 	 BearerAuth
-// @Tags         conversations
-// @Produce      json
-// @Param        id   path      int  true  "Conversation ID"
-// @Success      200  {object}   helpers.Response{data=[]models.ChatMessage}
-// @Failure      500  {object}   helpers.Response
-// @Router       /conversations/{id}/messages [get]
-func (r *appRoute) GetConversationMessages(c *gin.Context) {
-	conversationID := c.Param("id")
-
-	response := r.Service.GetConversationMessages(conversationID)
+	response := r.Service.GetConversations(claim)
 	c.JSON(response.Status, response)
 }

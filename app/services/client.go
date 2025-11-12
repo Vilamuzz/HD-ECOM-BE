@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"log"
-	"strconv"
 	"time"
 
 	"app/domain"
@@ -80,11 +79,75 @@ func writePump(c *domain.Client) {
 }
 
 func (s *appService) handleMessage(c *domain.Client, msg *IncomingMessage) {
-	if msg.Type != "send_message" {
+	switch msg.Type {
+	case "send_message":
+		s.handleSendMessage(c, msg.Payload)
+	case "subscribe":
+		s.handleSubscribe(c, msg.Payload)
+	case "unsubscribe":
+		s.handleUnsubscribe(c, msg.Payload)
+	default:
 		sendErrorToClient(c, "Unknown message type "+msg.Type)
+	}
+}
+
+func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interface{}) {
+	convID, ok := payload["conversation_id"].(uint64)
+	if !ok {
+		sendErrorToClient(c, "Invalid conversation ID")
 		return
 	}
-	s.handleSendMessage(c, msg.Payload)
+
+	// Ensure client's conversation map exists
+	if c.ConversationIDs == nil {
+		c.ConversationIDs = make(map[uint64]bool)
+	}
+
+	// Join conversation (adds to hub.Conversations and marks on client)
+	s.JoinConversation(c, convID)
+
+	// Acknowledge subscription
+	resp := map[string]interface{}{
+		"type":            "subscribed",
+		"conversation_id": convID,
+	}
+	jsonData, _ := json.Marshal(resp)
+	select {
+	case c.Send <- jsonData:
+	case <-time.After(5 * time.Second):
+		log.Println("Timeout sending subscribe response")
+	}
+}
+
+func (s *appService) handleUnsubscribe(c *domain.Client, payload map[string]interface{}) {
+	convID, ok := payload["conversation_id"].(uint64)
+	if !ok {
+		sendErrorToClient(c, "Invalid conversation ID")
+		return
+	}
+
+	// Remove client from conversation in hub
+	s.hub.Mu.Lock()
+	if clients, exists := s.hub.Conversations[convID]; exists {
+		delete(clients, c.UserID)
+		if len(clients) == 0 {
+			delete(s.hub.Conversations, convID)
+		}
+	}
+	delete(c.ConversationIDs, convID)
+	s.hub.Mu.Unlock()
+
+	// Acknowledge unsubscription
+	resp := map[string]interface{}{
+		"type":            "unsubscribed",
+		"conversation_id": convID,
+	}
+	jsonData, _ := json.Marshal(resp)
+	select {
+	case c.Send <- jsonData:
+	case <-time.After(5 * time.Second):
+		log.Println("Timeout sending unsubscribe response")
+	}
 }
 
 // Add error response helper
@@ -102,71 +165,9 @@ func sendErrorToClient(c *domain.Client, errorMsg string) {
 }
 
 func (s *appService) handleSendMessage(c *domain.Client, payload map[string]interface{}) {
-	var conversationID uint64
+	conversationID := payload["conversation_id"].(uint64)
 	var err error
-
-	_, ok := payload["conversation_id"]
-
-	userID, err := strconv.ParseUint(c.UserID, 10, 64)
-	if err != nil {
-		sendErrorToClient(c, "Invalid user ID")
-		return
-	}
-
-	// Find or create conversation
-	if !ok || conversationID == 0 {
-		existingConv, err := c.Repository.FindActiveConversationForCustomer(userID)
-		if err == nil && existingConv != nil {
-			conversationID = existingConv.ID
-		} else {
-			admin, err := c.Repository.GetAdminWithLeastConversations()
-			var adminID uint64
-			if err == nil && admin != nil {
-				adminID = admin.ID
-			}
-
-			conversation := &models.Conversation{
-				UserID:        userID,
-				AdminID:       adminID,
-				LastMessageAt: time.Now(),
-				CreatedAt:     time.Now(),
-				UpdatedAt:     time.Now(),
-			}
-
-			savedConv, err := c.Repository.CreateConversation(conversation)
-			if err != nil {
-				sendErrorToClient(c, "Failed to create conversation")
-				return
-			}
-
-			conversationID = savedConv.ID
-
-			// If admin was assigned, join them to the conversation
-			if adminID != 0 {
-				s.notifyAdminOfNewConversation(adminID, conversationID)
-			}
-		}
-
-		convIDStr := strconv.FormatUint(conversationID, 10)
-		s.JoinConversation(c, convIDStr)
-
-		// Send conversation_id back to client so they can use it in future messages
-		convResponse := map[string]interface{}{
-			"type":            "conversation_created",
-			"conversation_id": conversationID,
-		}
-		jsonData, _ := json.Marshal(convResponse)
-		select {
-		case c.Send <- jsonData:
-		case <-time.After(5 * time.Second):
-			log.Println("Timeout sending message")
-		}
-	} else {
-		convIDStr := strconv.FormatUint(conversationID, 10)
-		if !c.ConversationIDs[convIDStr] {
-			s.JoinConversation(c, convIDStr)
-		}
-	}
+	userID := c.UserID
 
 	// Extract message text
 	text, ok := payload["text"].(string)
@@ -176,14 +177,14 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 	}
 
 	// Create chat message
-	chatMessage := &models.ChatMessage{
+	chatMessage := &models.Message{
 		ConversationID: conversationID,
 		SenderID:       userID,
 		MessageText:    text,
 		CreatedAt:      time.Now(),
 	}
 
-	savedMessage, err := c.Repository.SaveChatMessage(chatMessage)
+	savedMessage, err := c.Repository.SaveMessage(chatMessage)
 	if err != nil {
 		sendErrorToClient(c, "Failed to save message")
 		return
@@ -195,51 +196,10 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 		sendErrorToClient(c, "Failed to update conversation")
 	}
 
-	// Get conversation participants
-	recipients, err := c.Repository.GetConversationParticipants(conversationID)
-	if err != nil {
-		sendErrorToClient(c, "Failed to get conversation participants")
-		return
-	}
-
-	recipientIDs := make([]string, len(recipients))
-	for i, id := range recipients {
-		recipientIDs[i] = strconv.FormatUint(id, 10)
-	}
-
-	// Broadcast to conversation participants only
+	// Broadcast to conversation participants only (hub routes to connected clients)
 	c.Hub.Broadcast <- &domain.Message{
-		ConversationID: strconv.FormatUint(conversationID, 10),
+		ConversationID: conversationID,
 		Data:           savedMessage,
-	}
-}
-
-// Add helper function to notify admin
-func (s *appService) notifyAdminOfNewConversation(adminID uint64, conversationID uint64) {
-	s.hub.Mu.RLock()
-	defer s.hub.Mu.RUnlock()
-
-	adminIDStr := strconv.FormatUint(adminID, 10)
-	convIDStr := strconv.FormatUint(conversationID, 10)
-
-	// Find admin's client in any conversation
-	for _, clients := range s.hub.Conversations {
-		if adminClient, exists := clients[adminIDStr]; exists {
-			// Join admin to new conversation
-			s.JoinConversation(adminClient, convIDStr)
-
-			// Notify admin
-			notification := map[string]interface{}{
-				"type":            "new_conversation_assigned",
-				"conversation_id": conversationID,
-				"message":         "A new conversation has been assigned to you",
-			}
-			jsonData, _ := json.Marshal(notification)
-			select {
-			case adminClient.Send <- jsonData:
-			default:
-			}
-			break
-		}
+		Type:           "new_message",
 	}
 }

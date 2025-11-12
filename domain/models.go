@@ -6,7 +6,7 @@ func GetAllModels() []interface{} {
 	return []interface{}{
 		&models.User{},
 		&models.Conversation{},
-		&models.ChatMessage{},
+		&models.Message{},
 		&models.AdminAvailability{},
 	}
 }

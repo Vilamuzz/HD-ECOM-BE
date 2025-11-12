@@ -6,7 +6,7 @@ import (
 )
 
 type Hub struct {
-	Conversations map[string]map[string]*Client
+	Conversations map[uint64]map[uint64]*Client
 	Broadcast     chan *Message
 	Register      chan *Client
 	Unregister    chan *Client
@@ -14,8 +14,9 @@ type Hub struct {
 }
 
 type Message struct {
-	ConversationID string      `json:"conversation_id"`
+	ConversationID uint64      `json:"conversation_id"`
 	Recipients     []string    `json:"-"`
+	Type           string      `json:"type"`
 	Data           interface{} `json:"data"`
 }
 
@@ -23,10 +24,10 @@ type Client struct {
 	Hub             *Hub
 	Conn            WebSocketConnection
 	Send            chan []byte
-	UserID          string
+	UserID          uint64
 	Name            string
 	Repository      AppRepository
-	ConversationIDs map[string]bool
+	ConversationIDs map[uint64]bool
 }
 
 type WebSocketConnection interface {

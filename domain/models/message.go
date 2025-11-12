@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type ChatMessage struct {
+type Message struct {
 	ID             uint64    `json:"id"`
 	ConversationID uint64    `json:"conversation_id"`
 	SenderID       uint64    `json:"sender_id"`

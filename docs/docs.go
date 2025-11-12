@@ -22,7 +22,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all conversations for the current user (admin/agent sees all, customer sees their own)",
+                "description": "Get all conversations for the current user (admin sees all, customer sees their own)",
                 "produces": [
                     "application/json"
                 ],
@@ -66,31 +66,17 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new conversation with optional agent assignment",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Create a new conversation between a customer and an admin",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "conversations"
                 ],
-                "summary": "Create a new conversation",
-                "parameters": [
-                    {
-                        "description": "Conversation Data",
-                        "name": "conversation",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.CreateConversationRequest"
-                        }
-                    }
-                ],
+                "summary": "Create conversation",
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -105,12 +91,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/helpers.Response"
                         }
                     },
                     "500": {
@@ -160,7 +140,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/models.ChatMessage"
+                                                "$ref": "#/definitions/models.Message"
                                             }
                                         }
                                     }
@@ -170,31 +150,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/helpers.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/test": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Test JWT",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Test Endpoint",
-                "responses": {
-                    "200": {
-                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/helpers.Response"
                         }
@@ -222,7 +177,30 @@ const docTemplate = `{
                 }
             }
         },
-        "models.ChatMessage": {
+        "models.Conversation": {
+            "type": "object",
+            "properties": {
+                "admin_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_message_at": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Message": {
             "type": "object",
             "properties": {
                 "attachment_url": {
@@ -237,53 +215,11 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "is_read": {
-                    "type": "boolean"
-                },
                 "message_text": {
-                    "type": "string"
-                },
-                "read_at": {
                     "type": "string"
                 },
                 "sender_id": {
                     "type": "integer"
-                }
-            }
-        },
-        "models.Conversation": {
-            "type": "object",
-            "properties": {
-                "agent_id": {
-                    "type": "integer"
-                },
-                "costumer_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "last_message_at": {
-                    "type": "string"
-                },
-                "status": {
-                    "description": "open, closed, pending",
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "requests.CreateConversationRequest": {
-            "type": "object",
-            "properties": {
-                "agent_id": {
-                    "type": "integer",
-                    "example": 123
                 }
             }
         }

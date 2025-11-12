@@ -1,5 +1,5 @@
 package requests
 
-type CreateConversationRequest struct {
-	AdminID *int64 `json:"admin_id" example:"123"`
+type ConversationRequest struct {
+	UserID uint64 `json:"user_id" example:"456"`
 }

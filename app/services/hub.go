@@ -22,7 +22,7 @@ func (w *WebSocketConnectionWrapper) SetWriteDeadline(t time.Time) error {
 
 func NewHub() *domain.Hub {
 	return &domain.Hub{
-		Conversations: make(map[string]map[string]*domain.Client),
+		Conversations: make(map[uint64]map[uint64]*domain.Client),
 		Broadcast:     make(chan *domain.Message, 256),
 		Register:      make(chan *domain.Client),
 		Unregister:    make(chan *domain.Client),
@@ -50,7 +50,7 @@ func (s *appService) RegisterClient(client *domain.Client) {
 
 	// Initialize ConversationIDs map if needed
 	if client.ConversationIDs == nil {
-		client.ConversationIDs = make(map[string]bool)
+		client.ConversationIDs = make(map[uint64]bool)
 	}
 }
 
@@ -104,12 +104,12 @@ func (s *appService) SendToRecipients(message *domain.Message) {
 }
 
 // Add helper method to join a conversation
-func (s *appService) JoinConversation(client *domain.Client, conversationID string) {
+func (s *appService) JoinConversation(client *domain.Client, conversationID uint64) {
 	s.hub.Mu.Lock()
 	defer s.hub.Mu.Unlock()
 
 	if s.hub.Conversations[conversationID] == nil {
-		s.hub.Conversations[conversationID] = make(map[string]*domain.Client)
+		s.hub.Conversations[conversationID] = make(map[uint64]*domain.Client)
 	}
 
 	s.hub.Conversations[conversationID][client.UserID] = client

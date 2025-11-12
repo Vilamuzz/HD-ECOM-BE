@@ -7,7 +7,6 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -37,7 +36,7 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		}
 
 		// Parse and validate JWT
-		token, err := jwt.ParseWithClaims(requestToken, &jwt_helpers.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(requestToken, &jwt_helpers.Claims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 
@@ -58,19 +57,13 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 			}
 		}
 
-		claims, ok := token.Claims.(*jwt_helpers.JWTClaims)
+		claims, ok := token.Claims.(*jwt_helpers.Claims)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid token claims", nil, nil))
 			return
 		}
 
-		userID, err := strconv.ParseInt(claims.UserID, 10, 64)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid user_id format", nil, nil))
-			return
-		}
-
-		// Extract other user info
+		userID := claims.UserID
 		username := claims.Username
 		email := claims.Email
 
@@ -90,12 +83,12 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		}
 
 		// Try to get user from database
-		user, err := m.repository.GetUserByID(userID)
+		_, err = m.repository.GetUserByID(userID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				// User doesn't exist, create new user
 				newUser := &models.User{
-					ID:        uint64(userID),
+					ID:        userID,
 					Username:  username,
 					Email:     email,
 					Role:      role,
@@ -114,14 +107,13 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 					return
 				}
 
-				user = newUser
 			} else {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Database error", nil, nil))
 				return
 			}
 		}
 
-		c.Set("userData", *user)
+		c.Set("userData", *claims)
 		c.Next()
 	}
 }

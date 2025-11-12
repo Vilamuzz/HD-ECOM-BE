@@ -50,7 +50,7 @@ func main() {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-		AllowWebSockets:  true, // Important for WebSocket
+		AllowWebSockets:  true,
 		MaxAge:           12 * time.Hour,
 	}))
 
