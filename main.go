@@ -45,7 +45,7 @@ func main() {
 
 	// Add CORS middleware
 	ginEngine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", os.Getenv("APP_URL") },
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
