@@ -63,7 +63,7 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 			return
 		}
 
-		userID := claims.UserID
+		userID := helpers.ConvertStringToUint64(claims.UserID)
 		username := claims.Username
 		email := claims.Email
 
@@ -83,7 +83,8 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		}
 
 		// Try to get user from database
-		_, err = m.repository.GetUserByID(userID)
+		u, err := m.repository.GetUserByID(userID)
+		var user models.User
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				// User doesn't exist, create new user
@@ -96,24 +97,36 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 					UpdatedAt: time.Now(),
 				}
 
-				err = m.repository.CreateUser(newUser)
-				if newUser.Role == "admin" {
-					err = m.repository.CreateAdminAvailability(&models.AdminAvailability{
-						AdminID: uint8(newUser.ID),
-					})
-				}
-				if err != nil {
+				if err = m.repository.CreateUser(newUser); err != nil {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create user", nil, nil))
 					return
 				}
 
+				if newUser.Role == "admin" {
+					if err = m.repository.CreateAdminAvailability(&models.AdminAvailability{
+						AdminID: uint8(newUser.ID),
+					}); err != nil {
+						c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create admin availability", nil, nil))
+						return
+					}
+				}
+
+				user = *newUser
 			} else {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Database error", nil, nil))
 				return
 			}
+		} else {
+			// existing user
+			if u == nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Database error", nil, nil))
+				return
+			}
+			user = *u
 		}
 
-		c.Set("userData", *claims)
+		// set model user (not jwt claims) into context
+		c.Set("userData", user)
 		c.Next()
 	}
 }

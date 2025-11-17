@@ -79,7 +79,12 @@ func (s *appService) SendToRecipients(message *domain.Message) {
 	s.hub.Mu.RLock()
 	defer s.hub.Mu.RUnlock()
 
-	jsonData, err := json.Marshal(message.Data)
+	response := map[string]interface{}{
+		"type":    message.Type,
+		"payload": message.Data,
+	}
+
+	jsonData, err := json.Marshal(response)
 	if err != nil {
 		return
 	}

@@ -17,9 +17,9 @@ func (r *appRepository) GetAdminConversations(adminID uint8) ([]models.Conversat
 	return conversations, err
 }
 
-func (r *appRepository) GetCustomerConversations(userID uint64) ([]models.Conversation, error) {
+func (r *appRepository) GetCustomerConversations(customerID uint64) ([]models.Conversation, error) {
 	var conversations []models.Conversation
-	err := r.Conn.Where("customer_id = ?", userID).
+	err := r.Conn.Where("customer_id = ?", customerID).
 		Order("last_message_at DESC").
 		Find(&conversations).Error
 	return conversations, err

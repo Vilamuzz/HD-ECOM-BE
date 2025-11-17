@@ -2,7 +2,9 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"app/domain"
@@ -43,7 +45,14 @@ func (s *appService) readPump(c *domain.Client) {
 	})
 	for {
 		var msg IncomingMessage
-		c.Conn.ReadJSON(&msg)
+		err := c.Conn.ReadJSON(&msg)
+		if err != nil {
+			// Connection closed or error - exit gracefully
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("WebSocket error for user %d: %v", c.UserID, err)
+			}
+			return
+		}
 		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		s.handleMessage(c, &msg)
 	}
@@ -92,8 +101,9 @@ func (s *appService) handleMessage(c *domain.Client, msg *IncomingMessage) {
 }
 
 func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interface{}) {
-	convID, ok := payload["conversation_id"].(uint64)
-	if !ok {
+	convID, err := parseConversationID(payload["conversation_id"])
+	log.Println("Subscribing to conversation ID:", convID)
+	if err != nil {
 		sendErrorToClient(c, "Invalid conversation ID")
 		return
 	}
@@ -108,8 +118,8 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 
 	// Acknowledge subscription
 	resp := map[string]interface{}{
-		"type":            "subscribed",
-		"conversation_id": convID,
+		"type":    "subscribed",
+		"payload": map[string]uint64{"conversation_id": convID},
 	}
 	jsonData, _ := json.Marshal(resp)
 	select {
@@ -150,7 +160,7 @@ func (s *appService) handleUnsubscribe(c *domain.Client, payload map[string]inte
 	}
 }
 
-// Add error response helper
+// Update sendErrorToClient to use a timeout select like other sends
 func sendErrorToClient(c *domain.Client, errorMsg string) {
 	errorResponse := map[string]interface{}{
 		"type":  "error",
@@ -160,13 +170,50 @@ func sendErrorToClient(c *domain.Client, errorMsg string) {
 	select {
 	case c.Send <- jsonData:
 	case <-time.After(5 * time.Second):
-		log.Println("Timeout sending message")
+		log.Printf("Timeout sending error message to client %d: %s", c.UserID, errorMsg)
+	}
+}
+
+func parseConversationID(v interface{}) (uint64, error) {
+	if v == nil {
+		return 0, fmt.Errorf("conversation_id missing")
+	}
+	switch t := v.(type) {
+	case float64:
+		return uint64(t), nil
+	case float32:
+		return uint64(t), nil
+	case int:
+		return uint64(t), nil
+	case int64:
+		return uint64(t), nil
+	case uint64:
+		return t, nil
+	case string:
+		if t == "" {
+			return 0, fmt.Errorf("conversation_id empty")
+		}
+		u, err := strconv.ParseUint(t, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return u, nil
+	default:
+		return 0, fmt.Errorf("invalid conversation_id type %T", v)
 	}
 }
 
 func (s *appService) handleSendMessage(c *domain.Client, payload map[string]interface{}) {
-	conversationID := payload["conversation_id"].(uint64)
-	var err error
+	conversationID, err := parseConversationID(payload["conversation_id"])
+	if err != nil {
+		sendErrorToClient(c, "Invalid conversation ID")
+		return
+	}
+	// require subscription to prevent unauthorized sends / avoid silent broadcasts
+	if c.ConversationIDs == nil || !c.ConversationIDs[conversationID] {
+		sendErrorToClient(c, "You are not subscribed to this conversation")
+		return
+	}
 	userID := c.UserID
 
 	// Extract message text
@@ -177,14 +224,14 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 	}
 
 	// Create chat message
-	chatMessage := &models.Message{
+	Message := &models.Message{
 		ConversationID: conversationID,
 		SenderID:       userID,
 		MessageText:    text,
 		CreatedAt:      time.Now(),
 	}
 
-	savedMessage, err := c.Repository.SaveMessage(chatMessage)
+	savedMessage, err := c.Repository.SaveMessage(Message)
 	if err != nil {
 		sendErrorToClient(c, "Failed to save message")
 		return

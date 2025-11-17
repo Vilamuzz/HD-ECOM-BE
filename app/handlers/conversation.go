@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	jwt_helpers "app/helpers/jwt"
+	"app/domain/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,7 +26,7 @@ func (r *appRoute) ConversationRoute(path string) {
 // @Router       /conversations [post]
 func (r *appRoute) CreateCustomerConversation(c *gin.Context) {
 	ctx := c.Request.Context()
-	claim, _ := c.MustGet("userData").(jwt_helpers.Claims)
+	claim, _ := c.MustGet("userData").(models.User)
 
 	response := r.Service.CreateCustomerConversation(ctx, claim)
 	c.JSON(response.Status, response)
@@ -42,7 +42,7 @@ func (r *appRoute) CreateCustomerConversation(c *gin.Context) {
 // @Failure      500  {object}   helpers.Response
 // @Router       /conversations [get]
 func (r *appRoute) GetConversations(c *gin.Context) {
-	claim, _ := c.MustGet("userData").(jwt_helpers.Claims)
+	claim, _ := c.MustGet("userData").(models.User)
 
 	response := r.Service.GetConversations(claim)
 	c.JSON(response.Status, response)

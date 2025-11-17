@@ -3,8 +3,8 @@ package services
 import (
 	"app/domain"
 	"app/domain/models"
-	"app/helpers"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,17 +21,19 @@ var DefaultUpgrader = websocket.Upgrader{
 }
 
 // ServeWebSocket handles WebSocket connection upgrades
-func (s *appService) ServeWebSocket(ctx *gin.Context) helpers.Response {
+func (s *appService) ServeWebSocket(ctx *gin.Context) {
 
 	user, ok := ctx.Value("userData").(models.User)
 	if !ok {
-		return helpers.NewResponse(http.StatusUnauthorized, "Unauthorized", nil, nil)
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	// Upgrade to WebSocket
 	conn, err := DefaultUpgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
-		return helpers.NewResponse(http.StatusInternalServerError, "WebSocket upgrade failed", nil, nil)
+		log.Println("websocket upgrade failed:", err)
+		return
 	}
 
 	// Create client
@@ -53,16 +55,16 @@ func (s *appService) ServeWebSocket(ctx *gin.Context) helpers.Response {
 
 	// Start pumps
 	s.StartClientPumps(client)
-
-	return helpers.NewResponse(http.StatusOK, "WebSocket connection established", nil, nil)
 }
 
 // sendInitialData sends connection confirmation and loads conversations
 func (s *appService) sendInitialData(client *domain.Client) {
 	connectResponse := map[string]interface{}{
-		"type":    "connected",
-		"user_id": client.UserID,
-		"message": "Successfully connected to WebSocket",
+		"type": "connected",
+		"payload": map[string]interface{}{
+			"user_id": client.UserID,
+			"message": "Successfully connected to WebSocket",
+		},
 	}
 	connectData, _ := json.Marshal(connectResponse)
 	client.Send <- connectData
