@@ -130,8 +130,8 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 }
 
 func (s *appService) handleUnsubscribe(c *domain.Client, payload map[string]interface{}) {
-	convID, ok := payload["conversation_id"].(uint64)
-	if !ok {
+	convID, err := parseConversationID(payload["conversation_id"])
+	if err != nil {
 		sendErrorToClient(c, "Invalid conversation ID")
 		return
 	}
@@ -152,6 +152,7 @@ func (s *appService) handleUnsubscribe(c *domain.Client, payload map[string]inte
 		"type":            "unsubscribed",
 		"conversation_id": convID,
 	}
+	log.Println("Unsubscribing from conversation ID:", convID)
 	jsonData, _ := json.Marshal(resp)
 	select {
 	case c.Send <- jsonData:
