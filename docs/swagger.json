@@ -82,7 +82,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.TicketAssignment"
+                            "$ref": "#/definitions/requests.CreateTicketAssignmentRequest"
                         }
                     }
                 ],
@@ -174,7 +174,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.TicketAssignment"
+                            "$ref": "#/definitions/requests.CreateTicketAssignmentRequest"
                         }
                     }
                 ],
@@ -2003,6 +2003,23 @@
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "requests.CreateTicketAssignmentRequest": {
+            "type": "object",
+            "properties": {
+                "id_admin": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "id_ticket": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tanggal_ditugaskan": {
+                    "type": "string",
+                    "example": "2025-11-07T10:00:00Z"
                 }
             }
         },

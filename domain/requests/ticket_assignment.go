@@ -1,5 +1,11 @@
 package requests
 
+type CreateTicketAssignmentRequest struct {
+	IDTicket          int    `json:"id_ticket" example:"1"`
+	IDAdmin           int    `json:"id_admin" example:"2"`
+	TanggalDitugaskan string `json:"tanggal_ditugaskan" example:"2025-11-07T10:00:00Z"`
+}
+
 // TicketAssignmentResponse is a clean response DTO for TicketAssignment
 // @Description TicketAssignmentResponse represents a ticket assignment with related ticket and admin info (no null fields)
 type TicketAssignmentResponse struct {
