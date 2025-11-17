@@ -37,18 +37,20 @@ func main() {
 	db := helpers.ConnectDB()
 	helpers.MigrateDB(db, domain.GetAllModels()...)
 	repo := repositories.NewAppRepository(db)
-	service := services.NewAppService(repo)
+	hub := services.NewHub()
+	service := services.NewAppService(repo, hub)
+	go service.Run()
 	middleware := middleware.NewAppMiddleware(repo)
 	ginEngine := gin.Default()
 
 	// Add CORS middleware
 	ginEngine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", os.Getenv("APP_URL") },
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-		AllowWebSockets:  true, // Important for WebSocket
+		AllowWebSockets:  true,
 		MaxAge:           12 * time.Hour,
 	}))
 

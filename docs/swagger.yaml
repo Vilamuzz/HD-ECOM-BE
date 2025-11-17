@@ -11,7 +11,22 @@ definitions:
           type: string
         type: object
     type: object
-  models.ChatMessage:
+  models.Conversation:
+    properties:
+      admin_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      last_message_at:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.Message:
     properties:
       attachment_url:
         type: string
@@ -21,37 +36,9 @@ definitions:
         type: string
       id:
         type: integer
-      is_read:
-        type: boolean
       message_text:
         type: string
-      read_at:
-        type: string
       sender_id:
-        type: integer
-    type: object
-  models.Conversation:
-    properties:
-      agent_id:
-        type: integer
-      costumer_id:
-        type: integer
-      created_at:
-        type: string
-      id:
-        type: integer
-      last_message_at:
-        type: string
-      status:
-        description: open, closed, pending
-        type: string
-      updated_at:
-        type: string
-    type: object
-  requests.CreateConversationRequest:
-    properties:
-      agent_id:
-        example: 123
         type: integer
     type: object
 info:
@@ -59,8 +46,8 @@ info:
 paths:
   /conversations:
     get:
-      description: Get all conversations for the current user (admin/agent sees all,
-        customer sees their own)
+      description: Get all conversations for the current user (admin sees all, customer
+        sees their own)
       produces:
       - application/json
       responses:
@@ -85,21 +72,12 @@ paths:
       tags:
       - conversations
     post:
-      consumes:
-      - application/json
-      description: Create a new conversation with optional agent assignment
-      parameters:
-      - description: Conversation Data
-        in: body
-        name: conversation
-        required: true
-        schema:
-          $ref: '#/definitions/requests.CreateConversationRequest'
+      description: Create a new conversation between a customer and an admin
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/helpers.Response'
@@ -107,17 +85,13 @@ paths:
                 data:
                   $ref: '#/definitions/models.Conversation'
               type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.Response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
       security:
       - BearerAuth: []
-      summary: Create a new conversation
+      summary: Create conversation
       tags:
       - conversations
   /conversations/{id}/messages:
@@ -140,7 +114,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/models.ChatMessage'
+                    $ref: '#/definitions/models.Message'
                   type: array
               type: object
         "500":
@@ -152,21 +126,6 @@ paths:
       summary: Get conversation messages
       tags:
       - conversations
-  /test:
-    get:
-      description: Test JWT
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/helpers.Response'
-      security:
-      - BearerAuth: []
-      summary: Test Endpoint
-      tags:
-      - users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

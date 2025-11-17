@@ -3,10 +3,10 @@ package middleware
 import (
 	"app/domain/models"
 	"app/helpers"
-	"log"
+	jwt_helpers "app/helpers/jwt"
+	"errors"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -23,8 +23,6 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		// If not in header, try query parameter (for WebSocket)
 		if requestToken == "" {
 			requestToken = c.Query("token")
-		} else {
-			log.Printf("[AUTH] Token from Authorization header: %s", requestToken)
 		}
 
 		if requestToken == "" {
@@ -38,56 +36,55 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		}
 
 		// Parse and validate JWT
-		token, err := jwt.Parse(requestToken, func(token *jwt.Token) (any, error) {
+		token, err := jwt.ParseWithClaims(requestToken, &jwt_helpers.Claims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid token", nil, nil))
-			return
+		if !token.Valid {
+			if errors.Is(err, jwt.ErrTokenSignatureInvalid) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid token signature", nil, nil))
+				return
+			}
+
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Token expired", nil, nil))
+				return
+			}
+
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, err.Error(), nil, nil))
+				return
+			}
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
+		claims, ok := token.Claims.(*jwt_helpers.Claims)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid token claims", nil, nil))
 			return
 		}
 
-		// Check expiration
-		exp, _ := claims["exp"].(float64)
-		if float64(time.Now().Unix()) > exp {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Token expired", nil, nil))
-			return
-		}
-
-		userID, err := strconv.ParseInt(claims["user_id"].(string), 10, 64)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid user_id format", nil, nil))
-			return
-		}
-
-		// Extract other user info
-		username, _ := claims["username"].(string)
-		email, _ := claims["email"].(string)
+		userID := helpers.ConvertStringToUint64(claims.UserID)
+		username := claims.Username
+		email := claims.Email
 
 		// Handle role as either string or number
 		var role string
-		if r, ok := claims["role"].(int16); ok {
-			// Convert numeric role to string
-			roleMap := map[int16]string{
-				0: "admin",
-				1: "seller",
-				2: "customer",
-			}
-			if roleStr, exists := roleMap[r]; exists {
-				role = roleStr
-			} else {
-				role = "customer"
-			}
+		r := claims.Role
+		// Convert numeric role to string
+		roleMap := map[uint8]string{
+			0: "admin",
+			1: "seller",
+			2: "customer",
+		}
+		if roleStr, exists := roleMap[r]; exists {
+			role = roleStr
+		} else {
+			role = "customer"
 		}
 
 		// Try to get user from database
-		user, err := m.repository.GetUserByID(userID)
+		u, err := m.repository.GetUserByID(userID)
+		var user models.User
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				// User doesn't exist, create new user
@@ -100,22 +97,36 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 					UpdatedAt: time.Now(),
 				}
 
-				err = m.repository.CreateUser(newUser)
-				if err != nil {
+				if err = m.repository.CreateUser(newUser); err != nil {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create user", nil, nil))
 					return
 				}
 
-				user = newUser
+				if newUser.Role == "admin" {
+					if err = m.repository.CreateAdminAvailability(&models.AdminAvailability{
+						AdminID: uint8(newUser.ID),
+					}); err != nil {
+						c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create admin availability", nil, nil))
+						return
+					}
+				}
+
+				user = *newUser
 			} else {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Database error", nil, nil))
 				return
 			}
+		} else {
+			// existing user
+			if u == nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Database error", nil, nil))
+				return
+			}
+			user = *u
 		}
 
-		// Set user in context
-		c.Set("currentUser", *user)
-		c.Set("userID", userID)
+		// set model user (not jwt claims) into context
+		c.Set("userData", user)
 		c.Next()
 	}
 }

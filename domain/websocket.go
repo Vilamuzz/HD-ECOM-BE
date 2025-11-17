@@ -6,8 +6,7 @@ import (
 )
 
 type Hub struct {
-	// Map of conversationID -> map of userID -> Client
-	Conversations map[string]map[string]*Client
+	Conversations map[uint64]map[uint64]*Client
 	Broadcast     chan *Message
 	Register      chan *Client
 	Unregister    chan *Client
@@ -15,8 +14,9 @@ type Hub struct {
 }
 
 type Message struct {
-	ConversationID string      `json:"conversation_id"`
-	Recipients     []string    `json:"-"` // Keep for backward compatibility
+	ConversationID uint64      `json:"conversation_id"`
+	Recipients     []string    `json:"-"`
+	Type           string      `json:"type"`
 	Data           interface{} `json:"data"`
 }
 
@@ -24,10 +24,10 @@ type Client struct {
 	Hub             *Hub
 	Conn            WebSocketConnection
 	Send            chan []byte
-	UserID          string
+	UserID          uint64
 	Name            string
 	Repository      AppRepository
-	ConversationIDs map[string]bool
+	ConversationIDs map[uint64]bool
 }
 
 type WebSocketConnection interface {
@@ -38,14 +38,4 @@ type WebSocketConnection interface {
 	SetWriteDeadline(t time.Time) error
 	SetPongHandler(h func(appData string) error)
 	Close() error
-}
-
-// HubService interface for hub operations
-type HubService interface {
-	Run()
-	RegisterClient(client *Client)
-	UnregisterClient(client *Client)
-	BroadcastMessage(message *Message)
-	SendToRecipients(message *Message)
-	JoinConversation(client *Client, conversationID string)
 }

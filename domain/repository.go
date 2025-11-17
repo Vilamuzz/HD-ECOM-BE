@@ -1,24 +1,28 @@
 package domain
 
-import "app/domain/models"
+import (
+	"app/domain/models"
+	"context"
+)
 
 type AppRepository interface {
 	// User operations
-	GetUserByID(id int64) (*models.User, error)
+	GetUserByID(id uint64) (*models.User, error)
 	CreateUser(user *models.User) error
 
 	// Conversation operations
-	GetConversation(id int64) (*models.Conversation, error)
-	GetConversationParticipants(conversationID int64) ([]int64, error)
-	CreateConversation(conversation *models.Conversation) (*models.Conversation, error)
-	GetAllConversations() ([]models.Conversation, error)
-	GetUserConversations(userID int64) ([]models.Conversation, error)
-	AssignConversationToAgent(conversationID int64, agentID int64) error
-	FindActiveConversationForCustomer(customerID int64) (*models.Conversation, error)
-	UpdateConversationLastMessage(conversationID int64) error
+	CreateConversation(ctx context.Context, conversation *models.Conversation) error
+	GetAdminConversations(adminID uint8) ([]models.Conversation, error)
+	GetCustomerConversations(userID uint64) ([]models.Conversation, error)
+	UpdateConversationLastMessage(conversationID uint64) error
 
 	// Chat message operations
-	SaveChatMessage(message *models.ChatMessage) (*models.ChatMessage, error)
-	GetChatMessages(conversationID int64) ([]models.ChatMessage, error)
-	GetChatMessagesByConversationID(conversationID string) ([]models.ChatMessage, error)
+	// Modified for cursor pagination: limit and cursor input, returns next cursor
+	GetMessageHistory(conversationID uint64, limit int, cursor string) ([]models.Message, string, error)
+	SaveMessage(message *models.Message) (*models.Message, error)
+
+	// Admin availability operations
+	GetAdminAvailabilityByAdminID() (*models.AdminAvailability, error)
+	CreateAdminAvailability(adminAvailability *models.AdminAvailability) error
+	IncrementAdminConversationCount(adminID uint8) error
 }
