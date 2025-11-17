@@ -771,7 +771,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.TicketComment"
+                            "$ref": "#/definitions/requests.CreateTicketCommentRequest"
                         }
                     }
                 ],
@@ -787,7 +787,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.TicketComment"
+                                            "$ref": "#/definitions/requests.TicketCommentResponse"
                                         }
                                     }
                                 }
@@ -881,7 +881,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.TicketComment"
+                            "$ref": "#/definitions/requests.UpdateTicketCommentRequest"
                         }
                     }
                 ],
@@ -897,7 +897,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.TicketComment"
+                                            "$ref": "#/definitions/requests.TicketCommentResponse"
                                         }
                                     }
                                 }
@@ -2034,6 +2034,23 @@ const docTemplate = `{
                 }
             }
         },
+        "requests.CreateTicketCommentRequest": {
+            "type": "object",
+            "properties": {
+                "id_ticket": {
+                    "type": "integer"
+                },
+                "id_user": {
+                    "type": "integer"
+                },
+                "isi_pesan": {
+                    "type": "string"
+                },
+                "tanggal_dibuat": {
+                    "type": "string"
+                }
+            }
+        },
         "requests.TicketAssignmentResponse": {
             "description": "TicketAssignmentResponse represents a ticket assignment with related ticket and admin info (no null fields)",
             "type": "object",
@@ -2055,6 +2072,26 @@ const docTemplate = `{
                 },
                 "ticket": {
                     "$ref": "#/definitions/requests.TicketResponse"
+                }
+            }
+        },
+        "requests.TicketCommentResponse": {
+            "type": "object",
+            "properties": {
+                "id_comment": {
+                    "type": "integer"
+                },
+                "id_ticket": {
+                    "type": "integer"
+                },
+                "id_user": {
+                    "type": "integer"
+                },
+                "isi_pesan": {
+                    "type": "string"
+                },
+                "tanggal_dibuat": {
+                    "type": "string"
                 }
             }
         },
@@ -2134,6 +2171,23 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tipe_pengaduan": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.UpdateTicketCommentRequest": {
+            "type": "object",
+            "properties": {
+                "id_ticket": {
+                    "type": "integer"
+                },
+                "id_user": {
+                    "type": "integer"
+                },
+                "isi_pesan": {
+                    "type": "string"
+                },
+                "tanggal_dibuat": {
                     "type": "string"
                 }
             }

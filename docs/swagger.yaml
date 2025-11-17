@@ -214,6 +214,17 @@ definitions:
         example: "2025-11-07T10:00:00Z"
         type: string
     type: object
+  requests.CreateTicketCommentRequest:
+    properties:
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
+    type: object
   requests.TicketAssignmentResponse:
     description: TicketAssignmentResponse represents a ticket assignment with related
       ticket and admin info (no null fields)
@@ -230,6 +241,19 @@ definitions:
         type: string
       ticket:
         $ref: '#/definitions/requests.TicketResponse'
+    type: object
+  requests.TicketCommentResponse:
+    properties:
+      id_comment:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
     type: object
   requests.TicketCreateRequest:
     properties:
@@ -285,6 +309,17 @@ definitions:
       tanggal_diperbarui:
         type: string
       tipe_pengaduan:
+        type: string
+    type: object
+  requests.UpdateTicketCommentRequest:
+    properties:
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
         type: string
     type: object
   requests.UserSimpleResponse:
@@ -765,7 +800,7 @@ paths:
         name: comment
         required: true
         schema:
-          $ref: '#/definitions/models.TicketComment'
+          $ref: '#/definitions/requests.CreateTicketCommentRequest'
       produces:
       - application/json
       responses:
@@ -776,7 +811,7 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/models.TicketComment'
+                  $ref: '#/definitions/requests.TicketCommentResponse'
               type: object
         "400":
           description: Bad Request
@@ -854,7 +889,7 @@ paths:
         name: comment
         required: true
         schema:
-          $ref: '#/definitions/models.TicketComment'
+          $ref: '#/definitions/requests.UpdateTicketCommentRequest'
       produces:
       - application/json
       responses:
@@ -865,7 +900,7 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/models.TicketComment'
+                  $ref: '#/definitions/requests.TicketCommentResponse'
               type: object
         "404":
           description: Not Found

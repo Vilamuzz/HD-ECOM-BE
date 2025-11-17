@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"app/domain/models"
-	"app/helpers"
-	"net/http"
-	"strconv"
+ "app/domain/models"
+ "app/domain/requests"
+ "app/helpers"
+ "net/http"
+ "strconv"
 
-	"github.com/gin-gonic/gin"
+ "github.com/gin-gonic/gin"
 )
 
 func (r *appRoute) TicketCommentRoutes(rg *gin.RouterGroup) {
@@ -24,24 +25,39 @@ func (r *appRoute) TicketCommentRoutes(rg *gin.RouterGroup) {
 // @Tags ticket-comments
 // @Accept json
 // @Produce json
-// @Param comment body models.TicketComment true "Comment Data"
-// @Success 201 {object} helpers.Response{data=models.TicketComment}
+// @Param comment body requests.CreateTicketCommentRequest true "Comment Data"
+// @Success 201 {object} helpers.Response{data=requests.TicketCommentResponse}
 // @Failure 400 {object} helpers.Response
 // @Failure 500 {object} helpers.Response
 // @Router /ticket-comments [post]
 func (r *appRoute) createTicketComment(c *gin.Context) {
-	var comment models.TicketComment
-	if err := c.ShouldBindJSON(&comment); err != nil {
-		c.JSON(http.StatusBadRequest, helpers.NewResponse(http.StatusBadRequest, "Invalid request body", nil, nil))
-		return
-	}
+ var req requests.CreateTicketCommentRequest
+ if err := c.ShouldBindJSON(&req); err != nil {
+ c.JSON(http.StatusBadRequest, helpers.NewResponse(http.StatusBadRequest, "Invalid request body", nil, nil))
+ return
+ }
 
-	if err := r.Service.CreateTicketComment(&comment); err != nil {
-		c.JSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create comment", nil, nil))
-		return
-	}
+ comment := models.TicketComment{
+ IDTicket: req.IDTicket,
+ IDUser: req.IDUser,
+ IsiPesan: req.IsiPesan,
+ TanggalDibuat: req.TanggalDibuat,
+ }
 
-	c.JSON(http.StatusCreated, helpers.NewResponse(http.StatusCreated, "Comment created successfully", nil, comment))
+ if err := r.Service.CreateTicketComment(&comment); err != nil {
+ c.JSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create comment", nil, nil))
+ return
+ }
+
+ resp := requests.TicketCommentResponse{
+ IDComment: comment.IDComment,
+ IDTicket: comment.IDTicket,
+ IDUser: comment.IDUser,
+ IsiPesan: comment.IsiPesan,
+ TanggalDibuat: comment.TanggalDibuat,
+ }
+
+ c.JSON(http.StatusCreated, helpers.NewResponse(http.StatusCreated, "Comment created successfully", nil, resp))
 }
 
 // GetTicketComments godoc
@@ -105,31 +121,46 @@ func (r *appRoute) getTicketCommentByID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Comment ID"
-// @Param comment body models.TicketComment true "Updated Comment Data"
-// @Success 200 {object} helpers.Response{data=models.TicketComment}
+// @Param comment body requests.UpdateTicketCommentRequest true "Updated Comment Data"
+// @Success 200 {object} helpers.Response{data=requests.TicketCommentResponse}
 // @Failure 404 {object} helpers.Response
 // @Failure 500 {object} helpers.Response
 // @Router /ticket-comments/{id} [put]
 func (r *appRoute) updateTicketComment(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, helpers.NewResponse(http.StatusBadRequest, "Invalid comment ID", nil, nil))
-		return
-	}
+ id, err := strconv.Atoi(c.Param("id"))
+ if err != nil {
+ c.JSON(http.StatusBadRequest, helpers.NewResponse(http.StatusBadRequest, "Invalid comment ID", nil, nil))
+ return
+ }
 
-	var comment models.TicketComment
-	if err := c.ShouldBindJSON(&comment); err != nil {
-		c.JSON(http.StatusBadRequest, helpers.NewResponse(http.StatusBadRequest, "Invalid request body", nil, nil))
-		return
-	}
+ var req requests.UpdateTicketCommentRequest
+ if err := c.ShouldBindJSON(&req); err != nil {
+ c.JSON(http.StatusBadRequest, helpers.NewResponse(http.StatusBadRequest, "Invalid request body", nil, nil))
+ return
+ }
 
-	comment.IDComment = id
-	if err := r.Service.UpdateTicketComment(&comment); err != nil {
-		c.JSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to update comment", nil, nil))
-		return
-	}
+ comment := models.TicketComment{
+ IDComment: id,
+ IDTicket: req.IDTicket,
+ IDUser: req.IDUser,
+ IsiPesan: req.IsiPesan,
+ TanggalDibuat: req.TanggalDibuat,
+ }
 
-	c.JSON(http.StatusOK, helpers.NewResponse(http.StatusOK, "Comment updated successfully", nil, comment))
+ if err := r.Service.UpdateTicketComment(&comment); err != nil {
+ c.JSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to update comment", nil, nil))
+ return
+ }
+
+ resp := requests.TicketCommentResponse{
+ IDComment: comment.IDComment,
+ IDTicket: comment.IDTicket,
+ IDUser: comment.IDUser,
+ IsiPesan: comment.IsiPesan,
+ TanggalDibuat: comment.TanggalDibuat,
+ }
+
+ c.JSON(http.StatusOK, helpers.NewResponse(http.StatusOK, "Comment updated successfully", nil, resp))
 }
 
 // DeleteTicketComment godoc
