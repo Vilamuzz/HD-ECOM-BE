@@ -8,5 +8,6 @@ func GetAllModels() []interface{} {
 		&models.Conversation{},
 		&models.Message{},
 		&models.AdminAvailability{},
+		&models.AdminConversationState{},
 	}
 }

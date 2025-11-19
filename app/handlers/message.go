@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"app/domain/models"
 	"app/helpers"
 	"net/http"
 	"strconv"
@@ -33,6 +34,10 @@ func (r *appRoute) GetMessageHistory(c *gin.Context) {
 		return
 	}
 
+	// Get user from context to check if admin
+	claim, _ := c.MustGet("userData").(models.User)
+	isAdmin := claim.Role == models.RoleAdmin
+
 	// parse query params for cursor pagination
 	limit := 50
 	if l := c.Query("limit"); l != "" {
@@ -42,6 +47,6 @@ func (r *appRoute) GetMessageHistory(c *gin.Context) {
 	}
 	cursor := c.Query("cursor")
 
-	response := r.Service.GetMessageHistory(conversationID, limit, cursor)
+	response := r.Service.GetMessageHistory(conversationID, limit, cursor, isAdmin)
 	c.JSON(response.Status, response)
 }

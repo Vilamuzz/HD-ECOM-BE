@@ -17,6 +17,18 @@ func (r *appRepository) GetAdminConversations(adminID uint8) ([]models.Conversat
 	return conversations, err
 }
 
+func (r *appRepository) CloseConversation(ctx context.Context, conversationID uint64) error {
+	return r.Conn.WithContext(ctx).Model(&models.Conversation{}).
+		Where("id = ?", conversationID).
+		Update("status", "closed").Error
+}
+
+func (r *appRepository) ReopenConversation(ctx context.Context, conversationID uint64) error {
+	return r.Conn.WithContext(ctx).Model(&models.Conversation{}).
+		Where("id = ?", conversationID).
+		Update("status", models.StatusOpen).Error
+}
+
 func (r *appRepository) GetCustomerConversations(customerID uint64) ([]models.Conversation, error) {
 	var conversations []models.Conversation
 	err := r.Conn.Where("customer_id = ?", customerID).
@@ -29,4 +41,10 @@ func (r *appRepository) UpdateConversationLastMessage(conversationID uint64) err
 	return r.Conn.Model(&models.Conversation{}).
 		Where("id = ?", conversationID).
 		Update("last_message_at", time.Now()).Error
+}
+
+func (r *appRepository) GetConversationByID(conversationID uint64) (*models.Conversation, error) {
+	var conversation models.Conversation
+	err := r.Conn.Where("id = ?", conversationID).First(&conversation).Error
+	return &conversation, err
 }

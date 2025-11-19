@@ -8,8 +8,10 @@ import (
 	"app/docs"
 	"app/domain"
 	"app/helpers"
+	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -34,11 +36,18 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
+	timeoutStr := os.Getenv("TIMEOUT")
+	if timeoutStr == "" {
+		timeoutStr = "5"
+	}
+	timeout, _ := strconv.Atoi(timeoutStr)
+	timeoutContext := time.Duration(timeout) * time.Second
+
 	db := helpers.ConnectDB()
 	helpers.MigrateDB(db, domain.GetAllModels()...)
 	repo := repositories.NewAppRepository(db)
 	hub := services.NewHub()
-	service := services.NewAppService(repo, hub)
+	service := services.NewAppService(services.DBInjection{Repo: repo}, hub, timeoutContext)
 	go service.Run()
 	middleware := middleware.NewAppMiddleware(repo)
 	ginEngine := gin.Default()
@@ -54,7 +63,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	handlers.App(service, repo, ginEngine, middleware)
+	handlers.App(service, ginEngine, middleware)
 
 	ginEngine.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, map[string]any{
@@ -64,6 +73,23 @@ func main() {
 
 	ginEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// Start cleanup job for expired messages
+	go startMessageCleanupJob(repo)
+
 	port := os.Getenv("APP_PORT")
 	ginEngine.Run(":" + port)
+}
+
+// startMessageCleanupJob runs daily to permanently delete messages past their purge date
+func startMessageCleanupJob(repo domain.AppRepository) {
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if err := repo.PermanentlyDeleteExpiredMessages(); err != nil {
+			log.Printf("Error cleaning up expired messages: %v", err)
+		} else {
+			log.Println("Successfully cleaned up expired messages")
+		}
+	}
 }

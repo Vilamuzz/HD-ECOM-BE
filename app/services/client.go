@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -210,11 +211,29 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 		sendErrorToClient(c, "Invalid conversation ID")
 		return
 	}
+
 	// require subscription to prevent unauthorized sends / avoid silent broadcasts
 	if c.ConversationIDs == nil || !c.ConversationIDs[conversationID] {
 		sendErrorToClient(c, "You are not subscribed to this conversation")
 		return
 	}
+
+	// Check if conversation is closed and reopen it
+	conversation, err := c.Repository.GetConversationByID(conversationID)
+	if err != nil {
+		sendErrorToClient(c, "Failed to get conversation")
+		return
+	}
+
+	// If conversation is closed, reopen it
+	if conversation.Status == models.StatusClosed {
+		ctx := context.Background()
+		if err := s.ReopenConversation(ctx, conversationID); err != nil {
+			sendErrorToClient(c, "Failed to reopen conversation")
+			return
+		}
+	}
+
 	userID := c.UserID
 
 	// Extract message text
@@ -224,12 +243,14 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 		return
 	}
 
-	// Create chat message
+	// Create message (no deleted_at or purge_at for new messages)
 	Message := &models.Message{
 		ConversationID: conversationID,
 		SenderID:       userID,
 		MessageText:    text,
 		CreatedAt:      time.Now(),
+		DeletedAt:      nil, // New message is not deleted
+		PurgeAt:        nil, // No purge scheduled
 	}
 
 	savedMessage, err := c.Repository.SaveMessage(Message)
@@ -244,10 +265,60 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 		sendErrorToClient(c, "Failed to update conversation")
 	}
 
+	// Handle admin notification for unread messages
+	go s.handleAdminNotification(c, conversationID, savedMessage.ID)
+
 	// Broadcast to conversation participants only (hub routes to connected clients)
 	c.Hub.Broadcast <- &domain.Message{
 		ConversationID: conversationID,
 		Data:           savedMessage,
 		Type:           "new_message",
+	}
+}
+
+// handleAdminNotification increments unread count if sender is not admin and admin is not in the room
+func (s *appService) handleAdminNotification(c *domain.Client, conversationID uint64, messageID uint64) {
+	// Get sender info
+	sender, err := c.Repository.GetUserByID(c.UserID)
+	if err != nil || sender == nil || sender.Role == models.RoleAdmin {
+		// Sender is admin or error occurred, no notification needed
+		return
+	}
+
+	// Get conversation to find admin ID
+	conversation, err := c.Repository.GetConversationByID(conversationID)
+	if err != nil || conversation == nil {
+		log.Printf("Failed to get conversation %d for notification: %v", conversationID, err)
+		return
+	}
+
+	adminID := conversation.AdminID
+
+	// Check if admin is currently in the conversation room
+	s.hub.Mu.RLock()
+	clients, exists := s.hub.Conversations[conversationID]
+	adminInRoom := false
+	if exists {
+		if _, found := clients[uint64(adminID)]; found {
+			adminInRoom = true
+		}
+	}
+	s.hub.Mu.RUnlock()
+
+	// If admin is not in the room, increment unread count
+	if !adminInRoom {
+		state, err := c.Repository.GetAdminConversationState(adminID, conversationID)
+		if err != nil {
+			log.Printf("Failed to get admin conversation state for admin %d, conversation %d: %v", adminID, conversationID, err)
+			return
+		}
+
+		if state != nil {
+			if err := c.Repository.IncrementUnreadCount(state); err != nil {
+				log.Printf("Failed to increment unread count for admin %d, conversation %d: %v", adminID, conversationID, err)
+			} else {
+				log.Printf("Incremented unread count for admin %d in conversation %d (new message: %d)", adminID, conversationID, messageID)
+			}
+		}
 	}
 }

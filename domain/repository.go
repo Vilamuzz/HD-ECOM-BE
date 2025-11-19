@@ -12,17 +12,30 @@ type AppRepository interface {
 
 	// Conversation operations
 	CreateConversation(ctx context.Context, conversation *models.Conversation) error
+	GetConversationByID(conversationID uint64) (*models.Conversation, error)
 	GetAdminConversations(adminID uint8) ([]models.Conversation, error)
 	GetCustomerConversations(userID uint64) ([]models.Conversation, error)
 	UpdateConversationLastMessage(conversationID uint64) error
+	CloseConversation(ctx context.Context, conversationID uint64) error
+	ReopenConversation(ctx context.Context, conversationID uint64) error
 
 	// Chat message operations
-	// Modified for cursor pagination: limit and cursor input, returns next cursor
 	GetMessageHistory(conversationID uint64, limit int, cursor string) ([]models.Message, string, error)
+	GetMessageHistoryForAdmin(conversationID uint64, limit int, cursor string) ([]models.Message, string, error)
 	SaveMessage(message *models.Message) (*models.Message, error)
+	SoftDeleteConversationMessages(conversationID uint64, purgeAfterDays int) error
+	ResetPurgeTimestamp(conversationID uint64) error
+	PermanentlyDeleteExpiredMessages() error
 
 	// Admin availability operations
 	GetAdminAvailabilityByAdminID() (*models.AdminAvailability, error)
 	CreateAdminAvailability(adminAvailability *models.AdminAvailability) error
 	IncrementAdminConversationCount(adminID uint8) error
+	DecrementAdminConversationCount(adminID uint8) error
+
+	// Admin conversation state operations
+	CreateAdminConversationState(adminID uint8, conversationID uint64) error
+	GetAdminConversationState(adminID uint8, conversationID uint64) (*models.AdminConversationState, error)
+	IncrementUnreadCount(state *models.AdminConversationState) error
+	ResetState(state *models.AdminConversationState, lastMessageID uint64) error
 }
