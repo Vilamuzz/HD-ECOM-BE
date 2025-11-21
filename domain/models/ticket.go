@@ -18,7 +18,7 @@ type Ticket struct {
 	// Relasi
 	User        *User              `json:"user" gorm:"foreignKey:IDUser"`
 	Category    *TicketCategory    `json:"category" gorm:"foreignKey:IDCategory;references:IDCategory"`
-	Priority    *TicketPriority    `json:"priority" gorm:"foreignKey:IDPriority"`
+	Priority    *TicketPriority    `json:"priority" gorm:"foreignKey:IDPriority;references:IDPriority"`
 	Status      *TicketStatus      `json:"status" gorm:"foreignKey:IDStatus;references:IDStatus"`
 	Comments    []TicketComment    `json:"comments" gorm:"foreignKey:IDTicket"`
 	Attachments []TicketAttachment `json:"attachments" gorm:"foreignKey:IDTicket"`
