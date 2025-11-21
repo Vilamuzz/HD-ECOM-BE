@@ -290,14 +290,11 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 
 // handleAdminNotification increments unread count if sender is not admin and admin is not in the room
 func (s *appService) handleAdminNotification(c *domain.Client, conversationID uint64, messageID uint64) {
-	// Get sender info
 	sender, err := c.Repository.GetUserByID(c.UserID)
 	if err != nil || sender == nil || sender.Role == models.RoleAdmin {
-		// Sender is admin or error occurred, no notification needed
 		return
 	}
 
-	// Get conversation to find admin ID
 	conversation, err := c.Repository.GetConversationByID(conversationID)
 	if err != nil || conversation == nil {
 		log.Printf("Failed to get conversation %d for notification: %v", conversationID, err)
@@ -306,31 +303,41 @@ func (s *appService) handleAdminNotification(c *domain.Client, conversationID ui
 
 	adminID := conversation.AdminID
 
-	// Check if admin is currently in the conversation room
+	// Check if admin is in room
 	s.hub.Mu.RLock()
-	clients, exists := s.hub.Conversations[conversationID]
-	adminInRoom := false
-	if exists {
-		if _, found := clients[uint64(adminID)]; found {
-			adminInRoom = true
-		}
-	}
+	clientsInConv := s.hub.Conversations[conversationID]
+	_, adminInRoom := clientsInConv[uint64(adminID)]
+	// Also check global connection
+	adminClient := s.hub.Clients[uint64(adminID)]
 	s.hub.Mu.RUnlock()
 
-	// If admin is not in the room, increment unread count
+	// Update unread count only if not in room
+	var unreadAfter uint
 	if !adminInRoom {
 		state, err := c.Repository.GetAdminConversationState(adminID, conversationID)
 		if err != nil {
 			log.Printf("Failed to get admin conversation state for admin %d, conversation %d: %v", adminID, conversationID, err)
 			return
 		}
-
 		if state != nil {
 			if err := c.Repository.IncrementUnreadCount(state); err != nil {
 				log.Printf("Failed to increment unread count for admin %d, conversation %d: %v", adminID, conversationID, err)
 			} else {
+				unreadAfter = state.UnreadCount
 				log.Printf("Incremented unread count for admin %d in conversation %d (new message: %d)", adminID, conversationID, messageID)
 			}
 		}
+	}
+
+	// Send live notification frame if admin has websocket connection
+	if adminClient != nil {
+		notification := map[string]interface{}{
+			"conversation_id": conversationID,
+			"message_id":      messageID,
+			"unread_count":    unreadAfter,
+			"sender_id":       c.UserID,
+			"in_room":         adminInRoom,
+		}
+		s.sendDirect(adminClient, "admin_notification", notification)
 	}
 }

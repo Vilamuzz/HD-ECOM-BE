@@ -23,6 +23,7 @@ func (w *WebSocketConnectionWrapper) SetWriteDeadline(t time.Time) error {
 func NewHub() *domain.Hub {
 	return &domain.Hub{
 		Conversations: make(map[uint64]map[uint64]*domain.Client),
+		Clients:       make(map[uint64]*domain.Client), // added
 		Broadcast:     make(chan *domain.Message, 256),
 		Register:      make(chan *domain.Client),
 		Unregister:    make(chan *domain.Client),
@@ -48,17 +49,17 @@ func (s *appService) RegisterClient(client *domain.Client) {
 	s.hub.Mu.Lock()
 	defer s.hub.Mu.Unlock()
 
-	// Initialize ConversationIDs map if needed
 	if client.ConversationIDs == nil {
 		client.ConversationIDs = make(map[uint64]bool)
 	}
+	// track globally
+	s.hub.Clients[client.UserID] = client
 }
 
 func (s *appService) UnregisterClient(client *domain.Client) {
 	s.hub.Mu.Lock()
 	defer s.hub.Mu.Unlock()
 
-	// Remove client from all conversations they're in
 	for convID := range client.ConversationIDs {
 		if clients, exists := s.hub.Conversations[convID]; exists {
 			delete(clients, client.UserID)
@@ -67,6 +68,7 @@ func (s *appService) UnregisterClient(client *domain.Client) {
 			}
 		}
 	}
+	delete(s.hub.Clients, client.UserID) // remove global reference
 
 	close(client.Send)
 }
@@ -119,4 +121,20 @@ func (s *appService) JoinConversation(client *domain.Client, conversationID uint
 
 	s.hub.Conversations[conversationID][client.UserID] = client
 	client.ConversationIDs[conversationID] = true
+}
+
+// helper to send direct JSON to a single client (non-conversation scoped)
+func (s *appService) sendDirect(client *domain.Client, frameType string, payload interface{}) {
+	resp := map[string]interface{}{
+		"type":    frameType,
+		"payload": payload,
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		return
+	}
+	select {
+	case client.Send <- data:
+	case <-time.After(3 * time.Second):
+	}
 }
