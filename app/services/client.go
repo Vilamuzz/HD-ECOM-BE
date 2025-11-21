@@ -109,15 +109,27 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 		return
 	}
 
-	// Ensure client's conversation map exists
 	if c.ConversationIDs == nil {
 		c.ConversationIDs = make(map[uint64]bool)
 	}
 
-	// Join conversation (adds to hub.Conversations and marks on client)
 	s.JoinConversation(c, convID)
 
-	// Acknowledge subscription
+	// Reset unread count if subscriber is admin
+	if user, uErr := c.Repository.GetUserByID(c.UserID); uErr == nil && user != nil && user.Role == models.RoleAdmin {
+		if state, sErr := c.Repository.GetAdminConversationState(uint8(user.ID), convID); sErr == nil && state != nil {
+			// Get latest message ID (if any) to set LastMessageID
+			msgs, _, mErr := c.Repository.GetMessageHistoryForAdmin(convID, 1, "")
+			var lastID uint64
+			if mErr == nil && len(msgs) > 0 {
+				lastID = msgs[0].ID
+			}
+			if rErr := c.Repository.ResetState(state, lastID); rErr != nil {
+				log.Printf("Failed to reset state for admin %d conv %d: %v", uint8(user.ID), convID, rErr)
+			}
+		}
+	}
+
 	resp := map[string]interface{}{
 		"type":    "subscribed",
 		"payload": map[string]uint64{"conversation_id": convID},

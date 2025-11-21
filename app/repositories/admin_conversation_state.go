@@ -18,6 +18,12 @@ func (r *appRepository) GetAdminConversationState(adminID uint8, conversationID 
 	return &state, err
 }
 
+func (r *appRepository) GetAdminConversationStatesByAdminID(adminID uint8) ([]models.AdminConversationState, error) {
+	var states []models.AdminConversationState
+	err := r.Conn.Where("admin_id = ?", adminID).Find(&states).Error
+	return states, err
+}
+
 func (r *appRepository) IncrementUnreadCount(state *models.AdminConversationState) error {
 	state.UnreadCount++
 	return r.Conn.Save(state).Error

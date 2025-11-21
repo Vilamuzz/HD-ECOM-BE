@@ -29,4 +29,5 @@ type AppService interface {
 
 	// Admin state management
 	GetAdminConversationState(adminID uint8, conversationID uint64) (*models.AdminConversationState, error)
+	GetAdminListConversationStates(claim models.User) helpers.Response
 }

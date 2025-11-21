@@ -23,4 +23,5 @@ func App(service domain.AppService, route *gin.Engine, middleware middleware.App
 	handler.WebSocketRoute("/ws")
 	handler.ConversationRoute("/conversations")
 	handler.MessageRoute("/conversations/:id/messages")
+	handler.AdminConversationStatesRoute("/conversations/notifications")
 }

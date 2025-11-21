@@ -36,6 +36,7 @@ type AppRepository interface {
 	// Admin conversation state operations
 	CreateAdminConversationState(adminID uint8, conversationID uint64) error
 	GetAdminConversationState(adminID uint8, conversationID uint64) (*models.AdminConversationState, error)
+	GetAdminConversationStatesByAdminID(adminID uint8) ([]models.AdminConversationState, error)
 	IncrementUnreadCount(state *models.AdminConversationState) error
 	ResetState(state *models.AdminConversationState, lastMessageID uint64) error
 }
