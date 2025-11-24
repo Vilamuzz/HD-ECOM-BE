@@ -92,6 +92,33 @@ func (s *appService) CreateCustomerConversation(ctx context.Context, claim model
 		return helpers.NewResponse(http.StatusInternalServerError, "failed to create admin conversation state", nil, nil)
 	}
 
+	// Notify admin if they have a websocket connection
+	s.hub.Mu.RLock()
+	adminClient := s.hub.Clients[uint64(admin.AdminID)]
+	s.hub.Mu.RUnlock()
+	if adminClient != nil {
+		// Enrich payload with full conversation data, customer/admin info and admin state
+		var adminUser *models.User
+		var customerUser *models.User
+
+		if u, err := s.repo.GetUserByID(uint64(admin.AdminID)); err == nil && u != nil {
+			adminUser = u
+		}
+		if u, err := s.repo.GetUserByID(createdConversation.CustomerID); err == nil && u != nil {
+			customerUser = u
+		}
+
+		adminState, _ := s.repo.GetAdminConversationState(admin.AdminID, createdConversation.ID)
+
+		payload := map[string]interface{}{
+			"conversation": createdConversation,
+			"customer":     customerUser,
+			"admin":        adminUser,
+			"admin_state":  adminState,
+		}
+		s.sendDirect(adminClient, "conversation_created", payload)
+	}
+
 	return helpers.NewResponse(http.StatusCreated, "successfully created conversation", nil, createdConversation)
 }
 

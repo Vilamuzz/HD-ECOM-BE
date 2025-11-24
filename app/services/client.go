@@ -339,5 +339,5 @@ func (s *appService) handleAdminNotification(c *domain.Client, conversationID ui
 			"in_room":         adminInRoom,
 		}
 		s.sendDirect(adminClient, "admin_notification", notification)
-	}
+	}	
 }
