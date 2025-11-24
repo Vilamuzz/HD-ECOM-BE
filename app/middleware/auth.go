@@ -68,18 +68,18 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		email := claims.Email
 
 		// Handle role as either string or number
-		var role string
+		var role models.UserRole
 		r := claims.Role
-		// Convert numeric role to string
-		roleMap := map[uint8]string{
-			0: "admin",
-			1: "seller",
-			2: "customer",
+		// Convert numeric role to models.UserRole
+		roleMap := map[uint8]models.UserRole{
+			0: models.RoleAdmin,
+			1: models.RoleSeller,
+			2: models.RoleCustomer,
 		}
-		if roleStr, exists := roleMap[r]; exists {
-			role = roleStr
+		if roleVal, exists := roleMap[r]; exists {
+			role = roleVal
 		} else {
-			role = "customer"
+			role = models.RoleCustomer
 		}
 
 		// Try to get user from database
@@ -102,7 +102,7 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 					return
 				}
 
-				if newUser.Role == "admin" {
+				if newUser.Role == models.RoleAdmin {
 					if err = m.repository.CreateAdminAvailability(&models.AdminAvailability{
 						AdminID: uint8(newUser.ID),
 					}); err != nil {

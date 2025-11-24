@@ -12,6 +12,7 @@ func (r *appRoute) ConversationRoute(path string) {
 	{
 		api.GET("", r.GetConversations)
 		api.POST("", r.CreateCustomerConversation)
+		api.POST("/:id/close", r.CloseConversation)
 	}
 }
 
@@ -45,5 +46,22 @@ func (r *appRoute) GetConversations(c *gin.Context) {
 	claim, _ := c.MustGet("userData").(models.User)
 
 	response := r.Service.GetConversations(claim)
+	c.JSON(response.Status, response)
+}
+
+// CloseConversation godoc
+// @Summary      Close conversation
+// @Description  Close an existing conversation
+// @Security 	 BearerAuth
+// @Tags         conversations
+// @Produce      json
+// @Success      200  {object}   helpers.Response{data=models.Conversation}
+// @Failure      500  {object}   helpers.Response
+// @Router       /conversations/{id}/close [post]
+func (r *appRoute) CloseConversation(c *gin.Context) {
+	claim, _ := c.MustGet("userData").(models.User)
+	ctx := c.Request.Context()
+	id := c.Param("id")
+	response := r.Service.CloseConversation(ctx, claim, id)
 	c.JSON(response.Status, response)
 }

@@ -2,13 +2,23 @@ package services
 
 import (
 	"app/domain"
+	"time"
 )
 
 type appService struct {
-	repo domain.AppRepository
-	hub  *domain.Hub
+	repo    domain.AppRepository
+	hub     *domain.Hub
+	timeout time.Duration
 }
 
-func NewAppService(repo domain.AppRepository, hub *domain.Hub) domain.AppService {
-	return &appService{repo: repo, hub: hub}
+type DBInjection struct {
+	Repo domain.AppRepository
+}
+
+func NewAppService(repoInjection DBInjection, hub *domain.Hub, timeout time.Duration) domain.AppService {
+	return &appService{
+		repo:    repoInjection.Repo,
+		hub:     hub,
+		timeout: timeout,
+	}
 }

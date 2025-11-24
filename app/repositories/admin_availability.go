@@ -24,3 +24,9 @@ func (r *appRepository) IncrementAdminConversationCount(adminID uint8) error {
 		Where("admin_id = ?", adminID).
 		UpdateColumn("current_conversations", gorm.Expr("current_conversations + ?", 1)).Error
 }
+
+func (r *appRepository) DecrementAdminConversationCount(adminID uint8) error {
+	return r.Conn.Model(&models.AdminAvailability{}).
+		Where("admin_id = ? AND current_conversations > 0", adminID).
+		UpdateColumn("current_conversations", gorm.Expr("current_conversations - ?", 1)).Error
+}

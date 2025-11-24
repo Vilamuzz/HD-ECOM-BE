@@ -7,6 +7,7 @@ import (
 
 type Hub struct {
 	Conversations map[uint64]map[uint64]*Client
+	Clients       map[uint64]*Client
 	Broadcast     chan *Message
 	Register      chan *Client
 	Unregister    chan *Client

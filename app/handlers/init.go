@@ -9,15 +9,13 @@ import (
 
 type appRoute struct {
 	Service    domain.AppService
-	Repository domain.AppRepository
 	Route      *gin.RouterGroup
 	Middleware middleware.AppMiddleware
 }
 
-func App(service domain.AppService, repo domain.AppRepository, route *gin.Engine, middleware middleware.AppMiddleware) {
+func App(service domain.AppService, route *gin.Engine, middleware middleware.AppMiddleware) {
 	handler := &appRoute{
 		Service:    service,
-		Repository: repo,
 		Route:      route.Group("/api"),
 		Middleware: middleware,
 	}
@@ -25,4 +23,5 @@ func App(service domain.AppService, repo domain.AppRepository, route *gin.Engine
 	handler.WebSocketRoute("/ws")
 	handler.ConversationRoute("/conversations")
 	handler.MessageRoute("/conversations/:id/messages")
+	handler.AdminConversationStatesRoute("/conversations/notifications")
 }

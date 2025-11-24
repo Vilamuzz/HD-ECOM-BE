@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -108,15 +109,27 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 		return
 	}
 
-	// Ensure client's conversation map exists
 	if c.ConversationIDs == nil {
 		c.ConversationIDs = make(map[uint64]bool)
 	}
 
-	// Join conversation (adds to hub.Conversations and marks on client)
 	s.JoinConversation(c, convID)
 
-	// Acknowledge subscription
+	// Reset unread count if subscriber is admin
+	if user, uErr := c.Repository.GetUserByID(c.UserID); uErr == nil && user != nil && user.Role == models.RoleAdmin {
+		if state, sErr := c.Repository.GetAdminConversationState(uint8(user.ID), convID); sErr == nil && state != nil {
+			// Get latest message ID (if any) to set LastMessageID
+			msgs, _, mErr := c.Repository.GetMessageHistoryForAdmin(convID, 1, "")
+			var lastID uint64
+			if mErr == nil && len(msgs) > 0 {
+				lastID = msgs[0].ID
+			}
+			if rErr := c.Repository.ResetState(state, lastID); rErr != nil {
+				log.Printf("Failed to reset state for admin %d conv %d: %v", uint8(user.ID), convID, rErr)
+			}
+		}
+	}
+
 	resp := map[string]interface{}{
 		"type":    "subscribed",
 		"payload": map[string]uint64{"conversation_id": convID},
@@ -130,8 +143,8 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 }
 
 func (s *appService) handleUnsubscribe(c *domain.Client, payload map[string]interface{}) {
-	convID, ok := payload["conversation_id"].(uint64)
-	if !ok {
+	convID, err := parseConversationID(payload["conversation_id"])
+	if err != nil {
 		sendErrorToClient(c, "Invalid conversation ID")
 		return
 	}
@@ -152,6 +165,7 @@ func (s *appService) handleUnsubscribe(c *domain.Client, payload map[string]inte
 		"type":            "unsubscribed",
 		"conversation_id": convID,
 	}
+	log.Println("Unsubscribing from conversation ID:", convID)
 	jsonData, _ := json.Marshal(resp)
 	select {
 	case c.Send <- jsonData:
@@ -209,11 +223,29 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 		sendErrorToClient(c, "Invalid conversation ID")
 		return
 	}
+
 	// require subscription to prevent unauthorized sends / avoid silent broadcasts
 	if c.ConversationIDs == nil || !c.ConversationIDs[conversationID] {
 		sendErrorToClient(c, "You are not subscribed to this conversation")
 		return
 	}
+
+	// Check if conversation is closed and reopen it
+	conversation, err := c.Repository.GetConversationByID(conversationID)
+	if err != nil {
+		sendErrorToClient(c, "Failed to get conversation")
+		return
+	}
+
+	// If conversation is closed, reopen it
+	if conversation.Status == models.StatusClosed {
+		ctx := context.Background()
+		if err := s.ReopenConversation(ctx, conversationID); err != nil {
+			sendErrorToClient(c, "Failed to reopen conversation")
+			return
+		}
+	}
+
 	userID := c.UserID
 
 	// Extract message text
@@ -223,12 +255,14 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 		return
 	}
 
-	// Create chat message
+	// Create message (no deleted_at or purge_at for new messages)
 	Message := &models.Message{
 		ConversationID: conversationID,
 		SenderID:       userID,
 		MessageText:    text,
 		CreatedAt:      time.Now(),
+		DeletedAt:      nil, // New message is not deleted
+		PurgeAt:        nil, // No purge scheduled
 	}
 
 	savedMessage, err := c.Repository.SaveMessage(Message)
@@ -243,10 +277,67 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 		sendErrorToClient(c, "Failed to update conversation")
 	}
 
+	// Handle admin notification for unread messages
+	go s.handleAdminNotification(c, conversationID, savedMessage.ID)
+
 	// Broadcast to conversation participants only (hub routes to connected clients)
 	c.Hub.Broadcast <- &domain.Message{
 		ConversationID: conversationID,
 		Data:           savedMessage,
 		Type:           "new_message",
 	}
+}
+
+// handleAdminNotification increments unread count if sender is not admin and admin is not in the room
+func (s *appService) handleAdminNotification(c *domain.Client, conversationID uint64, messageID uint64) {
+	sender, err := c.Repository.GetUserByID(c.UserID)
+	if err != nil || sender == nil || sender.Role == models.RoleAdmin {
+		return
+	}
+
+	conversation, err := c.Repository.GetConversationByID(conversationID)
+	if err != nil || conversation == nil {
+		log.Printf("Failed to get conversation %d for notification: %v", conversationID, err)
+		return
+	}
+
+	adminID := conversation.AdminID
+
+	// Check if admin is in room
+	s.hub.Mu.RLock()
+	clientsInConv := s.hub.Conversations[conversationID]
+	_, adminInRoom := clientsInConv[uint64(adminID)]
+	// Also check global connection
+	adminClient := s.hub.Clients[uint64(adminID)]
+	s.hub.Mu.RUnlock()
+
+	// Update unread count only if not in room
+	var unreadAfter uint
+	if !adminInRoom {
+		state, err := c.Repository.GetAdminConversationState(adminID, conversationID)
+		if err != nil {
+			log.Printf("Failed to get admin conversation state for admin %d, conversation %d: %v", adminID, conversationID, err)
+			return
+		}
+		if state != nil {
+			if err := c.Repository.IncrementUnreadCount(state); err != nil {
+				log.Printf("Failed to increment unread count for admin %d, conversation %d: %v", adminID, conversationID, err)
+			} else {
+				unreadAfter = state.UnreadCount
+				log.Printf("Incremented unread count for admin %d in conversation %d (new message: %d)", adminID, conversationID, messageID)
+			}
+		}
+	}
+
+	// Send live notification frame if admin has websocket connection
+	if adminClient != nil {
+		notification := map[string]interface{}{
+			"conversation_id": conversationID,
+			"message_id":      messageID,
+			"unread_count":    unreadAfter,
+			"sender_id":       c.UserID,
+			"in_room":         adminInRoom,
+		}
+		s.sendDirect(adminClient, "admin_notification", notification)
+	}	
 }
