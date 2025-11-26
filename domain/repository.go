@@ -13,7 +13,7 @@ type AppRepository interface {
 	// Conversation operations
 	CreateConversation(ctx context.Context, conversation *models.Conversation) error
 	GetConversationByID(conversationID uint64) (*models.Conversation, error)
-	GetAdminConversations(adminID uint8) ([]models.Conversation, error)
+	GetAdminConversations(adminID uint64) ([]models.Conversation, error)
 	GetCustomerConversations(userID uint64) ([]models.Conversation, error)
 	UpdateConversationLastMessage(conversationID uint64) error
 	CloseConversation(ctx context.Context, conversationID uint64) error
@@ -30,13 +30,13 @@ type AppRepository interface {
 	// Admin availability operations
 	GetAdminAvailabilityByAdminID() (*models.AdminAvailability, error)
 	CreateAdminAvailability(adminAvailability *models.AdminAvailability) error
-	IncrementAdminConversationCount(adminID uint8) error
-	DecrementAdminConversationCount(adminID uint8) error
+	IncrementAdminConversationCount(adminID uint64) error
+	DecrementAdminConversationCount(adminID uint64) error
 
 	// Admin conversation state operations
-	CreateAdminConversationState(adminID uint8, conversationID uint64) error
-	GetAdminConversationState(adminID uint8, conversationID uint64) (*models.AdminConversationState, error)
-	GetAdminConversationStatesByAdminID(adminID uint8) ([]models.AdminConversationState, error)
+	CreateAdminConversationState(adminID uint64, conversationID uint64) error
+	GetAdminConversationState(adminID uint64, conversationID uint64) (*models.AdminConversationState, error)
+	GetAdminConversationStatesByAdminID(adminID uint64) ([]models.AdminConversationState, error)
 	IncrementUnreadCount(state *models.AdminConversationState) error
 	ResetState(state *models.AdminConversationState, lastMessageID uint64) error
 }

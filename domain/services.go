@@ -28,6 +28,6 @@ type AppService interface {
 	GetMessageHistory(conversationID uint64, limit int, cursor string, isAdmin bool) helpers.Response
 
 	// Admin state management
-	GetAdminConversationState(adminID uint8, conversationID uint64) (*models.AdminConversationState, error)
+	GetAdminConversationState(adminID uint64, conversationID uint64) (*models.AdminConversationState, error)
 	GetAdminListConversationStates(claim models.User) helpers.Response
 }

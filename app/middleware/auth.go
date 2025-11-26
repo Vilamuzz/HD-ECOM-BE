@@ -104,7 +104,7 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 
 				if newUser.Role == models.RoleAdmin {
 					if err = m.repository.CreateAdminAvailability(&models.AdminAvailability{
-						AdminID: uint8(newUser.ID),
+						AdminID: newUser.ID,
 					}); err != nil {
 						c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create admin availability", nil, nil))
 						return
