@@ -11,7 +11,7 @@ func (s *appService) GetAdminConversationState(adminID uint64, conversationID ui
 }
 
 func (s *appService) GetAdminListConversationStates(claim models.User) helpers.Response {
-	states, err := s.repo.GetAdminConversationStatesByAdminID(claim.ID)
+	states, err := s.repo.GetAdminConversationStatesByAdminID(claim.IDUser)
 	if err != nil {
 		return helpers.NewResponse(http.StatusInternalServerError, "Failed to retrieve conversation states", nil, nil)
 	}

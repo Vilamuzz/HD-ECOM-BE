@@ -117,7 +117,7 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 
 	// Reset unread count if subscriber is admin
 	if user, uErr := c.Repository.GetUserByID(c.UserID); uErr == nil && user != nil && user.Role == models.RoleAdmin {
-		if state, sErr := c.Repository.GetAdminConversationState(user.ID, convID); sErr == nil && state != nil {
+		if state, sErr := c.Repository.GetAdminConversationState(user.IDUser, convID); sErr == nil && state != nil {
 			// Get latest message ID (if any) to set LastMessageID
 			msgs, _, mErr := c.Repository.GetMessageHistoryForAdmin(convID, 1, "")
 			var lastID uint64
@@ -125,7 +125,7 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 				lastID = msgs[0].ID
 			}
 			if rErr := c.Repository.ResetState(state, lastID); rErr != nil {
-				log.Printf("Failed to reset state for admin %d conv %d: %v", uint8(user.ID), convID, rErr)
+				log.Printf("Failed to reset state for admin %d conv %d: %v", uint8(user.IDUser), convID, rErr)
 			}
 		}
 	}
