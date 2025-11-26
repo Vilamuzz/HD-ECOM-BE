@@ -13,7 +13,7 @@ func (s *appService) GetConversations(claim models.User) helpers.Response {
 	var conversations []models.Conversation
 	var err error
 	if claim.Role == "admin" {
-		conversations, err = s.repo.GetAdminConversations(uint8(claim.ID))
+		conversations, err = s.repo.GetAdminConversations(claim.ID)
 
 		if err != nil {
 			return helpers.NewResponse(http.StatusInternalServerError, "Failed to get conversations", nil, nil)
@@ -144,7 +144,7 @@ func (s *appService) CloseConversation(ctx context.Context, claim models.User, i
 	}
 
 	// Decrement admin conversation count
-	if err := s.repo.DecrementAdminConversationCount(uint8(claim.ID)); err != nil {
+	if err := s.repo.DecrementAdminConversationCount(claim.ID); err != nil {
 		return helpers.NewResponse(http.StatusInternalServerError, "failed to update admin availability", nil, nil)
 	}
 

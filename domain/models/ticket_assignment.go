@@ -1,0 +1,14 @@
+package models
+
+import "time"
+
+type TicketAssignment struct {
+	ID                int       `json:"id_assignment" gorm:"column:id_assignment;primaryKey"`
+	TicketID          int       `json:"id_ticket" gorm:"column:id_ticket;index"`
+	AdminID           int       `json:"id_admin" gorm:"column:id_admin"`
+	TanggalDitugaskan time.Time `json:"tanggal_ditugaskan" gorm:"column:tanggal_ditugaskan;default:CURRENT_TIMESTAMP"`
+
+	// Relasi
+	Ticket *Ticket `json:"ticket,omitempty" gorm:"foreignKey:TicketID"`
+	Admin  *User   `json:"admin" gorm:"foreignKey:AdminID"`
+}

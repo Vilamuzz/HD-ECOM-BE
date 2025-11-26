@@ -2,7 +2,7 @@ package repositories
 
 import "app/domain/models"
 
-func (r *appRepository) CreateAdminConversationState(adminID uint8, conversationID uint64) error {
+func (r *appRepository) CreateAdminConversationState(adminID uint64, conversationID uint64) error {
 	state := &models.AdminConversationState{
 		AdminID:        adminID,
 		ConversationID: conversationID,
@@ -12,13 +12,13 @@ func (r *appRepository) CreateAdminConversationState(adminID uint8, conversation
 	return r.Conn.Create(state).Error
 }
 
-func (r *appRepository) GetAdminConversationState(adminID uint8, conversationID uint64) (*models.AdminConversationState, error) {
+func (r *appRepository) GetAdminConversationState(adminID uint64, conversationID uint64) (*models.AdminConversationState, error) {
 	var state models.AdminConversationState
 	err := r.Conn.Where("admin_id = ? AND conversation_id = ?", adminID, conversationID).First(&state).Error
 	return &state, err
 }
 
-func (r *appRepository) GetAdminConversationStatesByAdminID(adminID uint8) ([]models.AdminConversationState, error) {
+func (r *appRepository) GetAdminConversationStatesByAdminID(adminID uint64) ([]models.AdminConversationState, error) {
 	var states []models.AdminConversationState
 	err := r.Conn.Where("admin_id = ?", adminID).Find(&states).Error
 	return states, err

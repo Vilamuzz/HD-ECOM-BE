@@ -11,7 +11,7 @@ func (r *appRepository) CreateConversation(ctx context.Context, conversation *mo
 	return err
 }
 
-func (r *appRepository) GetAdminConversations(adminID uint8) ([]models.Conversation, error) {
+func (r *appRepository) GetAdminConversations(adminID uint64) ([]models.Conversation, error) {
 	var conversations []models.Conversation
 	err := r.Conn.Where("admin_id = ?", adminID).Order("last_message_at DESC").Find(&conversations).Error
 	return conversations, err

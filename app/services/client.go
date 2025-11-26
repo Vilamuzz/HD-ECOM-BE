@@ -117,7 +117,7 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 
 	// Reset unread count if subscriber is admin
 	if user, uErr := c.Repository.GetUserByID(c.UserID); uErr == nil && user != nil && user.Role == models.RoleAdmin {
-		if state, sErr := c.Repository.GetAdminConversationState(uint8(user.ID), convID); sErr == nil && state != nil {
+		if state, sErr := c.Repository.GetAdminConversationState(user.ID, convID); sErr == nil && state != nil {
 			// Get latest message ID (if any) to set LastMessageID
 			msgs, _, mErr := c.Repository.GetMessageHistoryForAdmin(convID, 1, "")
 			var lastID uint64
@@ -339,5 +339,5 @@ func (s *appService) handleAdminNotification(c *domain.Client, conversationID ui
 			"in_room":         adminInRoom,
 		}
 		s.sendDirect(adminClient, "admin_notification", notification)
-	}	
+	}
 }

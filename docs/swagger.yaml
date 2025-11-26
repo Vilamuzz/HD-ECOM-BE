@@ -11,35 +11,435 @@ definitions:
           type: string
         type: object
     type: object
-  models.Conversation:
+  models.AdminAvailability:
     properties:
+      admin:
+        $ref: '#/definitions/models.User'
       admin_id:
         type: integer
+      current_conversations:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.AdminConversationState:
+    properties:
+      admin:
+        $ref: '#/definitions/models.User'
+      admin_id:
+        type: integer
+      conversation:
+        $ref: '#/definitions/models.Conversation'
+      conversation_id:
+        type: integer
+      last_message_id:
+        type: integer
+      unread_count:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.Conversation:
+    properties:
+      admin:
+        $ref: '#/definitions/models.User'
+      admin_id:
+        type: integer
+      admin_state:
+        $ref: '#/definitions/models.AdminConversationState'
       created_at:
         type: string
+      customer:
+        $ref: '#/definitions/models.User'
+      customer_id:
+        type: integer
       id:
         type: integer
       last_message_at:
         type: string
+      messages:
+        items:
+          $ref: '#/definitions/models.Message'
+        type: array
+      status:
+        $ref: '#/definitions/models.ConversationStatus'
       updated_at:
         type: string
-      user_id:
-        type: integer
     type: object
+  models.ConversationStatus:
+    enum:
+    - open
+    - closed
+    type: string
+    x-enum-varnames:
+    - StatusOpen
+    - StatusClosed
   models.Message:
     properties:
-      attachment_url:
-        type: string
+      conversation:
+        $ref: '#/definitions/models.Conversation'
       conversation_id:
         type: integer
       created_at:
+        type: string
+      deleted_at:
         type: string
       id:
         type: integer
       message_text:
         type: string
+      purge_at:
+        type: string
+      sender:
+        $ref: '#/definitions/models.User'
       sender_id:
         type: integer
+    type: object
+  models.Ticket:
+    properties:
+      assignments:
+        items:
+          $ref: '#/definitions/models.TicketAssignment'
+        type: array
+      attachments:
+        items:
+          $ref: '#/definitions/models.TicketAttachment'
+        type: array
+      category:
+        $ref: '#/definitions/models.TicketCategory'
+      category_id:
+        type: integer
+      comments:
+        items:
+          $ref: '#/definitions/models.TicketComment'
+        type: array
+      deskripsi:
+        type: string
+      id_ticket:
+        type: integer
+      judul:
+        type: string
+      kode_tiket:
+        type: string
+      logs:
+        items:
+          $ref: '#/definitions/models.TicketLog'
+        type: array
+      priority:
+        $ref: '#/definitions/models.TicketPriority'
+      priority_id:
+        type: integer
+      status:
+        $ref: '#/definitions/models.TicketStatus'
+      status_id:
+        type: integer
+      tanggal_dibuat:
+        type: string
+      tanggal_diperbarui:
+        type: string
+      tipe_pengaduan:
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: Relasi - Add references to match custom column names
+      user_id:
+        type: integer
+    type: object
+  models.TicketAssignment:
+    properties:
+      admin:
+        $ref: '#/definitions/models.User'
+      id_admin:
+        type: integer
+      id_assignment:
+        type: integer
+      id_ticket:
+        type: integer
+      tanggal_ditugaskan:
+        type: string
+      ticket:
+        allOf:
+        - $ref: '#/definitions/models.Ticket'
+        description: Relasi
+    type: object
+  models.TicketAttachment:
+    properties:
+      file_path:
+        type: string
+      id_attachment:
+        type: integer
+      id_ticket:
+        type: integer
+      ticket:
+        allOf:
+        - $ref: '#/definitions/models.Ticket'
+        description: Relasi - specify references
+      uploaded_at:
+        type: string
+    type: object
+  models.TicketCategory:
+    properties:
+      id_category:
+        type: integer
+      nama_category:
+        type: string
+      tickets:
+        items:
+          $ref: '#/definitions/models.Ticket'
+        type: array
+    type: object
+  models.TicketComment:
+    properties:
+      id_comment:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
+      ticket:
+        allOf:
+        - $ref: '#/definitions/models.Ticket'
+        description: Relasi
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  models.TicketLog:
+    properties:
+      aktivitas:
+        type: string
+      id_log:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      ticket:
+        allOf:
+        - $ref: '#/definitions/models.Ticket'
+        description: Relasi
+      user:
+        $ref: '#/definitions/models.User'
+      waktu:
+        type: string
+    type: object
+  models.TicketPriority:
+    properties:
+      id_priority:
+        type: integer
+      nama_priority:
+        type: string
+      tickets:
+        items:
+          $ref: '#/definitions/models.Ticket'
+        type: array
+    type: object
+  models.TicketStatus:
+    properties:
+      id_status:
+        type: integer
+      nama_status:
+        type: string
+      tickets:
+        items:
+          $ref: '#/definitions/models.Ticket'
+        type: array
+    type: object
+  models.User:
+    properties:
+      admin_availability:
+        $ref: '#/definitions/models.AdminAvailability'
+      admin_states:
+        items:
+          $ref: '#/definitions/models.AdminConversationState'
+        type: array
+      assigned_tickets:
+        items:
+          $ref: '#/definitions/models.TicketAssignment'
+        type: array
+      comments:
+        items:
+          $ref: '#/definitions/models.TicketComment'
+        type: array
+      conversations:
+        items:
+          $ref: '#/definitions/models.Conversation'
+        type: array
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      logs:
+        items:
+          $ref: '#/definitions/models.TicketLog'
+        type: array
+      messages:
+        items:
+          $ref: '#/definitions/models.Message'
+        type: array
+      role:
+        $ref: '#/definitions/models.UserRole'
+      tickets:
+        items:
+          $ref: '#/definitions/models.Ticket'
+        type: array
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserRole:
+    enum:
+    - admin
+    - seller
+    - customer
+    type: string
+    x-enum-varnames:
+    - RoleAdmin
+    - RoleSeller
+    - RoleCustomer
+  requests.CreateTicketAssignmentRequest:
+    properties:
+      id_admin:
+        example: 2
+        type: integer
+      id_ticket:
+        example: 1
+        type: integer
+      tanggal_ditugaskan:
+        example: "2025-11-07T10:00:00Z"
+        type: string
+    type: object
+  requests.CreateTicketCommentRequest:
+    properties:
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
+    type: object
+  requests.TicketAssignmentResponse:
+    description: TicketAssignmentResponse represents a ticket assignment with related
+      ticket and admin info (no null fields)
+    properties:
+      admin:
+        $ref: '#/definitions/requests.UserSimpleResponse'
+      id_admin:
+        type: integer
+      id_assignment:
+        type: integer
+      id_ticket:
+        type: integer
+      tanggal_ditugaskan:
+        type: string
+      ticket:
+        $ref: '#/definitions/requests.TicketResponse'
+    type: object
+  requests.TicketCommentResponse:
+    properties:
+      id_comment:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
+    type: object
+  requests.TicketCreateRequest:
+    properties:
+      deskripsi:
+        example: Saya tidak bisa login ke akun saya.
+        type: string
+      id_category:
+        example: 1
+        type: integer
+      id_priority:
+        example: 1
+        type: integer
+      id_status:
+        example: 1
+        type: integer
+      id_user:
+        example: 1
+        type: integer
+      judul:
+        example: Tidak bisa login
+        type: string
+      kode_tiket:
+        example: TCKT-001
+        type: string
+      tipe_pengaduan:
+        description: 'Allowed: pelanggan, penjual'
+        enum:
+        - pelanggan
+        - penjual
+        example: pelanggan
+        type: string
+    type: object
+  requests.TicketResponse:
+    properties:
+      deskripsi:
+        type: string
+      id_category:
+        type: integer
+      id_priority:
+        type: integer
+      id_status:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      judul:
+        type: string
+      kode_tiket:
+        type: string
+      tanggal_dibuat:
+        type: string
+      tanggal_diperbarui:
+        type: string
+      tipe_pengaduan:
+        type: string
+    type: object
+  requests.UpdateTicketCommentRequest:
+    properties:
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
+    type: object
+  requests.UserSimpleResponse:
+    description: UserSimpleResponse represents a minimal user info for assignment
+      admin
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id_user:
+        type: integer
+      nama:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
     type: object
 info:
   contact: {}
@@ -94,6 +494,36 @@ paths:
       summary: Create conversation
       tags:
       - conversations
+  /conversations/{id}/close:
+    post:
+      description: Close an existing conversation
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Conversation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Close conversation
+      tags:
+      - conversations
   /conversations/{id}/messages:
     get:
       description: Get all messages for a specific conversation
@@ -126,6 +556,1034 @@ paths:
       summary: Get conversation messages
       tags:
       - conversations
+  /conversations/notifications:
+    get:
+      description: Get a list of conversation states for admin
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.AdminConversationState'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get admin list conversation states
+      tags:
+      - admin_conversation_states
+  /ticket-assignments:
+    get:
+      description: Get a list of all ticket assignments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/requests.TicketAssignmentResponse'
+                  type: array
+              type: object
+      summary: Get all ticket assignments
+      tags:
+      - ticket-assignments
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket assignment
+      parameters:
+      - description: Ticket Assignment Data
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateTicketAssignmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketAssignmentResponse'
+              type: object
+      summary: Create a new ticket assignment
+      tags:
+      - ticket-assignments
+  /ticket-assignments/{id}:
+    delete:
+      description: Delete a ticket assignment by its ID
+      parameters:
+      - description: Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket assignment
+      tags:
+      - ticket-assignments
+    get:
+      description: Get a ticket assignment by its ID
+      parameters:
+      - description: Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketAssignmentResponse'
+              type: object
+      summary: Get a ticket assignment by ID
+      tags:
+      - ticket-assignments
+    put:
+      consumes:
+      - application/json
+      description: Update a ticket assignment by its ID
+      parameters:
+      - description: Assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Assignment Data
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateTicketAssignmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketAssignmentResponse'
+              type: object
+      summary: Update a ticket assignment
+      tags:
+      - ticket-assignments
+  /ticket-attachments:
+    get:
+      description: Get a list of all ticket attachments
+      parameters:
+      - description: Filter by ticket ID
+        in: query
+        name: ticket_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketAttachment'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get all ticket attachments
+      tags:
+      - ticket-attachments
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new ticket attachment
+      parameters:
+      - description: Ticket ID
+        in: formData
+        name: id_ticket
+        required: true
+        type: integer
+      - description: Attachment file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketAttachment'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Create a new ticket attachment
+      tags:
+      - ticket-attachments
+  /ticket-attachments/{id}:
+    delete:
+      description: Delete a ticket attachment by its ID
+      parameters:
+      - description: Attachment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket attachment
+      tags:
+      - ticket-attachments
+    get:
+      description: Get a ticket attachment by its ID
+      parameters:
+      - description: Attachment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketAttachment'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get a ticket attachment by ID
+      tags:
+      - ticket-attachments
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update a ticket attachment by its ID
+      parameters:
+      - description: Attachment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Ticket ID
+        in: formData
+        name: id_ticket
+        type: integer
+      - description: New attachment file
+        in: formData
+        name: file
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketAttachment'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Update a ticket attachment
+      tags:
+      - ticket-attachments
+  /ticket-categories:
+    get:
+      description: Get a list of all ticket categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketCategory'
+                  type: array
+              type: object
+      summary: Get all ticket categories
+      tags:
+      - ticket-categories
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket category
+      parameters:
+      - description: Ticket Category Data
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketCategory'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketCategory'
+              type: object
+      summary: Create a new ticket category
+      tags:
+      - ticket-categories
+  /ticket-categories/{id}:
+    delete:
+      description: Delete a ticket category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket category
+      tags:
+      - ticket-categories
+    get:
+      description: Get a ticket category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketCategory'
+              type: object
+      summary: Get a ticket category by ID
+      tags:
+      - ticket-categories
+    put:
+      consumes:
+      - application/json
+      description: Update a ticket category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Category Data
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketCategory'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketCategory'
+              type: object
+      summary: Update a ticket category
+      tags:
+      - ticket-categories
+  /ticket-comments:
+    get:
+      description: Get all comments, optionally filtered by ticket ID
+      parameters:
+      - description: Filter by Ticket ID
+        in: query
+        name: ticket_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketComment'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get all ticket comments
+      tags:
+      - ticket-comments
+    post:
+      consumes:
+      - application/json
+      description: Create a new comment on a ticket
+      parameters:
+      - description: Comment Data
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateTicketCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketCommentResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Create a new ticket comment
+      tags:
+      - ticket-comments
+  /ticket-comments/{id}:
+    delete:
+      description: Delete an existing comment
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket comment
+      tags:
+      - ticket-comments
+    get:
+      description: Get a specific comment by its ID
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketComment'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get a ticket comment by ID
+      tags:
+      - ticket-comments
+    put:
+      consumes:
+      - application/json
+      description: Update an existing comment
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Comment Data
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UpdateTicketCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketCommentResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Update a ticket comment
+      tags:
+      - ticket-comments
+  /ticket-logs:
+    get:
+      description: Get all activity logs, optionally filtered by ticket ID
+      parameters:
+      - description: Filter by Ticket ID
+        in: query
+        name: ticket_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketLog'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get all ticket logs
+      tags:
+      - ticket-logs
+    post:
+      consumes:
+      - application/json
+      description: Create a new activity log for a ticket
+      parameters:
+      - description: Log Data
+        in: body
+        name: log
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketLog'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketLog'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Create a new ticket log
+      tags:
+      - ticket-logs
+  /ticket-logs/{id}:
+    get:
+      description: Get a specific log entry by its ID
+      parameters:
+      - description: Log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketLog'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get a ticket log by ID
+      tags:
+      - ticket-logs
+  /ticket-priorities:
+    get:
+      description: Get a list of all ticket priorities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketPriority'
+                  type: array
+              type: object
+      summary: Get all ticket priorities
+      tags:
+      - ticket-priorities
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket priority
+      parameters:
+      - description: Ticket Priority Data
+        in: body
+        name: priority
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketPriority'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketPriority'
+              type: object
+      summary: Create a new ticket priority
+      tags:
+      - ticket-priorities
+  /ticket-priorities/{id}:
+    delete:
+      description: Delete a ticket priority by its ID
+      parameters:
+      - description: Priority ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket priority
+      tags:
+      - ticket-priorities
+    get:
+      description: Get a ticket priority by its ID
+      parameters:
+      - description: Priority ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketPriority'
+              type: object
+      summary: Get a ticket priority by ID
+      tags:
+      - ticket-priorities
+    put:
+      consumes:
+      - application/json
+      description: Update a ticket priority by its ID
+      parameters:
+      - description: Priority ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Priority Data
+        in: body
+        name: priority
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketPriority'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketPriority'
+              type: object
+      summary: Update a ticket priority
+      tags:
+      - ticket-priorities
+  /ticket-statuses:
+    get:
+      description: Get a list of all ticket statuses
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketStatus'
+                  type: array
+              type: object
+      summary: Get all ticket statuses
+      tags:
+      - ticket-statuses
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket status
+      parameters:
+      - description: Ticket Status Data
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketStatus'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketStatus'
+              type: object
+      summary: Create a new ticket status
+      tags:
+      - ticket-statuses
+  /ticket-statuses/{id}:
+    delete:
+      description: Delete a ticket status by its ID
+      parameters:
+      - description: Status ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket status
+      tags:
+      - ticket-statuses
+    get:
+      description: Get a ticket status by its ID
+      parameters:
+      - description: Status ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketStatus'
+              type: object
+      summary: Get a ticket status by ID
+      tags:
+      - ticket-statuses
+    put:
+      consumes:
+      - application/json
+      description: Update a ticket status by its ID
+      parameters:
+      - description: Status ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Status Data
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/models.TicketStatus'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.TicketStatus'
+              type: object
+      summary: Update a ticket status
+      tags:
+      - ticket-statuses
+  /tickets:
+    get:
+      description: Get a list of all tickets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/requests.TicketResponse'
+                  type: array
+              type: object
+      summary: Get all tickets
+      tags:
+      - tickets
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket
+      parameters:
+      - description: Ticket Data
+        in: body
+        name: ticket
+        required: true
+        schema:
+          $ref: '#/definitions/requests.TicketCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketResponse'
+              type: object
+      summary: Create a new ticket
+      tags:
+      - tickets
+  /tickets/{id}:
+    delete:
+      description: Delete a ticket by its ID
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Delete a ticket
+      tags:
+      - tickets
+    get:
+      description: Get a ticket by its ID
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketResponse'
+              type: object
+      summary: Get a ticket by ID
+      tags:
+      - tickets
+    put:
+      consumes:
+      - application/json
+      description: Update a ticket by its ID
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Ticket Data
+        in: body
+        name: ticket
+        required: true
+        schema:
+          $ref: '#/definitions/requests.TicketCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/requests.TicketResponse'
+              type: object
+      summary: Update a ticket
+      tags:
+      - tickets
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.
