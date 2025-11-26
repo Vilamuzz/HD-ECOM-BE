@@ -6,4 +6,6 @@ type AdminAvailability struct {
 	AdminID              uint64    `json:"admin_id"`
 	CurrentConversations uint      `json:"current_conversations"`
 	UpdatedAt            time.Time `json:"updated_at"`
+
+	Admin User `json:"admin" gorm:"foreignKey:AdminID"`
 }

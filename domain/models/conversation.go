@@ -11,9 +11,10 @@ type Conversation struct {
 	CreatedAt     time.Time          `json:"created_at"`
 	UpdatedAt     time.Time          `json:"updated_at"`
 
-	Messages []Message `json:"messages" gorm:"foreignKey:ConversationID"`
-	Customer User      `json:"customer" gorm:"foreignKey:CustomerID"`
-	Admin    User      `json:"admin" gorm:"foreignKey:AdminID"`
+	Messages   []Message               `json:"messages" gorm:"foreignKey:ConversationID"`
+	Customer   User                    `json:"customer" gorm:"foreignKey:CustomerID"`
+	Admin      User                    `json:"admin" gorm:"foreignKey:AdminID"`
+	AdminState *AdminConversationState `json:"admin_state" gorm:"foreignKey:ConversationID"`
 }
 
 type ConversationStatus string

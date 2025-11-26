@@ -10,8 +10,10 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	Conversations []Conversation `json:"conversations" gorm:"foreignKey:CustomerID"`
-	Messages      []Message      `json:"messages" gorm:"foreignKey:SenderID"`
+	Conversations     []Conversation           `json:"conversations" gorm:"foreignKey:CustomerID"`
+	Messages          []Message                `json:"messages" gorm:"foreignKey:SenderID"`
+	AdminStates       []AdminConversationState `json:"admin_states" gorm:"foreignKey:AdminID"`
+	AdminAvailability *AdminAvailability       `json:"admin_availability" gorm:"foreignKey:AdminID"`
 }
 
 type UserRole string
