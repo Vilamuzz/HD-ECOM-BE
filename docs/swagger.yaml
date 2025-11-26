@@ -11,36 +11,106 @@ definitions:
           type: string
         type: object
     type: object
+  models.AdminConversationState:
+    properties:
+      admin_id:
+        type: integer
+      conversation_id:
+        type: integer
+      last_message_id:
+        type: integer
+      unread_count:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   models.Conversation:
     properties:
+      admin:
+        $ref: '#/definitions/models.User'
       admin_id:
         type: integer
       created_at:
         type: string
+      customer:
+        $ref: '#/definitions/models.User'
+      customer_id:
+        type: integer
       id:
         type: integer
       last_message_at:
         type: string
+      messages:
+        items:
+          $ref: '#/definitions/models.Message'
+        type: array
+      status:
+        $ref: '#/definitions/models.ConversationStatus'
       updated_at:
         type: string
-      user_id:
-        type: integer
     type: object
+  models.ConversationStatus:
+    enum:
+    - open
+    - closed
+    type: string
+    x-enum-varnames:
+    - StatusOpen
+    - StatusClosed
   models.Message:
     properties:
-      attachment_url:
-        type: string
+      conversation:
+        $ref: '#/definitions/models.Conversation'
       conversation_id:
         type: integer
       created_at:
+        type: string
+      deleted_at:
         type: string
       id:
         type: integer
       message_text:
         type: string
+      purge_at:
+        type: string
+      sender:
+        $ref: '#/definitions/models.User'
       sender_id:
         type: integer
     type: object
+  models.User:
+    properties:
+      conversations:
+        items:
+          $ref: '#/definitions/models.Conversation'
+        type: array
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      messages:
+        items:
+          $ref: '#/definitions/models.Message'
+        type: array
+      role:
+        $ref: '#/definitions/models.UserRole'
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserRole:
+    enum:
+    - admin
+    - seller
+    - customer
+    type: string
+    x-enum-varnames:
+    - RoleAdmin
+    - RoleSeller
+    - RoleCustomer
 info:
   contact: {}
 paths:
@@ -94,6 +164,36 @@ paths:
       summary: Create conversation
       tags:
       - conversations
+  /conversations/{id}/close:
+    post:
+      description: Close an existing conversation
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Conversation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Close conversation
+      tags:
+      - conversations
   /conversations/{id}/messages:
     get:
       description: Get all messages for a specific conversation
@@ -126,6 +226,30 @@ paths:
       summary: Get conversation messages
       tags:
       - conversations
+  /conversations/notifications:
+    get:
+      description: Get a list of conversation states for admin
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.AdminConversationState'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get admin list conversation states
+      tags:
+      - admin_conversation_states
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

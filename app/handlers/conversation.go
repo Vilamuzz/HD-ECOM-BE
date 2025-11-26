@@ -57,6 +57,7 @@ func (r *appRoute) GetConversations(c *gin.Context) {
 // @Produce      json
 // @Success      200  {object}   helpers.Response{data=models.Conversation}
 // @Failure      500  {object}   helpers.Response
+// @Param        id   path      string  true  "Conversation ID"
 // @Router       /conversations/{id}/close [post]
 func (r *appRoute) CloseConversation(c *gin.Context) {
 	claim, _ := c.MustGet("userData").(models.User)

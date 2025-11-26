@@ -91,6 +91,101 @@
                 }
             }
         },
+        "/conversations/notifications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a list of conversation states for admin",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin_conversation_states"
+                ],
+                "summary": "Get admin list conversation states",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.AdminConversationState"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/conversations/{id}/close": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Close an existing conversation",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "conversations"
+                ],
+                "summary": "Close conversation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Conversation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/conversations/{id}/messages": {
             "get": {
                 "security": [
@@ -166,14 +261,43 @@
                 }
             }
         },
-        "models.Conversation": {
+        "models.AdminConversationState": {
             "type": "object",
             "properties": {
                 "admin_id": {
                     "type": "integer"
                 },
+                "conversation_id": {
+                    "type": "integer"
+                },
+                "last_message_id": {
+                    "type": "integer"
+                },
+                "unread_count": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Conversation": {
+            "type": "object",
+            "properties": {
+                "admin": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "admin_id": {
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
+                },
+                "customer": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "customer_id": {
+                    "type": "integer"
                 },
                 "id": {
                     "type": "integer"
@@ -181,24 +305,44 @@
                 "last_message_at": {
                     "type": "string"
                 },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Message"
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/models.ConversationStatus"
+                },
                 "updated_at": {
                     "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
+        },
+        "models.ConversationStatus": {
+            "type": "string",
+            "enum": [
+                "open",
+                "closed"
+            ],
+            "x-enum-varnames": [
+                "StatusOpen",
+                "StatusClosed"
+            ]
         },
         "models.Message": {
             "type": "object",
             "properties": {
-                "attachment_url": {
-                    "type": "string"
+                "conversation": {
+                    "$ref": "#/definitions/models.Conversation"
                 },
                 "conversation_id": {
                     "type": "integer"
                 },
                 "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
                     "type": "string"
                 },
                 "id": {
@@ -207,10 +351,64 @@
                 "message_text": {
                     "type": "string"
                 },
+                "purge_at": {
+                    "type": "string"
+                },
+                "sender": {
+                    "$ref": "#/definitions/models.User"
+                },
                 "sender_id": {
                     "type": "integer"
                 }
             }
+        },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "conversations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Conversation"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Message"
+                    }
+                },
+                "role": {
+                    "$ref": "#/definitions/models.UserRole"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserRole": {
+            "type": "string",
+            "enum": [
+                "admin",
+                "seller",
+                "customer"
+            ],
+            "x-enum-varnames": [
+                "RoleAdmin",
+                "RoleSeller",
+                "RoleCustomer"
+            ]
         }
     },
     "securityDefinitions": {
