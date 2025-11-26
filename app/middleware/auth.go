@@ -89,7 +89,7 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 			if err == gorm.ErrRecordNotFound {
 				// User doesn't exist, create new user
 				newUser := &models.User{
-					IDUser:        userID,
+					ID:        userID,
 					Username:  username,
 					Email:     email,
 					Role:      role,
@@ -104,7 +104,7 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 
 				if newUser.Role == models.RoleAdmin {
 					if err = m.repository.CreateAdminAvailability(&models.AdminAvailability{
-						AdminID: newUser.IDUser,
+						AdminID: newUser.ID,
 					}); err != nil {
 						c.AbortWithStatusJSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create admin availability", nil, nil))
 						return

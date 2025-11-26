@@ -13,7 +13,7 @@ func (s *appService) GetConversations(claim models.User) helpers.Response {
 	var conversations []models.Conversation
 	var err error
 	if claim.Role == "admin" {
-		conversations, err = s.repo.GetAdminConversations(claim.IDUser)
+		conversations, err = s.repo.GetAdminConversations(claim.ID)
 
 		if err != nil {
 			return helpers.NewResponse(http.StatusInternalServerError, "Failed to get conversations", nil, nil)
@@ -47,7 +47,7 @@ func (s *appService) GetConversations(claim models.User) helpers.Response {
 		}
 		return helpers.NewResponse(http.StatusOK, "Successfully get conversation", nil, list)
 	} else {
-		conversations, err := s.repo.GetCustomerConversations(claim.IDUser)
+		conversations, err := s.repo.GetCustomerConversations(claim.ID)
 		if err != nil {
 			return helpers.NewResponse(http.StatusInternalServerError, "failed to get conversations", nil, nil)
 		}
@@ -74,7 +74,7 @@ func (s *appService) CreateCustomerConversation(ctx context.Context, claim model
 
 	now := time.Now()
 	createdConversation := &models.Conversation{
-		CustomerID: claim.IDUser,
+		CustomerID: claim.ID,
 		AdminID:    admin.AdminID,
 		CreatedAt:  now,
 		UpdatedAt:  now,
@@ -144,7 +144,7 @@ func (s *appService) CloseConversation(ctx context.Context, claim models.User, i
 	}
 
 	// Decrement admin conversation count
-	if err := s.repo.DecrementAdminConversationCount(claim.IDUser); err != nil {
+	if err := s.repo.DecrementAdminConversationCount(claim.ID); err != nil {
 		return helpers.NewResponse(http.StatusInternalServerError, "failed to update admin availability", nil, nil)
 	}
 

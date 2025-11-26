@@ -41,7 +41,7 @@ func (s *appService) ServeWebSocket(ctx *gin.Context) {
 		Hub:             s.hub,
 		Conn:            &WebSocketConnectionWrapper{Conn: conn},
 		Send:            make(chan []byte, 256),
-		UserID:          user.IDUser,
+		UserID:          user.ID,
 		Name:            user.Username,
 		Repository:      s.repo,
 		ConversationIDs: make(map[uint64]bool),
