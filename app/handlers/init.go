@@ -24,4 +24,12 @@ func App(service domain.AppService, route *gin.Engine, middleware middleware.App
 	handler.ConversationRoute("/conversations")
 	handler.MessageRoute("/conversations/:id/messages")
 	handler.AdminConversationStatesRoute("/conversations/notifications")
+	handler.TicketCategoryRoutes(handler.Route)
+	handler.TicketPriorityRoutes(handler.Route)
+	handler.TicketStatusRoutes(handler.Route)
+	handler.TicketRoutes(handler.Route)
+	handler.TicketAssignmentRoutes(handler.Route)
+	handler.TicketAttachmentRoutes(handler.Route)
+	handler.TicketCommentRoutes(handler.Route)
+	handler.TicketLogRoutes(handler.Route)
 }

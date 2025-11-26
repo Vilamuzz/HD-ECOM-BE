@@ -39,4 +39,60 @@ type AppRepository interface {
 	GetAdminConversationStatesByAdminID(adminID uint64) ([]models.AdminConversationState, error)
 	IncrementUnreadCount(state *models.AdminConversationState) error
 	ResetState(state *models.AdminConversationState, lastMessageID uint64) error
+	// Ticket Category
+	CreateTicketCategory(category *models.TicketCategory) error
+	GetTicketCategories() ([]models.TicketCategory, error)
+	GetTicketCategoryByID(id int) (*models.TicketCategory, error)
+	UpdateTicketCategory(category *models.TicketCategory) error
+	DeleteTicketCategory(id int) error
+
+	// Ticket Priority
+	CreateTicketPriority(priority *models.TicketPriority) error
+	GetTicketPriorities() ([]models.TicketPriority, error)
+	GetTicketPriorityByID(id int) (*models.TicketPriority, error)
+	UpdateTicketPriority(priority *models.TicketPriority) error
+	DeleteTicketPriority(id int) error
+
+	// Ticket Status
+	CreateTicketStatus(status *models.TicketStatus) error
+	GetTicketStatuses() ([]models.TicketStatus, error)
+	GetTicketStatusByID(id int) (*models.TicketStatus, error)
+	UpdateTicketStatus(status *models.TicketStatus) error
+	DeleteTicketStatus(id int) error
+
+	// Ticket
+	CreateTicket(ticket *models.Ticket) error
+	GetTickets() ([]models.Ticket, error)
+	GetTicketByID(id int) (*models.Ticket, error)
+	UpdateTicket(ticket *models.Ticket) error
+	DeleteTicket(id int) error
+
+	// Ticket Assignment
+	CreateTicketAssignment(assignment *models.TicketAssignment) error
+	GetTicketAssignments() ([]models.TicketAssignment, error)
+	GetTicketAssignmentByID(id int) (*models.TicketAssignment, error)
+	UpdateTicketAssignment(assignment *models.TicketAssignment) error
+	DeleteTicketAssignment(id int) error
+
+	// Ticket Attachment
+	CreateTicketAttachment(attachment *models.TicketAttachment) error
+	GetTicketAttachments() ([]models.TicketAttachment, error)
+	GetTicketAttachmentByID(id int) (*models.TicketAttachment, error)
+	GetTicketAttachmentsByTicketID(ticketID int) ([]models.TicketAttachment, error)
+	UpdateTicketAttachment(attachment *models.TicketAttachment) error
+	DeleteTicketAttachment(id int) error
+
+	// Ticket Comment
+	CreateTicketComment(comment *models.TicketComment) error
+	GetTicketComments() ([]models.TicketComment, error)
+	GetTicketCommentByID(id int) (*models.TicketComment, error)
+	GetTicketCommentsByTicketID(ticketID int) ([]models.TicketComment, error)
+	UpdateTicketComment(comment *models.TicketComment) error
+	DeleteTicketComment(id int) error
+
+	// Ticket Log
+	CreateTicketLog(log *models.TicketLog) error
+	GetTicketLogs() ([]models.TicketLog, error)
+	GetTicketLogByID(id int) (*models.TicketLog, error)
+	GetTicketLogsByTicketID(ticketID int) ([]models.TicketLog, error)
 }

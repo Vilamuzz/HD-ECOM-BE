@@ -14,6 +14,10 @@ type User struct {
 	Messages          []Message                `json:"messages" gorm:"foreignKey:SenderID"`
 	AdminStates       []AdminConversationState `json:"admin_states" gorm:"foreignKey:AdminID"`
 	AdminAvailability *AdminAvailability       `json:"admin_availability" gorm:"foreignKey:AdminID"`
+	Tickets           []Ticket                 `json:"tickets" gorm:"foreignKey:IDUser"`
+	Comments          []TicketComment          `json:"comments" gorm:"foreignKey:IDUser"`
+	AssignedTickets   []TicketAssignment       `json:"assigned_tickets" gorm:"foreignKey:IDAdmin"`
+	Logs              []TicketLog              `json:"logs" gorm:"foreignKey:IDUser"`
 }
 
 type UserRole string
