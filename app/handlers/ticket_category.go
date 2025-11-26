@@ -116,7 +116,7 @@ func (r *appRoute) updateTicketCategory(c *gin.Context) {
 		return
 	}
 
-	category.IDCategory = id
+	category.ID = id
 	if err := r.Service.UpdateTicketCategory(&category); err != nil {
 		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update ticket category", nil, nil)
 		c.JSON(http.StatusInternalServerError, response)

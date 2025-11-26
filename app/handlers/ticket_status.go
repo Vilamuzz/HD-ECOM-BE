@@ -116,7 +116,7 @@ func (r *appRoute) updateTicketStatus(c *gin.Context) {
 		return
 	}
 
-	status.IDStatus = id
+	status.ID = id
 	if err := r.Service.UpdateTicketStatus(&status); err != nil {
 		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update ticket status", nil, nil)
 		c.JSON(http.StatusInternalServerError, response)

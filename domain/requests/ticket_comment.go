@@ -4,8 +4,8 @@ import "time"
 
 // CreateTicketCommentRequest is used for creating a new ticket comment
 type CreateTicketCommentRequest struct {
-	IDTicket      int       `json:"id_ticket"`
-	IDUser        int       `json:"id_user"`
+	TicketID      int       `json:"id_ticket"`
+	UserID        int       `json:"id_user"`
 	IsiPesan      string    `json:"isi_pesan"`
 	TanggalDibuat time.Time `json:"tanggal_dibuat"`
 }
@@ -35,8 +35,8 @@ type CreateTicketCommentRequest struct {
 // You can adjust as needed
 
 type UpdateTicketCommentRequest struct {
-	IDTicket      int       `json:"id_ticket"`
-	IDUser        int       `json:"id_user"`
+	TicketID      int       `json:"id_ticket"`
+	UserID        int       `json:"id_user"`
 	IsiPesan      string    `json:"isi_pesan"`
 	TanggalDibuat time.Time `json:"tanggal_dibuat"`
 }
@@ -45,9 +45,9 @@ type UpdateTicketCommentRequest struct {
 // Only main fields, no relations
 
 type TicketCommentResponse struct {
-	IDComment     int       `json:"id_comment"`
-	IDTicket      int       `json:"id_ticket"`
-	IDUser        int       `json:"id_user"`
+	CommentID     int       `json:"id_comment"`
+	TicketID      int       `json:"id_ticket"`
+	UserID        int       `json:"id_user"`
 	IsiPesan      string    `json:"isi_pesan"`
 	TanggalDibuat time.Time `json:"tanggal_dibuat"`
 }

@@ -3,25 +3,25 @@ package models
 import "time"
 
 type Ticket struct {
-	IDTicket          int       `json:"id_ticket" gorm:"column:id_ticket;primaryKey"`
-	KodeTiket         string    `json:"kode_tiket" gorm:"column:kode_tiket"`
-	IDUser            int       `json:"id_user" gorm:"column:id_user"`
-	Judul             string    `json:"judul" gorm:"column:judul"`
-	Deskripsi         string    `json:"deskripsi" gorm:"column:deskripsi"`
-	IDCategory        int       `json:"id_category" gorm:"column:id_category"`
-	IDPriority        int       `json:"id_priority" gorm:"column:id_priority"`
-	IDStatus          int       `json:"id_status" gorm:"column:id_status"`
-	TipePengaduan     string    `json:"tipe_pengaduan" gorm:"column:tipe_pengaduan;type:varchar(50);check:tipe_pengaduan IN ('pelanggan', 'penjual')"`
-	TanggalDibuat     time.Time `json:"tanggal_dibuat" gorm:"column:tanggal_dibuat;default:CURRENT_TIMESTAMP"`
-	TanggalDiperbarui time.Time `json:"tanggal_diperbarui" gorm:"column:tanggal_diperbarui;default:CURRENT_TIMESTAMP"`
+	ID                int       `json:"id_ticket" gorm:"column:id_ticket;primaryKey;autoIncrement"`
+	KodeTiket         string    `json:"kode_tiket" gorm:"column:kode_tiket;unique"`
+	UserID            uint64    `json:"user_id" gorm:"column:id_user;not null;index"`
+	Judul             string    `json:"judul"`
+	Deskripsi         string    `json:"deskripsi" gorm:"type:text"`
+	CategoryID        int       `json:"category_id" gorm:"not null;index"`
+	PriorityID        int       `json:"priority_id" gorm:"not null;index"`
+	StatusID          int       `json:"status_id" gorm:"not null;index"`
+	TipePengaduan     string    `json:"tipe_pengaduan" gorm:"type:varchar(50);check:tipe_pengaduan IN ('pelanggan', 'penjual')"`
+	TanggalDibuat     time.Time `json:"tanggal_dibuat" gorm:"default:CURRENT_TIMESTAMP"`
+	TanggalDiperbarui time.Time `json:"tanggal_diperbarui" gorm:"default:CURRENT_TIMESTAMP"`
 
-	// Relasi
-	User        *User              `json:"user" gorm:"foreignKey:IDUser"`
-	Category    *TicketCategory    `json:"category" gorm:"foreignKey:IDCategory;references:IDCategory"`
-	Priority    *TicketPriority    `json:"priority" gorm:"foreignKey:IDPriority;references:IDPriority"`
-	Status      *TicketStatus      `json:"status" gorm:"foreignKey:IDStatus;references:IDStatus"`
-	Comments    []TicketComment    `json:"comments" gorm:"foreignKey:IDTicket"`
-	Attachments []TicketAttachment `json:"attachments" gorm:"foreignKey:IDTicket"`
-	Assignments []TicketAssignment `json:"assignments" gorm:"foreignKey:IDTicket"`
-	Logs        []TicketLog        `json:"logs" gorm:"foreignKey:IDTicket"`
+	// Relasi - Add references to match custom column names
+	User        User               `gorm:"foreignKey:UserID"`
+	Category    *TicketCategory    `json:"category,omitempty" gorm:"foreignKey:CategoryID"`
+	Priority    *TicketPriority    `json:"priority,omitempty" gorm:"foreignKey:PriorityID"`
+	Status      *TicketStatus      `json:"status,omitempty" gorm:"foreignKey:StatusID"`
+	Comments    []TicketComment    `json:"comments,omitempty" gorm:"foreignKey:TicketID"`
+	Attachments []TicketAttachment `json:"attachments,omitempty" gorm:"foreignKey:TicketID"`
+	Assignments []TicketAssignment `json:"assignments,omitempty" gorm:"foreignKey:TicketID"`
+	Logs        []TicketLog        `json:"logs,omitempty" gorm:"foreignKey:TicketID"`
 }

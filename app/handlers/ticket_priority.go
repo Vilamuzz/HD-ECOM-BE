@@ -116,7 +116,7 @@ func (r *appRoute) updateTicketPriority(c *gin.Context) {
 		return
 	}
 
-	priority.IDPriority = id
+	priority.ID = id
 	if err := r.Service.UpdateTicketPriority(&priority); err != nil {
 		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update ticket priority", nil, nil)
 		c.JSON(http.StatusInternalServerError, response)

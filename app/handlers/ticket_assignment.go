@@ -45,8 +45,8 @@ func (r *appRoute) createTicketAssignment(c *gin.Context) {
 	}
 
 	assignment := models.TicketAssignment{
-		IDTicket:          req.IDTicket,
-		IDAdmin:           req.IDAdmin,
+		TicketID:          req.TicketID,
+		AdminID:           req.AdminID,
 		TanggalDitugaskan: tglDitugaskan,
 	}
 
@@ -69,20 +69,20 @@ func (r *appRoute) createTicketAssignment(c *gin.Context) {
 // @Success 200 {object} helpers.Response{data=[]requests.TicketAssignmentResponse}
 // @Router /ticket-assignments [get]
 func (r *appRoute) getTicketAssignments(c *gin.Context) {
-	       assignments, err := r.Service.GetTicketAssignments()
-	       if err != nil {
-		       response := helpers.NewResponse(http.StatusInternalServerError, "Failed to get ticket assignments", nil, nil)
-		       c.JSON(http.StatusInternalServerError, response)
-		       return
-	       }
+	assignments, err := r.Service.GetTicketAssignments()
+	if err != nil {
+		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to get ticket assignments", nil, nil)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
 
-	       var respList []requests.TicketAssignmentResponse
-	       for _, a := range assignments {
-		       respList = append(respList, mapTicketAssignmentToResponse(&a))
-	       }
+	var respList []requests.TicketAssignmentResponse
+	for _, a := range assignments {
+		respList = append(respList, mapTicketAssignmentToResponse(&a))
+	}
 
-	       response := helpers.NewResponse(http.StatusOK, "Ticket assignments retrieved successfully", nil, respList)
-	       c.JSON(http.StatusOK, response)
+	response := helpers.NewResponse(http.StatusOK, "Ticket assignments retrieved successfully", nil, respList)
+	c.JSON(http.StatusOK, response)
 }
 
 // GetTicketAssignmentByID godoc
@@ -94,33 +94,33 @@ func (r *appRoute) getTicketAssignments(c *gin.Context) {
 // @Success 200 {object} helpers.Response{data=requests.TicketAssignmentResponse}
 // @Router /ticket-assignments/{id} [get]
 func (r *appRoute) getTicketAssignmentByID(c *gin.Context) {
-	       id, err := strconv.Atoi(c.Param("id"))
-	       if err != nil {
-		       response := helpers.NewResponse(http.StatusBadRequest, "Invalid assignment ID", nil, nil)
-		       c.JSON(http.StatusBadRequest, response)
-		       return
-	       }
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response := helpers.NewResponse(http.StatusBadRequest, "Invalid assignment ID", nil, nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
 
-	       assignment, err := r.Service.GetTicketAssignmentByID(id)
-	       if err != nil {
-		       response := helpers.NewResponse(http.StatusNotFound, "Assignment not found", nil, nil)
-		       c.JSON(http.StatusNotFound, response)
-		       return
-	       }
+	assignment, err := r.Service.GetTicketAssignmentByID(id)
+	if err != nil {
+		response := helpers.NewResponse(http.StatusNotFound, "Assignment not found", nil, nil)
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
 
-	       resp := mapTicketAssignmentToResponse(assignment)
-	       response := helpers.NewResponse(http.StatusOK, "Ticket assignment retrieved successfully", nil, resp)
-	       c.JSON(http.StatusOK, response)
+	resp := mapTicketAssignmentToResponse(assignment)
+	response := helpers.NewResponse(http.StatusOK, "Ticket assignment retrieved successfully", nil, resp)
+	c.JSON(http.StatusOK, response)
 }
 
 // mapTicketAssignmentToResponse maps TicketAssignment model to TicketAssignmentResponse DTO
 func mapTicketAssignmentToResponse(a *models.TicketAssignment) requests.TicketAssignmentResponse {
-	       return requests.TicketAssignmentResponse{
-		       IDAssignment:      a.IDAssignment,
-		       IDTicket:          a.IDTicket,
-		       IDAdmin:           a.IDAdmin,
-		       TanggalDitugaskan: a.TanggalDitugaskan.Format("2006-01-02T15:04:05Z"),
-	       }
+	return requests.TicketAssignmentResponse{
+		AssignmentID:      a.ID,
+		TicketID:          a.TicketID,
+		AdminID:           a.AdminID,
+		TanggalDitugaskan: a.TanggalDitugaskan.Format("2006-01-02T15:04:05Z"),
+	}
 }
 
 // UpdateTicketAssignment godoc
@@ -156,9 +156,9 @@ func (r *appRoute) updateTicketAssignment(c *gin.Context) {
 	}
 
 	assignment := models.TicketAssignment{
-		IDAssignment:      id,
-		IDTicket:          req.IDTicket,
-		IDAdmin:           req.IDAdmin,
+		ID:      id,
+		TicketID:          req.TicketID,
+		AdminID:           req.AdminID,
 		TanggalDitugaskan: tglDitugaskan,
 	}
 

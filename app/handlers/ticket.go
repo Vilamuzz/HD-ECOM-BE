@@ -38,12 +38,12 @@ func (r *appRoute) createTicket(c *gin.Context) {
 
 	ticket := models.Ticket{
 		KodeTiket:     req.KodeTiket,
-		IDUser:        req.IDUser,
+		UserID:        uint64(req.UserID),
 		Judul:         req.Judul,
 		Deskripsi:     req.Deskripsi,
-		IDCategory:    req.IDCategory,
-		IDPriority:    req.IDPriority,
-		IDStatus:      req.IDStatus,
+		CategoryID:    req.CategoryID,
+		PriorityID:    req.PriorityID,
+		StatusID:      req.StatusID,
 		TipePengaduan: req.TipePengaduan,
 	}
 
@@ -54,14 +54,14 @@ func (r *appRoute) createTicket(c *gin.Context) {
 	}
 
 	resp := requests.TicketResponse{
-		IDTicket:          ticket.IDTicket,
+		ID:                ticket.ID,
 		KodeTiket:         ticket.KodeTiket,
-		IDUser:            ticket.IDUser,
+		UserID:            uint64(ticket.UserID),
 		Judul:             ticket.Judul,
 		Deskripsi:         ticket.Deskripsi,
-		IDCategory:        ticket.IDCategory,
-		IDPriority:        ticket.IDPriority,
-		IDStatus:          ticket.IDStatus,
+		CategoryID:        ticket.CategoryID,
+		PriorityID:        ticket.PriorityID,
+		StatusID:          ticket.StatusID,
 		TipePengaduan:     ticket.TipePengaduan,
 		TanggalDibuat:     ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
 		TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
@@ -89,14 +89,14 @@ func (r *appRoute) getTickets(c *gin.Context) {
 	var resp []requests.TicketResponse
 	for _, ticket := range tickets {
 		resp = append(resp, requests.TicketResponse{
-			IDTicket:          ticket.IDTicket,
+			ID:                ticket.ID,
 			KodeTiket:         ticket.KodeTiket,
-			IDUser:            ticket.IDUser,
+			UserID:            ticket.UserID,
 			Judul:             ticket.Judul,
 			Deskripsi:         ticket.Deskripsi,
-			IDCategory:        ticket.IDCategory,
-			IDPriority:        ticket.IDPriority,
-			IDStatus:          ticket.IDStatus,
+			CategoryID:        ticket.CategoryID,
+			PriorityID:        ticket.PriorityID,
+			StatusID:          ticket.StatusID,
 			TipePengaduan:     ticket.TipePengaduan,
 			TanggalDibuat:     ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
 			TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
@@ -131,14 +131,14 @@ func (r *appRoute) getTicketByID(c *gin.Context) {
 	}
 
 	resp := requests.TicketResponse{
-		IDTicket:          ticket.IDTicket,
+		ID:                ticket.ID,
 		KodeTiket:         ticket.KodeTiket,
-		IDUser:            ticket.IDUser,
+		UserID:            ticket.UserID,
 		Judul:             ticket.Judul,
 		Deskripsi:         ticket.Deskripsi,
-		IDCategory:        ticket.IDCategory,
-		IDPriority:        ticket.IDPriority,
-		IDStatus:          ticket.IDStatus,
+		CategoryID:        ticket.CategoryID,
+		PriorityID:        ticket.PriorityID,
+		StatusID:          ticket.StatusID,
 		TipePengaduan:     ticket.TipePengaduan,
 		TanggalDibuat:     ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
 		TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
@@ -174,14 +174,14 @@ func (r *appRoute) updateTicket(c *gin.Context) {
 	}
 
 	ticket := models.Ticket{
-		IDTicket:      id,
+		ID:            id,
 		KodeTiket:     req.KodeTiket,
-		IDUser:        req.IDUser,
+		UserID:        req.UserID,
 		Judul:         req.Judul,
 		Deskripsi:     req.Deskripsi,
-		IDCategory:    req.IDCategory,
-		IDPriority:    req.IDPriority,
-		IDStatus:      req.IDStatus,
+		CategoryID:    req.CategoryID,
+		PriorityID:    req.PriorityID,
+		StatusID:      req.StatusID,
 		TipePengaduan: req.TipePengaduan,
 	}
 
@@ -192,14 +192,14 @@ func (r *appRoute) updateTicket(c *gin.Context) {
 	}
 
 	resp := requests.TicketResponse{
-		IDTicket:          ticket.IDTicket,
+		ID:                ticket.ID,
 		KodeTiket:         ticket.KodeTiket,
-		IDUser:            ticket.IDUser,
+		UserID:            ticket.UserID,
 		Judul:             ticket.Judul,
 		Deskripsi:         ticket.Deskripsi,
-		IDCategory:        ticket.IDCategory,
-		IDPriority:        ticket.IDPriority,
-		IDStatus:          ticket.IDStatus,
+		CategoryID:        ticket.CategoryID,
+		PriorityID:        ticket.PriorityID,
+		StatusID:          ticket.StatusID,
 		TipePengaduan:     ticket.TipePengaduan,
 		TanggalDibuat:     ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
 		TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),

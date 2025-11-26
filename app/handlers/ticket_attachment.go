@@ -54,7 +54,7 @@ func (r *appRoute) createTicketAttachment(c *gin.Context) {
 	}
 
 	attachment := &models.TicketAttachment{
-		IDTicket: ticketID,
+		TicketID: ticketID,
 		FilePath: filePath,
 	}
 
@@ -159,7 +159,7 @@ func (r *appRoute) updateTicketAttachment(c *gin.Context) {
 	// Update ticket ID if provided
 	if ticketID := c.PostForm("id_ticket"); ticketID != "" {
 		if id, err := strconv.Atoi(ticketID); err == nil {
-			attachment.IDTicket = id
+			attachment.TicketID = id
 		}
 	}
 
