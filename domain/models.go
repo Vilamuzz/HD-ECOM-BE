@@ -9,5 +9,15 @@ func GetAllModels() []interface{} {
 		&models.Message{},
 		&models.AdminAvailability{},
 		&models.AdminConversationState{},
+		// Master tables first
+		&models.TicketCategory{},
+		&models.TicketPriority{},
+		&models.TicketStatus{},
+		// Then transaction tables
+		&models.Ticket{},
+		&models.TicketComment{},
+		&models.TicketAttachment{},
+		&models.TicketAssignment{},
+		&models.TicketLog{},
 	}
 }

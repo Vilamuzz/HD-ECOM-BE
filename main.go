@@ -32,9 +32,14 @@ func main() {
 	docs.SwaggerInfo.Title = "Helpdesk E-Commerce API"
 	docs.SwaggerInfo.Description = "Api documentation for Helpdesk E-Commerce Application"
 	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "localhost:" + os.Getenv("APP_PORT")
+	docs.SwaggerInfo.Host = os.Getenv("BASE_API_URL")
 	docs.SwaggerInfo.BasePath = "/api"
-	docs.SwaggerInfo.Schemes = []string{"http"}
+	scheme := os.Getenv("SWAGGER_SCHEME")
+	if scheme == "" {
+		docs.SwaggerInfo.Schemes = []string{"http"}
+	} else {
+		docs.SwaggerInfo.Schemes = []string{scheme}
+	}
 
 	timeoutStr := os.Getenv("TIMEOUT")
 	if timeoutStr == "" {
@@ -54,7 +59,7 @@ func main() {
 
 	// Add CORS middleware
 	ginEngine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", os.Getenv("APP_URL") },
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

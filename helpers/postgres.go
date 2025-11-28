@@ -27,7 +27,7 @@ func ConnectDB() *gorm.DB {
 }
 
 func MigrateDB(db *gorm.DB, models ...interface{}) {
-	db.Migrator().DropTable(models...)
+	// db.Migrator().DropTable(models...)
 	err := db.AutoMigrate(models...)
 	if err != nil {
 		log.Fatal(err)

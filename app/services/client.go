@@ -139,6 +139,7 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 
 	// Reset unread count if subscriber is admin
 	if user.Role == models.RoleAdmin {
+
 		if state, sErr := c.Repository.GetAdminConversationState(user.ID, convID); sErr == nil && state != nil {
 			// Get latest message ID (if any) to set LastMessageID
 			msgs, _, mErr := c.Repository.GetMessageHistoryForAdmin(convID, 1, "")
