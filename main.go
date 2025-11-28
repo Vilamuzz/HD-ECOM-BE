@@ -8,6 +8,7 @@ import (
 	"app/docs"
 	"app/domain"
 	"app/helpers"
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -29,6 +30,12 @@ func init() {
 // @name						Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
+
+	client := helpers.NewMinioClient()
+	if err := helpers.EnsureBucket(context.Background(), client, "my-bucket"); err != nil {
+		log.Fatal(err)
+	}
+
 	docs.SwaggerInfo.Title = "Helpdesk E-Commerce API"
 	docs.SwaggerInfo.Description = "Api documentation for Helpdesk E-Commerce Application"
 	docs.SwaggerInfo.Version = "1.0"
@@ -54,7 +61,7 @@ func main() {
 
 	// Add CORS middleware
 	ginEngine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", os.Getenv("APP_URL") },
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", os.Getenv("APP_URL")},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

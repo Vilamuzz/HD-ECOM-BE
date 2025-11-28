@@ -1,8 +1,10 @@
 package services
 
 import (
-       "os"
-       "app/domain/models"
+	"app/domain/models"
+	"app/helpers"
+	"context"
+	"os"
 )
 
 func (s *appService) CreateTicketAttachment(attachment *models.TicketAttachment) error {
@@ -26,19 +28,28 @@ func (s *appService) UpdateTicketAttachment(attachment *models.TicketAttachment)
 }
 
 func (s *appService) DeleteTicketAttachment(id int) error {
-       // Get the attachment first
-       attachment, err := s.repo.GetTicketAttachmentByID(id)
-       if err != nil {
-	       return err
-       }
-       // Delete from DB
-       err = s.repo.DeleteTicketAttachment(id)
-       if err != nil {
-	       return err
-       }
-       // Delete file from disk
-       if attachment != nil && attachment.FilePath != "" {
-	       _ = os.Remove(attachment.FilePath) // Ignore error if file doesn't exist
-       }
-       return nil
+	// Get the attachment first
+	attachment, err := s.repo.GetTicketAttachmentByID(id)
+	if err != nil {
+		return err
+	}
+
+	// Delete from DB
+	err = s.repo.DeleteTicketAttachment(id)
+	if err != nil {
+		return err
+	}
+
+	// Delete file from MinIO
+	if attachment != nil && attachment.FilePath != "" {
+		ctx := context.Background()
+		minioClient := helpers.NewMinioClient()
+		bucketName := os.Getenv("MINIO_BUCKET_NAME")
+		if bucketName == "" {
+			bucketName = "my-bucket"
+		}
+		_ = helpers.DeleteFile(ctx, minioClient, bucketName, attachment.FilePath)
+	}
+
+	return nil
 }
