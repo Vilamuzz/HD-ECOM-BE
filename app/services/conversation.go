@@ -23,6 +23,7 @@ func (s *appService) GetConversations(claim models.User) helpers.Response {
 			models.Conversation
 			CustomerName  string `json:"customer_name"`
 			CustomerEmail string `json:"customer_email"`
+			CustomerRole  string `json:"customer_role"`
 		}
 
 		list := make([]ConversationWithCustomer, 0, len(conversations))
@@ -31,11 +32,13 @@ func (s *appService) GetConversations(claim models.User) helpers.Response {
 
 			customerName := ""
 			customerEmail := ""
+			customerRole := ""
 			if customerID != 0 {
 				u, err := s.repo.GetUserByID(customerID)
 				if err == nil && u != nil {
 					customerName = u.Username
 					customerEmail = u.Email
+					customerRole = string(u.Role)
 				}
 			}
 
@@ -43,6 +46,7 @@ func (s *appService) GetConversations(claim models.User) helpers.Response {
 				Conversation:  conv,
 				CustomerName:  customerName,
 				CustomerEmail: customerEmail,
+				CustomerRole:  customerRole,
 			})
 		}
 		return helpers.NewResponse(http.StatusOK, "Successfully get conversation", nil, list)
@@ -169,4 +173,8 @@ func (s *appService) ReopenConversation(ctx context.Context, conversationID uint
 
 	// Reset purge countdown but keep soft delete
 	return nil
+}
+
+func (s *appService) GetConversationByID(conversationID uint64) (*models.Conversation, error) {
+	return s.repo.GetConversationByID(conversationID)
 }

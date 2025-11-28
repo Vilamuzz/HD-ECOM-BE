@@ -20,6 +20,7 @@ type AppService interface {
 
 	// Conversation management
 	GetConversations(claim models.User) helpers.Response
+	GetConversationByID(conversationID uint64) (*models.Conversation, error)
 	CreateCustomerConversation(ctx context.Context, claim models.User) helpers.Response
 	CloseConversation(ctx context.Context, claim models.User, id string) helpers.Response
 	ReopenConversation(ctx context.Context, conversationID uint64) error
