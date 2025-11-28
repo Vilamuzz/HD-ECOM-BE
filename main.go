@@ -34,7 +34,12 @@ func main() {
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Host = os.Getenv("BASE_API_URL")
 	docs.SwaggerInfo.BasePath = "/api"
-	docs.SwaggerInfo.Schemes = []string{"http"}
+	scheme := os.Getenv("SWAGGER_SCHEME")
+	if scheme == "" {
+		docs.SwaggerInfo.Schemes = []string{"http"}
+	} else {
+		docs.SwaggerInfo.Schemes = []string{scheme}
+	}
 
 	timeoutStr := os.Getenv("TIMEOUT")
 	if timeoutStr == "" {
