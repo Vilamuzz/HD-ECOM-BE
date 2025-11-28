@@ -32,7 +32,7 @@ func main() {
 	docs.SwaggerInfo.Title = "Helpdesk E-Commerce API"
 	docs.SwaggerInfo.Description = "Api documentation for Helpdesk E-Commerce Application"
 	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "localhost:" + os.Getenv("APP_PORT")
+	docs.SwaggerInfo.Host = os.Getenv("BASE_URL") + os.Getenv("APP_PORT")
 	docs.SwaggerInfo.BasePath = "/api"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
