@@ -4,11 +4,11 @@ import (
 	"app/app/handlers"
 	"app/app/middleware"
 	"app/app/repositories"
+	"app/app/repositories/s3"
 	"app/app/services"
 	"app/docs"
 	"app/domain"
 	"app/helpers"
-	"context"
 	"log"
 	"net/http"
 	"os"
@@ -30,12 +30,6 @@ func init() {
 // @name						Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
-
-	client := helpers.NewMinioClient()
-	if err := helpers.EnsureBucket(context.Background(), client, "my-bucket"); err != nil {
-		log.Fatal(err)
-	}
-
 	docs.SwaggerInfo.Title = "Helpdesk E-Commerce API"
 	docs.SwaggerInfo.Description = "Api documentation for Helpdesk E-Commerce Application"
 	docs.SwaggerInfo.Version = "1.0"
@@ -53,8 +47,15 @@ func main() {
 	db := helpers.ConnectDB()
 	helpers.MigrateDB(db, domain.GetAllModels()...)
 	repo := repositories.NewAppRepository(db)
+
+	// Add S3 repository initialization
+	s3Repo := s3.NewS3Repository(timeoutContext)
+
 	hub := services.NewHub()
-	service := services.NewAppService(services.DBInjection{Repo: repo}, hub, timeoutContext)
+	service := services.NewAppService(services.DBInjection{
+		Repo:   repo,
+		S3Repo: s3Repo,
+	}, hub, timeoutContext)
 	go service.Run()
 	middleware := middleware.NewAppMiddleware(repo)
 	ginEngine := gin.Default()

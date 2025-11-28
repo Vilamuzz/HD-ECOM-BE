@@ -3,12 +3,10 @@ package handlers
 import (
 	"app/domain/models"
 	"app/helpers"
-	"context"
 	"log"
+	"mime/multipart"
 	"net/http"
-	"os"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -54,39 +52,13 @@ func (r *appRoute) createTicketAttachment(c *gin.Context) {
 		return
 	}
 
-	// Upload to MinIO
-	ctx := context.Background()
-	minioClient := helpers.NewMinioClient()
-	bucketName := os.Getenv("MINIO_BUCKET_NAME")
-	if bucketName == "" {
-		bucketName = "my-bucket"
-	}
-	log.Printf("[ticket-attachment] using bucket: %s", bucketName)
-
-	objectName, err := helpers.UploadFile(ctx, minioClient, bucketName, file)
+	attachment, err := r.Service.CreateTicketAttachment(ticketID, file)
 	if err != nil {
-		log.Printf("[ticket-attachment] UploadFile error: %v", err)
-		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to upload file to storage", nil, nil)
-		c.JSON(http.StatusInternalServerError, response)
-		return
-	}
-	log.Printf("[ticket-attachment] uploaded object: %s", objectName)
-
-	attachment := &models.TicketAttachment{
-		TicketID: ticketID,
-		FilePath: objectName, // Store MinIO object name
-	}
-
-	if err := r.Service.CreateTicketAttachment(attachment); err != nil {
-		// Rollback: delete uploaded file
-		log.Printf("[ticket-attachment] CreateTicketAttachment DB error: %v — rolling back delete %s", err, objectName)
-		helpers.DeleteFile(ctx, minioClient, bucketName, objectName)
-		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to create attachment record", nil, nil)
+		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to create attachment", nil, nil)
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	log.Printf("[ticket-attachment] attachment record created: id=%d file=%s", attachment.ID, attachment.FilePath)
 	response := helpers.NewResponse(http.StatusCreated, "Attachment created successfully", nil, attachment)
 	c.JSON(http.StatusCreated, response)
 }
@@ -139,23 +111,14 @@ func (r *appRoute) getTicketAttachmentByID(c *gin.Context) {
 		return
 	}
 
-	attachment, err := r.Service.GetTicketAttachmentByID(id)
+	attachment, downloadURL, err := r.Service.GetTicketAttachmentByID(id)
 	if err != nil {
 		response := helpers.NewResponse(http.StatusNotFound, "Attachment not found", nil, nil)
 		c.JSON(http.StatusNotFound, response)
 		return
 	}
 
-	// Generate presigned URL for download (valid for 1 hour)
-	ctx := context.Background()
-	minioClient := helpers.NewMinioClient()
-	bucketName := os.Getenv("MINIO_BUCKET_NAME")
-	if bucketName == "" {
-		bucketName = "my-bucket"
-	}
-
-	downloadURL, err := helpers.GetFileURL(ctx, minioClient, bucketName, attachment.FilePath, 1*time.Hour)
-	if err != nil {
+	if downloadURL == "" {
 		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to generate download URL", nil, nil)
 		c.JSON(http.StatusInternalServerError, response)
 		return
@@ -192,59 +155,28 @@ func (r *appRoute) updateTicketAttachment(c *gin.Context) {
 		return
 	}
 
-	attachment, err := r.Service.GetTicketAttachmentByID(id)
+	var ticketID *int
+	if ticketIDStr := c.PostForm("id_ticket"); ticketIDStr != "" {
+		if parsedID, err := strconv.Atoi(ticketIDStr); err == nil {
+			ticketID = &parsedID
+		}
+	}
+
+	var file *multipart.FileHeader
+	if f, err := c.FormFile("file"); err == nil {
+		file = f
+	}
+
+	attachment, err := r.Service.UpdateTicketAttachment(id, ticketID, file)
 	if err != nil {
-		response := helpers.NewResponse(http.StatusNotFound, "Attachment not found", nil, nil)
-		c.JSON(http.StatusNotFound, response)
+		if err.Error() == "record not found" {
+			response := helpers.NewResponse(http.StatusNotFound, "Attachment not found", nil, nil)
+			c.JSON(http.StatusNotFound, response)
+		} else {
+			response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update attachment", nil, nil)
+			c.JSON(http.StatusInternalServerError, response)
+		}
 		return
-	}
-
-	// Update ticket ID if provided
-	if ticketID := c.PostForm("id_ticket"); ticketID != "" {
-		if id, err := strconv.Atoi(ticketID); err == nil {
-			attachment.TicketID = id
-		}
-	}
-
-	// Update file if provided
-	if file, err := c.FormFile("file"); err == nil {
-		ctx := context.Background()
-		minioClient := helpers.NewMinioClient()
-		bucketName := os.Getenv("MINIO_BUCKET_NAME")
-		if bucketName == "" {
-			bucketName = "my-bucket"
-		}
-
-		// Upload new file
-		objectName, err := helpers.UploadFile(ctx, minioClient, bucketName, file)
-		if err != nil {
-			response := helpers.NewResponse(http.StatusInternalServerError, "Failed to upload file", nil, nil)
-			c.JSON(http.StatusInternalServerError, response)
-			return
-		}
-
-		// Delete old file
-		oldFilePath := attachment.FilePath
-		attachment.FilePath = objectName
-
-		if err := r.Service.UpdateTicketAttachment(attachment); err != nil {
-			// Rollback: delete new file
-			helpers.DeleteFile(ctx, minioClient, bucketName, objectName)
-			response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update attachment", nil, nil)
-			c.JSON(http.StatusInternalServerError, response)
-			return
-		}
-
-		// Delete old file after successful update
-		if oldFilePath != "" {
-			helpers.DeleteFile(ctx, minioClient, bucketName, oldFilePath)
-		}
-	} else {
-		if err := r.Service.UpdateTicketAttachment(attachment); err != nil {
-			response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update attachment", nil, nil)
-			c.JSON(http.StatusInternalServerError, response)
-			return
-		}
 	}
 
 	response := helpers.NewResponse(http.StatusOK, "Attachment updated successfully", nil, attachment)

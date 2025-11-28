@@ -3,6 +3,8 @@ package domain
 import (
 	"app/domain/models"
 	"context"
+	"mime/multipart"
+	"time"
 )
 
 type AppRepository interface {
@@ -95,4 +97,10 @@ type AppRepository interface {
 	GetTicketLogs() ([]models.TicketLog, error)
 	GetTicketLogByID(id int) (*models.TicketLog, error)
 	GetTicketLogsByTicketID(ticketID int) ([]models.TicketLog, error)
+}
+
+type S3Repository interface {
+	UploadFile(ctx context.Context, file *multipart.FileHeader) (string, error)
+	DeleteFile(ctx context.Context, filePath string) error
+	GetFileURL(ctx context.Context, filePath string, expiry time.Duration) (string, error)
 }
