@@ -34,7 +34,7 @@ func main() {
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Host = os.Getenv("BASE_API_URL")
 	docs.SwaggerInfo.BasePath = "/api"
-	docs.SwaggerInfo.Schemes = []string{"http"}
+	docs.SwaggerInfo.Schemes = []string{"https"}
 
 	timeoutStr := os.Getenv("TIMEOUT")
 	if timeoutStr == "" {
