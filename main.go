@@ -4,6 +4,7 @@ import (
 	"app/app/handlers"
 	"app/app/middleware"
 	"app/app/repositories"
+	"app/app/repositories/s3"
 	"app/app/services"
 	"app/docs"
 	"app/domain"
@@ -51,15 +52,22 @@ func main() {
 	db := helpers.ConnectDB()
 	helpers.MigrateDB(db, domain.GetAllModels()...)
 	repo := repositories.NewAppRepository(db)
+
+	// Add S3 repository initialization
+	s3Repo := s3.NewS3Repository(timeoutContext)
+
 	hub := services.NewHub()
-	service := services.NewAppService(services.DBInjection{Repo: repo}, hub, timeoutContext)
+	service := services.NewAppService(services.DBInjection{
+		Repo:   repo,
+		S3Repo: s3Repo,
+	}, hub, timeoutContext)
 	go service.Run()
 	middleware := middleware.NewAppMiddleware(repo)
 	ginEngine := gin.Default()
 
 	// Add CORS middleware
 	ginEngine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", os.Getenv("APP_URL") },
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", os.Getenv("APP_URL")},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

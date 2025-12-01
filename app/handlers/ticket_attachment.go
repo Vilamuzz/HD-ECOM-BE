@@ -3,6 +3,8 @@ package handlers
 import (
 	"app/domain/models"
 	"app/helpers"
+	"log"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 
@@ -33,33 +35,26 @@ func (r *appRoute) TicketAttachmentRoutes(rg *gin.RouterGroup) {
 func (r *appRoute) createTicketAttachment(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
+		log.Printf("[ticket-attachment] no file uploaded: %v", err)
 		response := helpers.NewResponse(http.StatusBadRequest, "No file uploaded", nil, nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
+	// Log incoming file info for debugging
+	log.Printf("[ticket-attachment] incoming file: name=%s size=%d header=%v", file.Filename, file.Size, file.Header)
+
 	ticketID, err := strconv.Atoi(c.PostForm("id_ticket"))
 	if err != nil {
+		log.Printf("[ticket-attachment] invalid ticket id: %v", err)
 		response := helpers.NewResponse(http.StatusBadRequest, "Invalid ticket ID", nil, nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	// Save file and create attachment record
-	filePath := "uploads/" + file.Filename // You might want to generate a unique filename
-	if err := c.SaveUploadedFile(file, filePath); err != nil {
-		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to save file", nil, nil)
-		c.JSON(http.StatusInternalServerError, response)
-		return
-	}
-
-	attachment := &models.TicketAttachment{
-		TicketID: ticketID,
-		FilePath: filePath,
-	}
-
-	if err := r.Service.CreateTicketAttachment(attachment); err != nil {
-		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to create attachment record", nil, nil)
+	attachment, err := r.Service.CreateTicketAttachment(ticketID, file)
+	if err != nil {
+		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to create attachment", nil, nil)
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -116,14 +111,25 @@ func (r *appRoute) getTicketAttachmentByID(c *gin.Context) {
 		return
 	}
 
-	attachment, err := r.Service.GetTicketAttachmentByID(id)
+	attachment, downloadURL, err := r.Service.GetTicketAttachmentByID(id)
 	if err != nil {
 		response := helpers.NewResponse(http.StatusNotFound, "Attachment not found", nil, nil)
 		c.JSON(http.StatusNotFound, response)
 		return
 	}
 
-	response := helpers.NewResponse(http.StatusOK, "Attachment retrieved successfully", nil, attachment)
+	if downloadURL == "" {
+		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to generate download URL", nil, nil)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	data := map[string]interface{}{
+		"attachment":   attachment,
+		"download_url": downloadURL,
+	}
+
+	response := helpers.NewResponse(http.StatusOK, "Attachment retrieved successfully", nil, data)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -149,34 +155,27 @@ func (r *appRoute) updateTicketAttachment(c *gin.Context) {
 		return
 	}
 
-	attachment, err := r.Service.GetTicketAttachmentByID(id)
+	var ticketID *int
+	if ticketIDStr := c.PostForm("id_ticket"); ticketIDStr != "" {
+		if parsedID, err := strconv.Atoi(ticketIDStr); err == nil {
+			ticketID = &parsedID
+		}
+	}
+
+	var file *multipart.FileHeader
+	if f, err := c.FormFile("file"); err == nil {
+		file = f
+	}
+
+	attachment, err := r.Service.UpdateTicketAttachment(id, ticketID, file)
 	if err != nil {
-		response := helpers.NewResponse(http.StatusNotFound, "Attachment not found", nil, nil)
-		c.JSON(http.StatusNotFound, response)
-		return
-	}
-
-	// Update ticket ID if provided
-	if ticketID := c.PostForm("id_ticket"); ticketID != "" {
-		if id, err := strconv.Atoi(ticketID); err == nil {
-			attachment.TicketID = id
-		}
-	}
-
-	// Update file if provided
-	if file, err := c.FormFile("file"); err == nil {
-		filePath := "uploads/" + file.Filename // You might want to generate a unique filename
-		if err := c.SaveUploadedFile(file, filePath); err != nil {
-			response := helpers.NewResponse(http.StatusInternalServerError, "Failed to save file", nil, nil)
+		if err.Error() == "record not found" {
+			response := helpers.NewResponse(http.StatusNotFound, "Attachment not found", nil, nil)
+			c.JSON(http.StatusNotFound, response)
+		} else {
+			response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update attachment", nil, nil)
 			c.JSON(http.StatusInternalServerError, response)
-			return
 		}
-		attachment.FilePath = filePath
-	}
-
-	if err := r.Service.UpdateTicketAttachment(attachment); err != nil {
-		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update attachment", nil, nil)
-		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
