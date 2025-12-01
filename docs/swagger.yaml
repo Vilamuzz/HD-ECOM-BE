@@ -360,13 +360,13 @@ definitions:
   requests.TicketCreateRequest:
     properties:
       deskripsi:
-        example: Saya tidak bisa login ke akun saya.
+        example: Cannot access my account after password reset
         type: string
       id_category:
         example: 1
         type: integer
       id_priority:
-        example: 1
+        example: 2
         type: integer
       id_status:
         example: 1
@@ -375,20 +375,11 @@ definitions:
         example: 1
         type: integer
       judul:
-        example: Tidak bisa login
+        example: Login Issues
         type: string
       kode_tiket:
         example: TCKT-001
         type: string
-      tipe_pengaduan:
-        allOf:
-        - $ref: '#/definitions/models.UserRole'
-        description: 'Allowed: admin, seller, customer'
-        enum:
-        - admin
-        - seller
-        - customer
-        example: customer
     type: object
   requests.TicketResponse:
     properties:

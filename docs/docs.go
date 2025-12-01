@@ -2519,7 +2519,7 @@ const docTemplate = `{
             "properties": {
                 "deskripsi": {
                     "type": "string",
-                    "example": "Saya tidak bisa login ke akun saya."
+                    "example": "Cannot access my account after password reset"
                 },
                 "id_category": {
                     "type": "integer",
@@ -2527,7 +2527,7 @@ const docTemplate = `{
                 },
                 "id_priority": {
                     "type": "integer",
-                    "example": 1
+                    "example": 2
                 },
                 "id_status": {
                     "type": "integer",
@@ -2539,25 +2539,11 @@ const docTemplate = `{
                 },
                 "judul": {
                     "type": "string",
-                    "example": "Tidak bisa login"
+                    "example": "Login Issues"
                 },
                 "kode_tiket": {
                     "type": "string",
                     "example": "TCKT-001"
-                },
-                "tipe_pengaduan": {
-                    "description": "Allowed: admin, seller, customer",
-                    "enum": [
-                        "admin",
-                        "seller",
-                        "customer"
-                    ],
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.UserRole"
-                        }
-                    ],
-                    "example": "customer"
                 }
             }
         },
