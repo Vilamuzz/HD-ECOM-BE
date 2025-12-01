@@ -138,7 +138,7 @@ definitions:
       tanggal_diperbarui:
         type: string
       tipe_pengaduan:
-        type: string
+        $ref: '#/definitions/models.UserRole'
       user:
         allOf:
         - $ref: '#/definitions/models.User'
@@ -381,12 +381,14 @@ definitions:
         example: TCKT-001
         type: string
       tipe_pengaduan:
-        description: 'Allowed: pelanggan, penjual'
+        allOf:
+        - $ref: '#/definitions/models.UserRole'
+        description: 'Allowed: admin, seller, customer'
         enum:
-        - pelanggan
-        - penjual
-        example: pelanggan
-        type: string
+        - admin
+        - seller
+        - customer
+        example: customer
     type: object
   requests.TicketResponse:
     properties:
@@ -411,7 +413,7 @@ definitions:
       tanggal_diperbarui:
         type: string
       tipe_pengaduan:
-        type: string
+        $ref: '#/definitions/models.UserRole'
     type: object
   requests.UpdateTicketCommentRequest:
     properties:
@@ -580,6 +582,30 @@ paths:
       summary: Get admin list conversation states
       tags:
       - admin_conversation_states
+  /me:
+    get:
+      description: Get information about the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get current user info
+      tags:
+      - users
   /ticket-assignments:
     get:
       description: Get a list of all ticket assignments
@@ -1488,7 +1514,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new ticket
+      description: Create a new ticket (tipe_pengaduan will be auto-filled based on
+        user role)
       parameters:
       - description: Ticket Data
         in: body
@@ -1508,6 +1535,8 @@ paths:
                 data:
                   $ref: '#/definitions/requests.TicketResponse'
               type: object
+      security:
+      - BearerAuth: []
       summary: Create a new ticket
       tags:
       - tickets
@@ -1556,7 +1585,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update a ticket by its ID
+      description: Update a ticket by its ID (tipe_pengaduan will be auto-filled based
+        on user role)
       parameters:
       - description: Ticket ID
         in: path
@@ -1581,6 +1611,8 @@ paths:
                 data:
                   $ref: '#/definitions/requests.TicketResponse'
               type: object
+      security:
+      - BearerAuth: []
       summary: Update a ticket
       tags:
       - tickets

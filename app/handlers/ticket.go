@@ -12,17 +12,18 @@ import (
 
 func (r *appRoute) TicketRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/tickets")
-	api.POST("", r.createTicket)
+	api.POST("", r.Middleware.Auth(), r.createTicket)
 	api.GET("", r.getTickets)
 	api.GET("/:id", r.getTicketByID)
-	api.PUT("/:id", r.updateTicket)
+	api.PUT("/:id", r.Middleware.Auth(), r.updateTicket)
 	api.DELETE("/:id", r.deleteTicket)
 }
 
 // CreateTicket godoc
 // @Summary Create a new ticket
-// @Description Create a new ticket
+// @Description Create a new ticket (tipe_pengaduan will be auto-filled based on user role)
 // @Tags tickets
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param ticket body requests.TicketCreateRequest true "Ticket Data"
@@ -36,15 +37,35 @@ func (r *appRoute) createTicket(c *gin.Context) {
 		return
 	}
 
+	// Ambil user dari context
+	userData, exists := c.Get("userData")
+	var tipePengaduan models.UserRole
+	var userID uint64
+	if exists {
+		user, ok := userData.(models.User)
+		if ok && user.Role != "" {
+			tipePengaduan = user.Role
+			userID = user.ID
+		} else {
+			// fallback ke default customer jika role kosong
+			tipePengaduan = models.RoleCustomer
+			userID = req.UserID
+		}
+	} else {
+		// fallback jika tidak ada user di context - default customer
+		tipePengaduan = models.RoleCustomer
+		userID = req.UserID
+	}
+
 	ticket := models.Ticket{
 		KodeTiket:     req.KodeTiket,
-		UserID:        uint64(req.UserID),
+		UserID:        userID,
 		Judul:         req.Judul,
 		Deskripsi:     req.Deskripsi,
 		CategoryID:    req.CategoryID,
 		PriorityID:    req.PriorityID,
 		StatusID:      req.StatusID,
-		TipePengaduan: req.TipePengaduan,
+		TipePengaduan: tipePengaduan,
 	}
 
 	if err := r.Service.CreateTicket(&ticket); err != nil {
@@ -150,8 +171,9 @@ func (r *appRoute) getTicketByID(c *gin.Context) {
 
 // UpdateTicket godoc
 // @Summary Update a ticket
-// @Description Update a ticket by its ID
+// @Description Update a ticket by its ID (tipe_pengaduan will be auto-filled based on user role)
 // @Tags tickets
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param id path int true "Ticket ID"
@@ -173,16 +195,36 @@ func (r *appRoute) updateTicket(c *gin.Context) {
 		return
 	}
 
+	// Ambil user dari context
+	userData, exists := c.Get("userData")
+	var tipePengaduan models.UserRole
+	var userID uint64
+	if exists {
+		user, ok := userData.(models.User)
+		if ok && user.Role != "" {
+			tipePengaduan = user.Role
+			userID = user.ID
+		} else {
+			// fallback ke default customer jika role kosong
+			tipePengaduan = models.RoleCustomer
+			userID = req.UserID
+		}
+	} else {
+		// fallback jika tidak ada user di context - default customer
+		tipePengaduan = models.RoleCustomer
+		userID = req.UserID
+	}
+
 	ticket := models.Ticket{
 		ID:            id,
 		KodeTiket:     req.KodeTiket,
-		UserID:        req.UserID,
+		UserID:        userID,
 		Judul:         req.Judul,
 		Deskripsi:     req.Deskripsi,
 		CategoryID:    req.CategoryID,
 		PriorityID:    req.PriorityID,
 		StatusID:      req.StatusID,
-		TipePengaduan: req.TipePengaduan,
+		TipePengaduan: tipePengaduan,
 	}
 
 	if err := r.Service.UpdateTicket(&ticket); err != nil {

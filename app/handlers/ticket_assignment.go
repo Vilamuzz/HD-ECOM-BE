@@ -156,7 +156,7 @@ func (r *appRoute) updateTicketAssignment(c *gin.Context) {
 	}
 
 	assignment := models.TicketAssignment{
-		ID:      id,
+		ID:                id,
 		TicketID:          req.TicketID,
 		AdminID:           req.AdminID,
 		TanggalDitugaskan: tglDitugaskan,
