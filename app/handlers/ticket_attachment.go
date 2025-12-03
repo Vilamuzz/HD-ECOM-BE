@@ -14,7 +14,7 @@ import (
 func (r *appRoute) TicketAttachmentRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/ticket-attachments")
 	api.POST("", r.createTicketAttachment)
-	api.GET("", r.getTicketAttachments)
+	api.GET("/ticket/:ticket_id", r.getTicketAttachmentsByTicketID) // New dedicated endpoint
 	api.GET("/:id", r.getTicketAttachmentByID)
 	api.PUT("/:id", r.updateTicketAttachment)
 	api.DELETE("/:id", r.deleteTicketAttachment)
@@ -91,6 +91,51 @@ func (r *appRoute) getTicketAttachments(c *gin.Context) {
 	}
 
 	response := helpers.NewResponse(http.StatusOK, "Attachments retrieved successfully", nil, attachments)
+	c.JSON(http.StatusOK, response)
+}
+
+// GetTicketAttachmentsByTicketID godoc
+// @Summary Get ticket attachments by ticket ID
+// @Description Get all attachments for a specific ticket
+// @Tags ticket-attachments
+// @Produce json
+// @Param ticket_id path int true "Ticket ID"
+// @Success 200 {object} helpers.Response{data=[]models.TicketAttachment}
+// @Failure 400 {object} helpers.Response
+// @Failure 500 {object} helpers.Response
+// @Router /ticket-attachments/ticket/{ticket_id} [get]
+func (r *appRoute) getTicketAttachmentsByTicketID(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("ticket_id"))
+	if err != nil {
+		response := helpers.NewResponse(http.StatusBadRequest, "Invalid ticket ID", nil, nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	attachments, err := r.Service.GetTicketAttachmentsByTicketID(ticketID)
+	if err != nil {
+		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to get attachments", nil, nil)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Create response data with download URLs for each attachment
+	var responseData []map[string]interface{}
+	for _, attachment := range attachments {
+		_, downloadURL, err := r.Service.GetTicketAttachmentByID(attachment.ID)
+		if err != nil {
+			log.Printf("[ticket-attachment] failed to get download URL for attachment %d: %v", attachment.ID, err)
+			downloadURL = ""
+		}
+
+		data := map[string]interface{}{
+			"attachment":   attachment,
+			"download_url": downloadURL,
+		}
+		responseData = append(responseData, data)
+	}
+
+	response := helpers.NewResponse(http.StatusOK, "Attachments retrieved successfully", nil, responseData)
 	c.JSON(http.StatusOK, response)
 }
 

@@ -882,6 +882,40 @@ paths:
       summary: Update a ticket attachment
       tags:
       - ticket-attachments
+  /ticket-attachments/ticket/{ticket_id}:
+    get:
+      description: Get all attachments for a specific ticket
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticket_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketAttachment'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      summary: Get ticket attachments by ticket ID
+      tags:
+      - ticket-attachments
   /ticket-categories:
     get:
       description: Get a list of all ticket categories
@@ -1605,6 +1639,36 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a ticket
+      tags:
+      - tickets
+  /tickets/my-tickets:
+    get:
+      description: Get all tickets belonging to the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/requests.TicketResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get current user's tickets
       tags:
       - tickets
 securityDefinitions:

@@ -14,6 +14,7 @@ func (r *appRoute) TicketRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/tickets")
 	api.POST("", r.Middleware.Auth(), r.createTicket)
 	api.GET("", r.getTickets)
+	api.GET("/my-tickets", r.Middleware.Auth(), r.getMyTickets) // New endpoint
 	api.GET("/:id", r.getTicketByID)
 	api.PUT("/:id", r.Middleware.Auth(), r.updateTicket)
 	api.DELETE("/:id", r.deleteTicket)
@@ -37,34 +38,35 @@ func (r *appRoute) createTicket(c *gin.Context) {
 		return
 	}
 
-	// Ambil user dari context
+	// Get user from context (required - no fallback)
 	userData, exists := c.Get("userData")
-	var tipePengaduan models.UserRole
-	var userID uint64
-	if exists {
-		user, ok := userData.(models.User)
-		if ok && user.Role != "" {
-			tipePengaduan = user.Role
-			userID = user.ID
-		} else {
-			// fallback ke default customer jika role kosong
-			tipePengaduan = models.RoleCustomer
-			userID = req.UserID
-		}
-	} else {
-		// fallback jika tidak ada user di context - default customer
-		tipePengaduan = models.RoleCustomer
-		userID = req.UserID
+	if !exists {
+		response := helpers.NewResponse(http.StatusUnauthorized, "User authentication required", nil, nil)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	user, ok := userData.(models.User)
+	if !ok {
+		response := helpers.NewResponse(http.StatusUnauthorized, "Invalid user data", nil, nil)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	// Use authenticated user's data
+	tipePengaduan := user.Role
+	if tipePengaduan == "" {
+		tipePengaduan = models.RoleCustomer // default fallback
 	}
 
 	ticket := models.Ticket{
-		KodeTiket:     req.KodeTiket,
-		UserID:        userID,
+		// KodeTiket will be auto-generated in service
+		UserID:        user.ID, // Always use authenticated user's ID
 		Judul:         req.Judul,
 		Deskripsi:     req.Deskripsi,
 		CategoryID:    req.CategoryID,
-		PriorityID:    req.PriorityID,
-		StatusID:      req.StatusID,
+		PriorityID:    3, // Default priority ID
+		StatusID:      1, // Default status ID
 		TipePengaduan: tipePengaduan,
 	}
 
@@ -77,7 +79,7 @@ func (r *appRoute) createTicket(c *gin.Context) {
 	resp := requests.TicketResponse{
 		ID:                ticket.ID,
 		KodeTiket:         ticket.KodeTiket,
-		UserID:            uint64(ticket.UserID),
+		UserID:            ticket.UserID,
 		Judul:             ticket.Judul,
 		Deskripsi:         ticket.Deskripsi,
 		CategoryID:        ticket.CategoryID,
@@ -274,5 +276,60 @@ func (r *appRoute) deleteTicket(c *gin.Context) {
 	}
 
 	response := helpers.NewResponse(http.StatusOK, "Ticket deleted successfully", nil, nil)
+	c.JSON(http.StatusOK, response)
+}
+
+// GetMyTickets godoc
+// @Summary Get current user's tickets
+// @Description Get all tickets belonging to the authenticated user
+// @Tags tickets
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} helpers.Response{data=[]requests.TicketResponse}
+// @Failure 401 {object} helpers.Response
+// @Failure 500 {object} helpers.Response
+// @Router /tickets/my-tickets [get]
+func (r *appRoute) getMyTickets(c *gin.Context) {
+	// Get authenticated user from context
+	userData, exists := c.Get("userData")
+	if !exists {
+		response := helpers.NewResponse(http.StatusUnauthorized, "User authentication required", nil, nil)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	user, ok := userData.(models.User)
+	if !ok {
+		response := helpers.NewResponse(http.StatusUnauthorized, "Invalid user data", nil, nil)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	// Get tickets by user ID
+	tickets, err := r.Service.GetTicketsByUserID(int(user.ID))
+	if err != nil {
+		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to get user tickets", nil, nil)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	var resp []requests.TicketResponse
+	for _, ticket := range tickets {
+		resp = append(resp, requests.TicketResponse{
+			ID:                ticket.ID,
+			KodeTiket:         ticket.KodeTiket,
+			UserID:            ticket.UserID,
+			Judul:             ticket.Judul,
+			Deskripsi:         ticket.Deskripsi,
+			CategoryID:        ticket.CategoryID,
+			PriorityID:        ticket.PriorityID,
+			StatusID:          ticket.StatusID,
+			TipePengaduan:     ticket.TipePengaduan,
+			TanggalDibuat:     ticket.TanggalDibuat.Format("2006-01-02T15:04:05Z07:00"),
+			TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
+		})
+	}
+
+	response := helpers.NewResponse(http.StatusOK, "User tickets retrieved successfully", nil, resp)
 	c.JSON(http.StatusOK, response)
 }
