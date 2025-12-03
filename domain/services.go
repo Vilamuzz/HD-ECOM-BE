@@ -4,6 +4,7 @@ import (
 	"app/domain/models"
 	"app/helpers"
 	"context"
+	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,6 +21,7 @@ type AppService interface {
 
 	// Conversation management
 	GetConversations(claim models.User) helpers.Response
+	GetConversationByID(conversationID uint64) (*models.Conversation, error)
 	CreateCustomerConversation(ctx context.Context, claim models.User) helpers.Response
 	CloseConversation(ctx context.Context, claim models.User, id string) helpers.Response
 	ReopenConversation(ctx context.Context, conversationID uint64) error
@@ -66,11 +68,11 @@ type AppService interface {
 	DeleteTicketAssignment(id int) error
 
 	// Ticket Attachment
-	CreateTicketAttachment(attachment *models.TicketAttachment) error
+	CreateTicketAttachment(ticketID int, file *multipart.FileHeader) (*models.TicketAttachment, error)
 	GetTicketAttachments() ([]models.TicketAttachment, error)
-	GetTicketAttachmentByID(id int) (*models.TicketAttachment, error)
+	GetTicketAttachmentByID(id int) (*models.TicketAttachment, string, error)
 	GetTicketAttachmentsByTicketID(ticketID int) ([]models.TicketAttachment, error)
-	UpdateTicketAttachment(attachment *models.TicketAttachment) error
+	UpdateTicketAttachment(id int, ticketID *int, file *multipart.FileHeader) (*models.TicketAttachment, error)
 	DeleteTicketAttachment(id int) error
 
 	// Ticket Comment
