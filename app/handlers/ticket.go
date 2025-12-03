@@ -37,34 +37,35 @@ func (r *appRoute) createTicket(c *gin.Context) {
 		return
 	}
 
-	// Ambil user dari context
+	// Get user from context (required - no fallback)
 	userData, exists := c.Get("userData")
-	var tipePengaduan models.UserRole
-	var userID uint64
-	if exists {
-		user, ok := userData.(models.User)
-		if ok && user.Role != "" {
-			tipePengaduan = user.Role
-			userID = user.ID
-		} else {
-			// fallback ke default customer jika role kosong
-			tipePengaduan = models.RoleCustomer
-			userID = req.UserID
-		}
-	} else {
-		// fallback jika tidak ada user di context - default customer
-		tipePengaduan = models.RoleCustomer
-		userID = req.UserID
+	if !exists {
+		response := helpers.NewResponse(http.StatusUnauthorized, "User authentication required", nil, nil)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	user, ok := userData.(models.User)
+	if !ok {
+		response := helpers.NewResponse(http.StatusUnauthorized, "Invalid user data", nil, nil)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	// Use authenticated user's data
+	tipePengaduan := user.Role
+	if tipePengaduan == "" {
+		tipePengaduan = models.RoleCustomer // default fallback
 	}
 
 	ticket := models.Ticket{
-		KodeTiket:     req.KodeTiket,
-		UserID:        userID,
+		// KodeTiket will be auto-generated in service
+		UserID:        user.ID, // Always use authenticated user's ID
 		Judul:         req.Judul,
 		Deskripsi:     req.Deskripsi,
 		CategoryID:    req.CategoryID,
-		PriorityID:    req.PriorityID,
-		StatusID:      req.StatusID,
+		PriorityID:    3, // Default priority ID
+		StatusID:      1, // Default status ID
 		TipePengaduan: tipePengaduan,
 	}
 
@@ -77,7 +78,7 @@ func (r *appRoute) createTicket(c *gin.Context) {
 	resp := requests.TicketResponse{
 		ID:                ticket.ID,
 		KodeTiket:         ticket.KodeTiket,
-		UserID:            uint64(ticket.UserID),
+		UserID:            ticket.UserID,
 		Judul:             ticket.Judul,
 		Deskripsi:         ticket.Deskripsi,
 		CategoryID:        ticket.CategoryID,
