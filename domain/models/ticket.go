@@ -11,7 +11,7 @@ type Ticket struct {
 	CategoryID        int       `json:"category_id" gorm:"not null;index"`
 	PriorityID        int       `json:"priority_id" gorm:"not null;index"`
 	StatusID          int       `json:"status_id" gorm:"not null;index"`
-	TipePengaduan     string    `json:"tipe_pengaduan" gorm:"type:varchar(50);check:tipe_pengaduan IN ('pelanggan', 'penjual')"`
+	TipePengaduan     UserRole  `json:"tipe_pengaduan" gorm:"type:varchar(50);check:tipe_pengaduan IN ('admin', 'seller', 'customer')"`
 	TanggalDibuat     time.Time `json:"tanggal_dibuat" gorm:"default:CURRENT_TIMESTAMP"`
 	TanggalDiperbarui time.Time `json:"tanggal_diperbarui" gorm:"default:CURRENT_TIMESTAMP"`
 

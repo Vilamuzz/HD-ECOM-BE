@@ -252,6 +252,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get information about the currently authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get current user info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/ticket-assignments": {
             "get": {
                 "description": "Get a list of all ticket assignments",
@@ -1747,7 +1790,12 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new ticket",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new ticket (tipe_pengaduan will be auto-filled based on user role)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1832,7 +1880,12 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update a ticket by its ID",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a ticket by its ID (tipe_pengaduan will be auto-filled based on user role)",
                 "consumes": [
                     "application/json"
                 ],
@@ -2121,7 +2174,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tipe_pengaduan": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.UserRole"
                 },
                 "user": {
                     "description": "Relasi - Add references to match custom column names",
@@ -2466,7 +2519,7 @@ const docTemplate = `{
             "properties": {
                 "deskripsi": {
                     "type": "string",
-                    "example": "Saya tidak bisa login ke akun saya."
+                    "example": "Cannot access my account after password reset"
                 },
                 "id_category": {
                     "type": "integer",
@@ -2474,7 +2527,7 @@ const docTemplate = `{
                 },
                 "id_priority": {
                     "type": "integer",
-                    "example": 1
+                    "example": 2
                 },
                 "id_status": {
                     "type": "integer",
@@ -2486,20 +2539,11 @@ const docTemplate = `{
                 },
                 "judul": {
                     "type": "string",
-                    "example": "Tidak bisa login"
+                    "example": "Login Issues"
                 },
                 "kode_tiket": {
                     "type": "string",
                     "example": "TCKT-001"
-                },
-                "tipe_pengaduan": {
-                    "description": "Allowed: pelanggan, penjual",
-                    "type": "string",
-                    "enum": [
-                        "pelanggan",
-                        "penjual"
-                    ],
-                    "example": "pelanggan"
                 }
             }
         },
@@ -2537,7 +2581,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tipe_pengaduan": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.UserRole"
                 }
             }
         },
