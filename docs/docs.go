@@ -603,6 +603,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/ticket-attachments/ticket/{ticket_id}": {
+            "get": {
+                "description": "Get all attachments for a specific ticket",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-attachments"
+                ],
+                "summary": "Get ticket attachments by ticket ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "ticket_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.TicketAttachment"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/ticket-attachments/{id}": {
             "get": {
                 "description": "Get a ticket attachment by its ID",
