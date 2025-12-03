@@ -25,3 +25,9 @@ func (r *appRepository) UpdateTicket(ticket *models.Ticket) error {
 func (r *appRepository) DeleteTicket(id int) error {
 	return r.Conn.Delete(&models.Ticket{}, id).Error
 }
+
+func (r *appRepository) GetTicketsByUserID(userID int) ([]models.Ticket, error) {
+	var tickets []models.Ticket
+	err := r.Conn.Where("id_user = ?", userID).Preload("User").Preload("Category").Preload("Priority").Preload("Status").Find(&tickets).Error
+	return tickets, err
+}

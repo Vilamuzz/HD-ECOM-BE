@@ -66,6 +66,7 @@ type AppRepository interface {
 	CreateTicket(ticket *models.Ticket) error
 	GetTickets() ([]models.Ticket, error)
 	GetTicketByID(id int) (*models.Ticket, error)
+	GetTicketsByUserID(userID int) ([]models.Ticket, error)
 	UpdateTicket(ticket *models.Ticket) error
 	DeleteTicket(id int) error
 

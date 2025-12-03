@@ -45,3 +45,7 @@ func (s *appService) UpdateTicket(ticket *models.Ticket) error {
 func (s *appService) DeleteTicket(id int) error {
 	return s.repo.DeleteTicket(id)
 }
+
+func (s *appService) GetTicketsByUserID(userID int) ([]models.Ticket, error) {
+	return s.repo.GetTicketsByUserID(userID)
+}
