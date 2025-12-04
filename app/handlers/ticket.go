@@ -88,10 +88,16 @@ func (r *appRoute) getTickets(c *gin.Context) {
 
 	var resp []requests.TicketResponse
 	for _, ticket := range tickets {
+		username := ""
+		if ticket.User.Username != "" {
+			username = ticket.User.Username
+		}
+
 		resp = append(resp, requests.TicketResponse{
 			ID:                ticket.ID,
 			KodeTiket:         ticket.KodeTiket,
 			UserID:            ticket.UserID,
+			Username:          username,
 			Judul:             ticket.Judul,
 			Deskripsi:         ticket.Deskripsi,
 			CategoryID:        ticket.CategoryID,
@@ -130,10 +136,16 @@ func (r *appRoute) getTicketByID(c *gin.Context) {
 		return
 	}
 
+	username := ""
+	if ticket.User.Username != "" {
+		username = ticket.User.Username
+	}
+
 	resp := requests.TicketResponse{
 		ID:                ticket.ID,
 		KodeTiket:         ticket.KodeTiket,
 		UserID:            ticket.UserID,
+		Username:          username,
 		Judul:             ticket.Judul,
 		Deskripsi:         ticket.Deskripsi,
 		CategoryID:        ticket.CategoryID,

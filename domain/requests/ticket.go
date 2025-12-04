@@ -15,7 +15,8 @@ type TicketCreateRequest struct {
 type TicketResponse struct {
 	ID                int    `json:"id_ticket"`
 	KodeTiket         string `json:"kode_tiket"`
-	UserID            uint64 `json:"id_user"`
+	UserID            uint64 `json:"id_user"` // Tetap kirim ID jika diperlukan
+	Username          string `json:"username"` // Tambahkan field ini
 	Judul             string `json:"judul"`
 	Deskripsi         string `json:"deskripsi"`
 	CategoryID        int    `json:"id_category"`
