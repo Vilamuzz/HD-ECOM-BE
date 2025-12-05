@@ -15,15 +15,16 @@ type TicketCreateRequest struct {
 }
 
 type TicketResponse struct {
-	ID                int             `json:"id_ticket"`
-	KodeTiket         string          `json:"kode_tiket"`
-	UserID            uint64          `json:"id_user"`
-	Judul             string          `json:"judul"`
-	Deskripsi         string          `json:"deskripsi"`
-	CategoryID        int             `json:"id_category"`
-	PriorityID        int             `json:"id_priority"`
-	StatusID          int             `json:"id_status"`
+	ID                int    `json:"id_ticket"`
+	KodeTiket         string `json:"kode_tiket"`
+	UserID            uint64 `json:"id_user"` // Tetap kirim ID jika diperlukan
+	Username          string `json:"username"` // Tambahkan field ini
+	Judul             string `json:"judul"`
+	Deskripsi         string `json:"deskripsi"`
+	CategoryID        int    `json:"id_category"`
+	PriorityID        int    `json:"id_priority"`
+	StatusID          int    `json:"id_status"`
 	TipePengaduan     models.UserRole `json:"tipe_pengaduan"`
-	TanggalDibuat     string          `json:"tanggal_dibuat"`
-	TanggalDiperbarui string          `json:"tanggal_diperbarui"`
+	TanggalDibuat     string `json:"tanggal_dibuat"`
+	TanggalDiperbarui string `json:"tanggal_diperbarui"`
 }

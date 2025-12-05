@@ -2674,6 +2674,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "id_user": {
+                    "description": "Tetap kirim ID jika diperlukan",
                     "type": "integer"
                 },
                 "judul": {
@@ -2690,6 +2691,10 @@ const docTemplate = `{
                 },
                 "tipe_pengaduan": {
                     "$ref": "#/definitions/models.UserRole"
+                },
+                "username": {
+                    "description": "Tambahkan field ini",
+                    "type": "string"
                 }
             }
         },

@@ -394,6 +394,7 @@ definitions:
       id_ticket:
         type: integer
       id_user:
+        description: Tetap kirim ID jika diperlukan
         type: integer
       judul:
         type: string
@@ -405,6 +406,9 @@ definitions:
         type: string
       tipe_pengaduan:
         $ref: '#/definitions/models.UserRole'
+      username:
+        description: Tambahkan field ini
+        type: string
     type: object
   requests.UpdateTicketCommentRequest:
     properties:
