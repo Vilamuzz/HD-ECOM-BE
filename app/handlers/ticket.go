@@ -12,12 +12,18 @@ import (
 
 func (r *appRoute) TicketRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/tickets")
-	api.POST("", r.Middleware.Auth(), r.createTicket)
-	api.GET("", r.getTickets)
-	api.GET("/my-tickets", r.Middleware.Auth(), r.getMyTickets) // New endpoint
+
+	// Public endpoints (no auth required)
 	api.GET("/:id", r.getTicketByID)
+
+	// Authenticated user endpoints
+	api.POST("", r.Middleware.Auth(), r.createTicket)
+	api.GET("/my-tickets", r.Middleware.Auth(), r.getMyTickets)
 	api.PUT("/:id", r.Middleware.Auth(), r.updateTicket)
-	api.DELETE("/:id", r.deleteTicket)
+	api.DELETE("/:id", r.Middleware.Auth(), r.deleteTicket)
+
+	// Admin-only endpoints
+	api.GET("", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.getTickets)
 }
 
 // CreateTicket godoc

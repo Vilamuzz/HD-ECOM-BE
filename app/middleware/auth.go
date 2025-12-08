@@ -131,3 +131,39 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func (m *appMiddleware) RequireRole(allowedRoles ...models.UserRole) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        // Get user data from context (set by Auth middleware)
+        userData, exists := c.Get("userData")
+        if !exists {
+            c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Unauthorized", nil, nil))
+            c.Abort()
+            return
+        }
+
+        user, ok := userData.(models.User)
+        if !ok {
+            c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid user data", nil, nil))
+            c.Abort()
+            return
+        }
+
+        // Check if user's role is in the allowed roles
+        hasPermission := false
+        for _, role := range allowedRoles {
+            if user.Role == role {
+                hasPermission = true
+                break
+            }
+        }
+
+        if !hasPermission {
+            c.JSON(http.StatusForbidden, helpers.NewResponse(http.StatusForbidden, "Access denied. Insufficient permissions", nil, nil))
+            c.Abort()
+            return
+        }
+
+        c.Next()
+    }
+}

@@ -297,6 +297,11 @@ const docTemplate = `{
         },
         "/ticket-assignments": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a list of all ticket assignments",
                 "produces": [
                     "application/json"
@@ -319,7 +324,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                                "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
                                             }
                                         }
                                     }
@@ -330,6 +335,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new ticket assignment",
                 "consumes": [
                     "application/json"
@@ -364,7 +374,47 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/ticket-assignments/my-assignments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get ticket assignments where the admin_id matches the authenticated support user's ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-assignments"
+                ],
+                "summary": "Get my ticket assignments as support user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -376,6 +426,11 @@ const docTemplate = `{
         },
         "/ticket-assignments/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a ticket assignment by its ID",
                 "produces": [
                     "application/json"
@@ -405,7 +460,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
                                         }
                                     }
                                 }
@@ -415,6 +470,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a ticket assignment by its ID",
                 "consumes": [
                     "application/json"
@@ -456,7 +516,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
                                         }
                                     }
                                 }
@@ -466,6 +526,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a ticket assignment by its ID",
                 "produces": [
                     "application/json"
@@ -1835,7 +1900,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/requests.TicketResponse"
+                                                "$ref": "#/definitions/app_domain_requests.TicketResponse"
                                             }
                                         }
                                     }
@@ -1885,7 +1950,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketResponse"
                                         }
                                     }
                                 }
@@ -1924,7 +1989,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/requests.TicketResponse"
+                                                "$ref": "#/definitions/app_domain_requests.TicketResponse"
                                             }
                                         }
                                     }
@@ -1978,7 +2043,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketResponse"
                                         }
                                     }
                                 }
@@ -2034,7 +2099,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketResponse"
                                         }
                                     }
                                 }
@@ -2133,6 +2198,73 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "app_domain_requests.TicketAssignmentResponse": {
+            "description": "TicketAssignmentResponse represents a ticket assignment with related ticket and admin info (no null fields)",
+            "type": "object",
+            "properties": {
+                "admin": {
+                    "$ref": "#/definitions/requests.UserSimpleResponse"
+                },
+                "id_admin": {
+                    "type": "integer"
+                },
+                "id_assignment": {
+                    "type": "integer"
+                },
+                "id_ticket": {
+                    "type": "integer"
+                },
+                "tanggal_ditugaskan": {
+                    "type": "string"
+                },
+                "ticket": {
+                    "$ref": "#/definitions/app_domain_requests.TicketResponse"
+                }
+            }
+        },
+        "app_domain_requests.TicketResponse": {
+            "type": "object",
+            "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "id_category": {
+                    "type": "integer"
+                },
+                "id_priority": {
+                    "type": "integer"
+                },
+                "id_status": {
+                    "type": "integer"
+                },
+                "id_ticket": {
+                    "type": "integer"
+                },
+                "id_user": {
+                    "description": "Tetap kirim ID jika diperlukan",
+                    "type": "integer"
+                },
+                "judul": {
+                    "type": "string"
+                },
+                "kode_tiket": {
+                    "type": "string"
+                },
+                "tanggal_dibuat": {
+                    "type": "string"
+                },
+                "tanggal_diperbarui": {
+                    "type": "string"
+                },
+                "tipe_pengaduan": {
+                    "$ref": "#/definitions/models.UserRole"
+                },
+                "username": {
+                    "description": "Tambahkan field ini",
+                    "type": "string"
+                }
+            }
+        },
         "helpers.Response": {
             "type": "object",
             "properties": {
@@ -2640,30 +2772,6 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.TicketAssignmentResponse": {
-            "description": "TicketAssignmentResponse represents a ticket assignment with related ticket and admin info (no null fields)",
-            "type": "object",
-            "properties": {
-                "admin": {
-                    "$ref": "#/definitions/requests.UserSimpleResponse"
-                },
-                "id_admin": {
-                    "type": "integer"
-                },
-                "id_assignment": {
-                    "type": "integer"
-                },
-                "id_ticket": {
-                    "type": "integer"
-                },
-                "tanggal_ditugaskan": {
-                    "type": "string"
-                },
-                "ticket": {
-                    "$ref": "#/definitions/requests.TicketResponse"
-                }
-            }
-        },
         "requests.TicketCommentResponse": {
             "type": "object",
             "properties": {
@@ -2714,49 +2822,6 @@ const docTemplate = `{
                 "kode_tiket": {
                     "type": "string",
                     "example": "TCKT-001"
-                }
-            }
-        },
-        "requests.TicketResponse": {
-            "type": "object",
-            "properties": {
-                "deskripsi": {
-                    "type": "string"
-                },
-                "id_category": {
-                    "type": "integer"
-                },
-                "id_priority": {
-                    "type": "integer"
-                },
-                "id_status": {
-                    "type": "integer"
-                },
-                "id_ticket": {
-                    "type": "integer"
-                },
-                "id_user": {
-                    "description": "Tetap kirim ID jika diperlukan",
-                    "type": "integer"
-                },
-                "judul": {
-                    "type": "string"
-                },
-                "kode_tiket": {
-                    "type": "string"
-                },
-                "tanggal_dibuat": {
-                    "type": "string"
-                },
-                "tanggal_diperbarui": {
-                    "type": "string"
-                },
-                "tipe_pengaduan": {
-                    "$ref": "#/definitions/models.UserRole"
-                },
-                "username": {
-                    "description": "Tambahkan field ini",
-                    "type": "string"
                 }
             }
         },
