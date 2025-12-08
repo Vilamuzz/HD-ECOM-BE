@@ -12,22 +12,28 @@ import (
 
 func (r *appRoute) TicketCommentRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/ticket-comments")
-	api.POST("", r.createTicketComment)
-	api.GET("", r.getTicketComments)
-	api.GET("/:id", r.getTicketCommentByID)
-	api.PUT("/:id", r.updateTicketComment)
-	api.DELETE("/:id", r.deleteTicketComment)
+	
+	// Public/authenticated user can view comments
+	api.GET("", r.Middleware.Auth(), r.getTicketComments)
+	api.GET("/:id", r.Middleware.Auth(), r.getTicketCommentByID)
+	
+	// Only admin and support can create, update, and delete comments
+	api.POST("", r.Middleware.Auth(), r.Middleware.RequireAdminOrSupport(), r.createTicketComment)
+	api.PUT("/:id", r.Middleware.Auth(), r.Middleware.RequireAdminOrSupport(), r.updateTicketComment)
+	api.DELETE("/:id", r.Middleware.Auth(), r.Middleware.RequireAdminOrSupport(), r.deleteTicketComment)
 }
 
 // CreateTicketComment godoc
 // @Summary Create a new ticket comment
-// @Description Create a new comment on a ticket
+// @Description Create a new comment on a ticket (Admin and Support only)
 // @Tags ticket-comments
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param comment body requests.CreateTicketCommentRequest true "Comment Data"
 // @Success 201 {object} helpers.Response{data=requests.TicketCommentResponse}
 // @Failure 400 {object} helpers.Response
+// @Failure 403 {object} helpers.Response
 // @Failure 500 {object} helpers.Response
 // @Router /ticket-comments [post]
 func (r *appRoute) createTicketComment(c *gin.Context) {
@@ -37,15 +43,28 @@ func (r *appRoute) createTicketComment(c *gin.Context) {
 		return
 	}
 
+	// Get user from context (required - no fallback)
+	userData, exists := c.Get("userData")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "User authentication required", nil, nil))
+		return
+	}
+
+	user, ok := userData.(models.User)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid user data", nil, nil))
+		return
+	}
+
 	comment := models.TicketComment{
-		TicketID:      req.TicketID,
-		UserID:        req.UserID,
-		IsiPesan:      req.IsiPesan,
-		TanggalDibuat: req.TanggalDibuat,
+		TicketID: req.TicketID,
+		UserID:   int(user.ID), // Use authenticated user's ID
+		IsiPesan: req.IsiPesan,
+		// TanggalDibuat will be set by database (CURRENT_TIMESTAMP) or service layer
 	}
 
 	if err := r.Service.CreateTicketComment(&comment); err != nil {
-		c.JSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create comment", nil, nil))
+		c.JSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create comment: "+err.Error(), nil, nil))
 		return
 	}
 
@@ -65,6 +84,7 @@ func (r *appRoute) createTicketComment(c *gin.Context) {
 // @Description Get all comments, optionally filtered by ticket ID
 // @Tags ticket-comments
 // @Produce json
+// @Security BearerAuth
 // @Param ticket_id query int false "Filter by Ticket ID"
 // @Success 200 {object} helpers.Response{data=[]models.TicketComment}
 // @Failure 500 {object} helpers.Response
@@ -94,6 +114,7 @@ func (r *appRoute) getTicketComments(c *gin.Context) {
 // @Description Get a specific comment by its ID
 // @Tags ticket-comments
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Comment ID"
 // @Success 200 {object} helpers.Response{data=models.TicketComment}
 // @Failure 404 {object} helpers.Response
@@ -116,13 +137,15 @@ func (r *appRoute) getTicketCommentByID(c *gin.Context) {
 
 // UpdateTicketComment godoc
 // @Summary Update a ticket comment
-// @Description Update an existing comment
+// @Description Update an existing comment (Admin and Support only)
 // @Tags ticket-comments
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Comment ID"
 // @Param comment body requests.UpdateTicketCommentRequest true "Updated Comment Data"
 // @Success 200 {object} helpers.Response{data=requests.TicketCommentResponse}
+// @Failure 403 {object} helpers.Response
 // @Failure 404 {object} helpers.Response
 // @Failure 500 {object} helpers.Response
 // @Router /ticket-comments/{id} [put]
@@ -139,12 +162,25 @@ func (r *appRoute) updateTicketComment(c *gin.Context) {
 		return
 	}
 
+	// Get user from context
+	userData, exists := c.Get("userData")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "User authentication required", nil, nil))
+		return
+	}
+
+	user, ok := userData.(models.User)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid user data", nil, nil))
+		return
+	}
+
 	comment := models.TicketComment{
-		ID:            id,
-		TicketID:      req.TicketID,
-		UserID:        req.UserID,
-		IsiPesan:      req.IsiPesan,
-		TanggalDibuat: req.TanggalDibuat,
+		ID:       id,
+		TicketID: req.TicketID,
+		UserID:   int(user.ID), // Use authenticated user's ID
+		IsiPesan: req.IsiPesan,
+		// TanggalDibuat should not be updated
 	}
 
 	if err := r.Service.UpdateTicketComment(&comment); err != nil {
@@ -165,11 +201,13 @@ func (r *appRoute) updateTicketComment(c *gin.Context) {
 
 // DeleteTicketComment godoc
 // @Summary Delete a ticket comment
-// @Description Delete an existing comment
+// @Description Delete an existing comment (Admin and Support only)
 // @Tags ticket-comments
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Comment ID"
 // @Success 200 {object} helpers.Response
+// @Failure 403 {object} helpers.Response
 // @Failure 500 {object} helpers.Response
 // @Router /ticket-comments/{id} [delete]
 func (r *appRoute) deleteTicketComment(c *gin.Context) {

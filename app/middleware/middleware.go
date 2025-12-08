@@ -8,4 +8,5 @@ import (
 type AppMiddleware interface {
     Auth() gin.HandlerFunc
     RequireRole(allowedRoles ...models.UserRole) gin.HandlerFunc
+    RequireAdminOrSupport() gin.HandlerFunc
 }

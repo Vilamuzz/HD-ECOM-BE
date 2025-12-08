@@ -1,4 +1,15 @@
 definitions:
+  app_domain_requests.CreateTicketCommentRequest:
+    properties:
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
+      ticket_id:
+        type: integer
+    type: object
   app_domain_requests.TicketAssignmentResponse:
     description: TicketAssignmentResponse represents a ticket assignment with related
       ticket and admin info (no null fields)
@@ -15,6 +26,19 @@ definitions:
         type: string
       ticket:
         $ref: '#/definitions/app_domain_requests.TicketResponse'
+    type: object
+  app_domain_requests.TicketCommentResponse:
+    properties:
+      id_comment:
+        type: integer
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
+      ticket_id:
+        type: integer
     type: object
   app_domain_requests.TicketResponse:
     properties:
@@ -44,6 +68,17 @@ definitions:
       username:
         description: Tambahkan field ini
         type: string
+    type: object
+  app_domain_requests.UpdateTicketCommentRequest:
+    properties:
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
+      ticket_id:
+        type: integer
     type: object
   helpers.Response:
     properties:
@@ -364,30 +399,6 @@ definitions:
         example: "2025-11-07T10:00:00Z"
         type: string
     type: object
-  requests.CreateTicketCommentRequest:
-    properties:
-      id_ticket:
-        type: integer
-      id_user:
-        type: integer
-      isi_pesan:
-        type: string
-      tanggal_dibuat:
-        type: string
-    type: object
-  requests.TicketCommentResponse:
-    properties:
-      id_comment:
-        type: integer
-      id_ticket:
-        type: integer
-      id_user:
-        type: integer
-      isi_pesan:
-        type: string
-      tanggal_dibuat:
-        type: string
-    type: object
   requests.TicketCreateRequest:
     properties:
       deskripsi:
@@ -410,17 +421,6 @@ definitions:
         type: string
       kode_tiket:
         example: TCKT-001
-        type: string
-    type: object
-  requests.UpdateTicketCommentRequest:
-    properties:
-      id_ticket:
-        type: integer
-      id_user:
-        type: integer
-      isi_pesan:
-        type: string
-      tanggal_dibuat:
         type: string
     type: object
   requests.UserSimpleResponse:
@@ -781,6 +781,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Get all ticket attachments
       tags:
       - ticket-attachments
@@ -819,6 +821,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Create a new ticket attachment
       tags:
       - ticket-attachments
@@ -846,6 +850,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket attachment
       tags:
       - ticket-attachments
@@ -873,6 +879,8 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Get a ticket attachment by ID
       tags:
       - ticket-attachments
@@ -918,6 +926,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Update a ticket attachment
       tags:
       - ticket-attachments
@@ -952,6 +962,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Get ticket attachments by ticket ID
       tags:
       - ticket-attachments
@@ -998,6 +1010,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketCategory'
               type: object
+      security:
+      - BearerAuth: []
       summary: Create a new ticket category
       tags:
       - ticket-categories
@@ -1017,6 +1031,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket category
       tags:
       - ticket-categories
@@ -1071,6 +1087,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketCategory'
               type: object
+      security:
+      - BearerAuth: []
       summary: Update a ticket category
       tags:
       - ticket-categories
@@ -1100,20 +1118,22 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Get all ticket comments
       tags:
       - ticket-comments
     post:
       consumes:
       - application/json
-      description: Create a new comment on a ticket
+      description: Create a new comment on a ticket (Admin and Support only)
       parameters:
       - description: Comment Data
         in: body
         name: comment
         required: true
         schema:
-          $ref: '#/definitions/requests.CreateTicketCommentRequest'
+          $ref: '#/definitions/app_domain_requests.CreateTicketCommentRequest'
       produces:
       - application/json
       responses:
@@ -1124,22 +1144,28 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/requests.TicketCommentResponse'
+                  $ref: '#/definitions/app_domain_requests.TicketCommentResponse'
               type: object
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/helpers.Response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Create a new ticket comment
       tags:
       - ticket-comments
   /ticket-comments/{id}:
     delete:
-      description: Delete an existing comment
+      description: Delete an existing comment (Admin and Support only)
       parameters:
       - description: Comment ID
         in: path
@@ -1153,10 +1179,16 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/helpers.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.Response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket comment
       tags:
       - ticket-comments
@@ -1184,13 +1216,15 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Get a ticket comment by ID
       tags:
       - ticket-comments
     put:
       consumes:
       - application/json
-      description: Update an existing comment
+      description: Update an existing comment (Admin and Support only)
       parameters:
       - description: Comment ID
         in: path
@@ -1202,7 +1236,7 @@ paths:
         name: comment
         required: true
         schema:
-          $ref: '#/definitions/requests.UpdateTicketCommentRequest'
+          $ref: '#/definitions/app_domain_requests.UpdateTicketCommentRequest'
       produces:
       - application/json
       responses:
@@ -1213,8 +1247,12 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/requests.TicketCommentResponse'
+                  $ref: '#/definitions/app_domain_requests.TicketCommentResponse'
               type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.Response'
         "404":
           description: Not Found
           schema:
@@ -1223,6 +1261,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Update a ticket comment
       tags:
       - ticket-comments

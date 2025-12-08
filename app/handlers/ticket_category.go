@@ -11,11 +11,11 @@ import (
 
 func (r *appRoute) TicketCategoryRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/ticket-categories")
-	api.POST("", r.createTicketCategory)
+	api.POST("", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.createTicketCategory)
 	api.GET("", r.getTicketCategories)
 	api.GET("/:id", r.getTicketCategoryByID)
-	api.PUT("/:id", r.updateTicketCategory)
-	api.DELETE("/:id", r.deleteTicketCategory)
+	api.PUT("/:id", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin),  r.updateTicketCategory)
+	api.DELETE("/:id", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin),  r.deleteTicketCategory)
 }
 
 // CreateTicketCategory godoc
@@ -24,6 +24,7 @@ func (r *appRoute) TicketCategoryRoutes(rg *gin.RouterGroup) {
 // @Tags ticket-categories
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param category body models.TicketCategory true "Ticket Category Data"
 // @Success 201 {object} helpers.Response{data=models.TicketCategory}
 // @Router /ticket-categories [post]
@@ -97,6 +98,7 @@ func (r *appRoute) getTicketCategoryByID(c *gin.Context) {
 // @Tags ticket-categories
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Category ID"
 // @Param category body models.TicketCategory true "Updated Category Data"
 // @Success 200 {object} helpers.Response{data=models.TicketCategory}
@@ -132,6 +134,7 @@ func (r *appRoute) updateTicketCategory(c *gin.Context) {
 // @Description Delete a ticket category by its ID
 // @Tags ticket-categories
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Category ID"
 // @Success 200 {object} helpers.Response
 // @Router /ticket-categories/{id} [delete]

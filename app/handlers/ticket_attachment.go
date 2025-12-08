@@ -13,11 +13,11 @@ import (
 
 func (r *appRoute) TicketAttachmentRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/ticket-attachments")
-	api.POST("", r.createTicketAttachment)
+	api.POST("", r.Middleware.Auth(), r.createTicketAttachment)
 	api.GET("/ticket/:ticket_id", r.getTicketAttachmentsByTicketID) // New dedicated endpoint
-	api.GET("/:id", r.getTicketAttachmentByID)
-	api.PUT("/:id", r.updateTicketAttachment)
-	api.DELETE("/:id", r.deleteTicketAttachment)
+	api.GET("/:id", r.Middleware.Auth(), r.getTicketAttachmentByID)
+	api.PUT("/:id", r.Middleware.Auth(), r.updateTicketAttachment)
+	api.DELETE("/:id", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.deleteTicketAttachment)
 }
 
 // CreateTicketAttachment godoc
@@ -26,6 +26,7 @@ func (r *appRoute) TicketAttachmentRoutes(rg *gin.RouterGroup) {
 // @Tags ticket-attachments
 // @Accept multipart/form-data
 // @Produce json
+// @Security BearerAuth
 // @Param id_ticket formData int true "Ticket ID"
 // @Param file formData file true "Attachment file"
 // @Success 201 {object} helpers.Response{data=models.TicketAttachment}
@@ -68,6 +69,7 @@ func (r *appRoute) createTicketAttachment(c *gin.Context) {
 // @Description Get a list of all ticket attachments
 // @Tags ticket-attachments
 // @Produce json
+// @Security BearerAuth
 // @Param ticket_id query int false "Filter by ticket ID"
 // @Success 200 {object} helpers.Response{data=[]models.TicketAttachment}
 // @Failure 500 {object} helpers.Response
@@ -99,6 +101,7 @@ func (r *appRoute) getTicketAttachments(c *gin.Context) {
 // @Description Get all attachments for a specific ticket
 // @Tags ticket-attachments
 // @Produce json
+// @Security BearerAuth
 // @Param ticket_id path int true "Ticket ID"
 // @Success 200 {object} helpers.Response{data=[]models.TicketAttachment}
 // @Failure 400 {object} helpers.Response
@@ -144,6 +147,7 @@ func (r *appRoute) getTicketAttachmentsByTicketID(c *gin.Context) {
 // @Description Get a ticket attachment by its ID
 // @Tags ticket-attachments
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Attachment ID"
 // @Success 200 {object} helpers.Response{data=models.TicketAttachment}
 // @Failure 404 {object} helpers.Response
@@ -184,6 +188,7 @@ func (r *appRoute) getTicketAttachmentByID(c *gin.Context) {
 // @Tags ticket-attachments
 // @Accept multipart/form-data
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Attachment ID"
 // @Param id_ticket formData int false "Ticket ID"
 // @Param file formData file false "New attachment file"
@@ -233,6 +238,7 @@ func (r *appRoute) updateTicketAttachment(c *gin.Context) {
 // @Description Delete a ticket attachment by its ID
 // @Tags ticket-attachments
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Attachment ID"
 // @Success 200 {object} helpers.Response
 // @Failure 400 {object} helpers.Response
