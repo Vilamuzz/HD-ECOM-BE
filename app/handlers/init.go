@@ -32,6 +32,6 @@ func App(service domain.AppService, route *gin.Engine, middleware middleware.App
 	handler.TicketAttachmentRoutes(handler.Route)
 	handler.TicketCommentRoutes(handler.Route)
 	handler.TicketLogRoutes(handler.Route)
-	// Tambahkan endpoint GET /me
 	handler.Route.GET("/me", handler.Middleware.Auth(), handler.GetCurrentUser)
+    handler.Route.GET("/users/support", handler.Middleware.Auth(), handler.GetSupportUsers)
 }

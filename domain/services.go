@@ -10,6 +10,9 @@ import (
 )
 
 type AppService interface {
+	// User management
+	GetSupportUsers() helpers.Response
+
 	// WebSocket management
 	Run()
 	RegisterClient(client *Client)

@@ -11,6 +11,7 @@ type AppRepository interface {
 	// User operations
 	GetUserByID(id uint64) (*models.User, error)
 	CreateUser(user *models.User) error
+	GetUsersByRole(role models.UserRole) ([]models.User, error)
 
 	// Conversation operations
 	CreateConversation(ctx context.Context, conversation *models.Conversation) error

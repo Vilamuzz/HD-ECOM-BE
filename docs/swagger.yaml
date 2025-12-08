@@ -299,11 +299,13 @@ definitions:
     - admin
     - seller
     - customer
+    - support
     type: string
     x-enum-varnames:
     - RoleAdmin
     - RoleSeller
     - RoleCustomer
+    - RoleSupport
   requests.CreateTicketAssignmentRequest:
     properties:
       id_admin:
@@ -1675,6 +1677,41 @@ paths:
       summary: Get current user's tickets
       tags:
       - tickets
+  /users/support:
+    get:
+      description: Get all users with the support role
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    properties:
+                      user_id:
+                        type: integer
+                      username:
+                        type: string
+                    type: object
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get support users
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

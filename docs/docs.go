@@ -2070,6 +2070,66 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/support": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all users with the support role",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get support users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "user_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "username": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2536,12 +2596,14 @@ const docTemplate = `{
             "enum": [
                 "admin",
                 "seller",
-                "customer"
+                "customer",
+                "support"
             ],
             "x-enum-varnames": [
                 "RoleAdmin",
                 "RoleSeller",
-                "RoleCustomer"
+                "RoleCustomer",
+                "RoleSupport"
             ]
         },
         "requests.CreateTicketAssignmentRequest": {
