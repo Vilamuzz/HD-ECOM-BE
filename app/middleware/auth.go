@@ -75,6 +75,7 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 			0: models.RoleAdmin,
 			1: models.RoleSeller,
 			2: models.RoleCustomer,
+			3: models.RoleSupport,
 		}
 		if roleVal, exists := roleMap[r]; exists {
 			role = roleVal

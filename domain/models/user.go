@@ -26,4 +26,5 @@ const (
 	RoleAdmin    UserRole = "admin"
 	RoleSeller   UserRole = "seller"
 	RoleCustomer UserRole = "customer"
+	RoleSupport  UserRole = "support"
 )
