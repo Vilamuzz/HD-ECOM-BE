@@ -1,4 +1,21 @@
 definitions:
+  app_app_domain_requests.TicketResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      priority:
+        type: string
+      status:
+        type: string
+      subject:
+        type: string
+      updated_at:
+        type: string
+    type: object
   app_domain_requests.CreateTicketCommentRequest:
     properties:
       id_user:
@@ -422,6 +439,22 @@ definitions:
       kode_tiket:
         example: TCKT-001
         type: string
+    type: object
+  requests.TicketListMeta:
+    properties:
+      limit:
+        type: integer
+      next_cursor:
+        type: string
+    type: object
+  requests.TicketListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/app_app_domain_requests.TicketResponse'
+        type: array
+      meta:
+        $ref: '#/definitions/requests.TicketListMeta'
     type: object
   requests.UserSimpleResponse:
     description: UserSimpleResponse represents a minimal user info for assignment
@@ -1597,7 +1630,32 @@ paths:
       - ticket-statuses
   /tickets:
     get:
-      description: Get a list of all tickets
+      description: Get a list of all tickets (Admin only), cursor-based pagination
+      parameters:
+      - description: Filter by tipe_pengaduan (customer, seller, admin, support)
+        in: query
+        name: role
+        type: string
+      - description: Filter by status ID
+        in: query
+        name: status
+        type: integer
+      - description: Filter by priority ID
+        in: query
+        name: priority
+        type: integer
+      - description: Filter by category ID
+        in: query
+        name: category
+        type: integer
+      - description: 'Items per page (default: 5)'
+        in: query
+        name: limit
+        type: integer
+      - description: Cursor for next page
+        in: query
+        name: cursor
+        type: string
       produces:
       - application/json
       responses:
@@ -1608,10 +1666,10 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/app_domain_requests.TicketResponse'
-                  type: array
+                  $ref: '#/definitions/requests.TicketListResponse'
               type: object
+      security:
+      - BearerAuth: []
       summary: Get all tickets
       tags:
       - tickets

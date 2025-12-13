@@ -48,6 +48,7 @@ type AppRepository interface {
 	GetTicketCategoryByID(id int) (*models.TicketCategory, error)
 	UpdateTicketCategory(category *models.TicketCategory) error
 	DeleteTicketCategory(id int) error
+	GetTicketsPaginated(limit, offset int) ([]models.Ticket, int, error)
 
 	// Ticket Priority
 	CreateTicketPriority(priority *models.TicketPriority) error
@@ -70,6 +71,7 @@ type AppRepository interface {
 	GetTicketsByUserID(userID int) ([]models.Ticket, error)
 	UpdateTicket(ticket *models.Ticket) error
 	DeleteTicket(id int) error
+	GetTicketsCursor(limit int, cursor string, tipePengaduan string) ([]models.Ticket, string, error)
 
 	// Ticket Assignment
 	CreateTicketAssignment(assignment *models.TicketAssignment) error

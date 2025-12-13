@@ -1966,7 +1966,12 @@ const docTemplate = `{
         },
         "/tickets": {
             "get": {
-                "description": "Get a list of all tickets",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a list of all tickets (Admin only), cursor-based pagination",
                 "produces": [
                     "application/json"
                 ],
@@ -1974,6 +1979,44 @@ const docTemplate = `{
                     "tickets"
                 ],
                 "summary": "Get all tickets",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by tipe_pengaduan (customer, seller, admin, support)",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by status ID",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by priority ID",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by category ID",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 5)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cursor for next page",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1986,10 +2029,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/app_domain_requests.TicketResponse"
-                                            }
+                                            "$ref": "#/definitions/requests.TicketListResponse"
                                         }
                                     }
                                 }
@@ -2286,6 +2326,32 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "app_app_domain_requests.TicketResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "app_domain_requests.CreateTicketCommentRequest": {
             "type": "object",
             "properties": {
@@ -2927,6 +2993,31 @@ const docTemplate = `{
                 "kode_tiket": {
                     "type": "string",
                     "example": "TCKT-001"
+                }
+            }
+        },
+        "requests.TicketListMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.TicketListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/app_app_domain_requests.TicketResponse"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/requests.TicketListMeta"
                 }
             }
         },

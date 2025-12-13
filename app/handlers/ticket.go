@@ -102,18 +102,76 @@ func (r *appRoute) createTicket(c *gin.Context) {
 
 // GetTickets godoc
 // @Summary Get all tickets
-// @Description Get a list of all tickets
+// @Description Get a list of all tickets (Admin only), cursor-based pagination
 // @Tags tickets
 // @Produce json
-// @Success 200 {object} helpers.Response{data=[]requests.TicketResponse}
+// @Security BearerAuth
+// @Param role query string false "Filter by tipe_pengaduan (customer, seller, admin, support)"
+// @Param status query int false "Filter by status ID"
+// @Param priority query int false "Filter by priority ID"
+// @Param category query int false "Filter by category ID"
+// @Param limit query int false "Items per page (default: 5)"
+// @Param cursor query string false "Cursor for next page"
+// @Success 200 {object} helpers.Response{data=requests.TicketListResponse}
 // @Router /tickets [get]
 func (r *appRoute) getTickets(c *gin.Context) {
-	tickets, err := r.Service.GetTickets()
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "5"))
+	if limit < 1 || limit > 100 {
+		limit = 5
+	}
+	cursor := c.Query("cursor")
+	filterType := c.Query("role")
+
+	// New: get filter params for status, priority, and category (by id)
+	statusIDStr := c.Query("status")
+	priorityIDStr := c.Query("priority")
+	categoryIDStr := c.Query("category")
+
+	var statusID, priorityID, categoryID int
+	var filterStatus, filterPriority, filterCategory bool
+
+	if statusIDStr != "" {
+		if v, err := strconv.Atoi(statusIDStr); err == nil {
+			statusID = v
+			filterStatus = true
+		}
+	}
+	if priorityIDStr != "" {
+		if v, err := strconv.Atoi(priorityIDStr); err == nil {
+			priorityID = v
+			filterPriority = true
+		}
+	}
+	if categoryIDStr != "" {
+		if v, err := strconv.Atoi(categoryIDStr); err == nil {
+			categoryID = v
+			filterCategory = true
+		}
+	}
+
+	// Call service for cursor-based pagination
+	tickets, nextCursor, err := r.Service.GetTicketsCursor(limit, cursor, filterType)
 	if err != nil {
-		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to get tickets", nil, nil)
-		c.JSON(http.StatusInternalServerError, response)
+		response := helpers.NewResponse(500, "Failed to get tickets", nil, nil)
+		c.JSON(500, response)
 		return
 	}
+
+	// Apply filters in handler (if not handled in service)
+	var filtered []models.Ticket
+	for _, ticket := range tickets {
+		if filterStatus && int(ticket.StatusID) != statusID {
+			continue
+		}
+		if filterPriority && int(ticket.PriorityID) != priorityID {
+			continue
+		}
+		if filterCategory && int(ticket.CategoryID) != categoryID {
+			continue
+		}
+		filtered = append(filtered, ticket)
+	}
+	tickets = filtered
 
 	var resp []requests.TicketResponse
 	for _, ticket := range tickets {
@@ -121,7 +179,6 @@ func (r *appRoute) getTickets(c *gin.Context) {
 		if ticket.User.Username != "" {
 			username = ticket.User.Username
 		}
-
 		resp = append(resp, requests.TicketResponse{
 			ID:                ticket.ID,
 			KodeTiket:         ticket.KodeTiket,
@@ -138,8 +195,15 @@ func (r *appRoute) getTickets(c *gin.Context) {
 		})
 	}
 
-	response := helpers.NewResponse(http.StatusOK, "Tickets retrieved successfully", nil, resp)
-	c.JSON(http.StatusOK, response)
+	responseData := map[string]interface{}{
+		"data": resp,
+		"meta": map[string]interface{}{
+			"next_cursor": nextCursor,
+			"limit":       limit,
+		},
+	}
+	response := helpers.NewResponse(200, "Tickets retrieved successfully", nil, responseData)
+	c.JSON(200, response)
 }
 
 // GetTicketByID godoc
