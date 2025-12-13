@@ -71,7 +71,7 @@ type AppRepository interface {
 	GetTicketsByUserID(userID int) ([]models.Ticket, error)
 	UpdateTicket(ticket *models.Ticket) error
 	DeleteTicket(id int) error
-	GetTicketsCursor(limit int, cursor string, tipePengaduan string) ([]models.Ticket, string, error)
+	GetTicketsCursor(limit int, cursor string, tipePengaduan string, statusID, priorityID, categoryID int) ([]models.Ticket, string, error)
 
 	// Ticket Assignment
 	CreateTicketAssignment(assignment *models.TicketAssignment) error

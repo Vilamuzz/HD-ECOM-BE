@@ -61,7 +61,7 @@ type AppService interface {
 	GetTicketsPaginated(limit, offset int) ([]models.Ticket, int, error)
 	GetTicketByID(id int) (*models.Ticket, error)
 	GetTicketsByUserID(userID int) ([]models.Ticket, error)
-	GetTicketsCursor(limit int, cursor string, tipePengaduan string) ([]models.Ticket, string, error)
+	GetTicketsCursor(limit int, cursor string, tipePengaduan string, statusID, priorityID, categoryID int) ([]models.Ticket, string, error)
 	UpdateTicket(ticket *models.Ticket) error
 	DeleteTicket(id int) error
 

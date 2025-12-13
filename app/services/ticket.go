@@ -54,6 +54,6 @@ func (s *appService) GetTicketsByUserID(userID int) ([]models.Ticket, error) {
 	return s.repo.GetTicketsByUserID(userID)
 }
 
-func (s *appService) GetTicketsCursor(limit int, cursor string, tipePengaduan string) ([]models.Ticket, string, error) {
-    return s.repo.GetTicketsCursor(limit, cursor, tipePengaduan)
+func (s *appService) GetTicketsCursor(limit int, cursor string, tipePengaduan string, statusID, priorityID, categoryID int) ([]models.Ticket, string, error) {
+    return s.repo.GetTicketsCursor(limit, cursor, tipePengaduan, statusID, priorityID, categoryID)
 }

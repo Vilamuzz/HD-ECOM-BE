@@ -110,69 +110,32 @@ func (r *appRoute) createTicket(c *gin.Context) {
 // @Param status query int false "Filter by status ID"
 // @Param priority query int false "Filter by priority ID"
 // @Param category query int false "Filter by category ID"
-// @Param limit query int false "Items per page (default: 5)"
+// @Param limit query int false "Items per page (default: 10)"
 // @Param cursor query string false "Cursor for next page"
 // @Success 200 {object} helpers.Response{data=requests.TicketListResponse}
 // @Router /tickets [get]
 func (r *appRoute) getTickets(c *gin.Context) {
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "5"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if limit < 1 || limit > 100 {
-		limit = 5
+		limit = 10
 	}
 	cursor := c.Query("cursor")
 	filterType := c.Query("role")
 
-	// New: get filter params for status, priority, and category (by id)
-	statusIDStr := c.Query("status")
-	priorityIDStr := c.Query("priority")
-	categoryIDStr := c.Query("category")
+	// Get filter params for status, priority, and category
+	statusID, _ := strconv.Atoi(c.Query("status"))
+	priorityID, _ := strconv.Atoi(c.Query("priority"))
+	categoryID, _ := strconv.Atoi(c.Query("category"))
 
-	var statusID, priorityID, categoryID int
-	var filterStatus, filterPriority, filterCategory bool
-
-	if statusIDStr != "" {
-		if v, err := strconv.Atoi(statusIDStr); err == nil {
-			statusID = v
-			filterStatus = true
-		}
-	}
-	if priorityIDStr != "" {
-		if v, err := strconv.Atoi(priorityIDStr); err == nil {
-			priorityID = v
-			filterPriority = true
-		}
-	}
-	if categoryIDStr != "" {
-		if v, err := strconv.Atoi(categoryIDStr); err == nil {
-			categoryID = v
-			filterCategory = true
-		}
-	}
-
-	// Call service for cursor-based pagination
-	tickets, nextCursor, err := r.Service.GetTicketsCursor(limit, cursor, filterType)
+	// Call service with all filters - filtering happens at DB level
+	tickets, nextCursor, err := r.Service.GetTicketsCursor(limit, cursor, filterType, statusID, priorityID, categoryID)
 	if err != nil {
 		response := helpers.NewResponse(500, "Failed to get tickets", nil, nil)
 		c.JSON(500, response)
 		return
 	}
 
-	// Apply filters in handler (if not handled in service)
-	var filtered []models.Ticket
-	for _, ticket := range tickets {
-		if filterStatus && int(ticket.StatusID) != statusID {
-			continue
-		}
-		if filterPriority && int(ticket.PriorityID) != priorityID {
-			continue
-		}
-		if filterCategory && int(ticket.CategoryID) != categoryID {
-			continue
-		}
-		filtered = append(filtered, ticket)
-	}
-	tickets = filtered
-
+	// No need to filter here anymore - already filtered by database
 	var resp []requests.TicketResponse
 	for _, ticket := range tickets {
 		username := ""

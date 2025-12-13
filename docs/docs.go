@@ -2006,7 +2006,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Items per page (default: 5)",
+                        "description": "Items per page (default: 10)",
                         "name": "limit",
                         "in": "query"
                     },

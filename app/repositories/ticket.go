@@ -53,27 +53,42 @@ func (r *appRepository) GetTicketsByUserID(userID int) ([]models.Ticket, error) 
 }
 
 // Add this function for cursor-based pagination
-func (r *appRepository) GetTicketsCursor(limit int, cursor string, tipePengaduan string) ([]models.Ticket, string, error) {
+func (r *appRepository) GetTicketsCursor(limit int, cursor string, tipePengaduan string, statusID, priorityID, categoryID int) ([]models.Ticket, string, error) {
 	var tickets []models.Ticket
 
 	db := r.Conn.Preload("User").Preload("Category").Preload("Priority").Preload("Status")
+
+	// Apply filters at database level
 	if tipePengaduan != "" {
 		db = db.Where("tipe_pengaduan = ?", tipePengaduan)
 	}
+	if statusID > 0 {
+		db = db.Where("status_id = ?", statusID)
+	}
+	if priorityID > 0 {
+		db = db.Where("priority_id = ?", priorityID)
+	}
+	if categoryID > 0 {
+		db = db.Where("category_id = ?", categoryID)
+	}
+
 	if cursor != "" {
 		// cursor is last seen ticket ID (assuming descending order)
 		if lastID, err := strconv.Atoi(cursor); err == nil {
 			db = db.Where("id_ticket < ?", lastID)
 		}
 	}
+
 	err := db.Order("id_ticket desc").Limit(limit + 1).Find(&tickets).Error
 	if err != nil {
 		return nil, "", err
 	}
+
 	var nextCursor string
 	if len(tickets) > limit {
 		nextCursor = strconv.Itoa(tickets[limit].ID)
 		tickets = tickets[:limit]
 	}
+
 	return tickets, nextCursor, nil
 }

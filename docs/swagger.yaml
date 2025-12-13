@@ -1648,7 +1648,7 @@ paths:
         in: query
         name: category
         type: integer
-      - description: 'Items per page (default: 5)'
+      - description: 'Items per page (default: 10)'
         in: query
         name: limit
         type: integer
