@@ -16,8 +16,11 @@ func (s *appService) GetAdminListConversationStates(claim models.User) helpers.R
 		return helpers.NewResponse(http.StatusInternalServerError, "Failed to retrieve conversation states", nil, nil)
 	}
 
-	// Get ticket notification counts
+	// Get ticket notification counts by type
 	customerCount, sellerCount, ticketErr := s.repo.GetOpenTicketCountsByType()
+
+	// Get additional ticket statistics
+	total, inProgress, resolved, priorityCounts, statsErr := s.repo.GetTicketStatistics()
 
 	// Prepare response data
 	responseData := map[string]interface{}{
@@ -26,12 +29,26 @@ func (s *appService) GetAdminListConversationStates(claim models.User) helpers.R
 			"customer_open_tickets": customerCount,
 			"seller_open_tickets":   sellerCount,
 			"total_open_tickets":    customerCount + sellerCount,
+			"total_tickets":         total,
+			"in_progress_tickets":   inProgress,
+			"resolved_tickets":      resolved,
+			"priority_counts": map[string]int{
+				"low":      priorityCounts[1],
+				"medium":   priorityCounts[2],
+				"high":     priorityCounts[3],
+				"critical": priorityCounts[4],
+			},
 		},
 	}
 
 	// Add error info if ticket count failed
 	if ticketErr != nil {
-		responseData["ticket_notifications"].(map[string]interface{})["error"] = ticketErr.Error()
+		responseData["ticket_notifications"].(map[string]interface{})["type_count_error"] = ticketErr.Error()
+	}
+
+	// Add error info if statistics failed
+	if statsErr != nil {
+		responseData["ticket_notifications"].(map[string]interface{})["statistics_error"] = statsErr.Error()
 	}
 
 	return helpers.NewResponse(http.StatusOK, "Successfully retrieved conversation states and ticket notifications", nil, responseData)

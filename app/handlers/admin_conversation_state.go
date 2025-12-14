@@ -8,7 +8,7 @@ import (
 
 func (r *appRoute) AdminConversationStatesRoute(path string) {
 	api := r.Route.Group(path)
-	api.Use(r.Middleware.Auth())
+	api.Use(r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin))
 	{
 		api.GET("", r.GetAdminListConversationStates)
 	}

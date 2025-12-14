@@ -123,3 +123,42 @@ func (r *appRepository) GetOpenTicketCountsByType() (customerCount int, sellerCo
 
 	return int(customerResult), int(sellerResult), nil
 }
+
+func (r *appRepository) GetTicketStatistics() (total int, inProgress int, resolved int, priorityCounts map[int]int, err error) {
+	var totalCount int64
+	var inProgressCount int64
+	var resolvedCount int64
+
+	// Get total ticket count
+	if err := r.Conn.Model(&models.Ticket{}).Count(&totalCount).Error; err != nil {
+		return 0, 0, 0, nil, err
+	}
+
+	// Get in progress tickets (status_id = 2)
+	if err := r.Conn.Model(&models.Ticket{}).
+		Where("status_id = ?", 2).
+		Count(&inProgressCount).Error; err != nil {
+		return 0, 0, 0, nil, err
+	}
+
+	// Get resolved tickets (status_id = 3)
+	if err := r.Conn.Model(&models.Ticket{}).
+		Where("status_id = ?", 3).
+		Count(&resolvedCount).Error; err != nil {
+		return 0, 0, 0, nil, err
+	}
+
+	// Get counts by priority (1, 2, 3, 4)
+	priorityCounts = make(map[int]int)
+	for priorityID := 1; priorityID <= 4; priorityID++ {
+		var count int64
+		if err := r.Conn.Model(&models.Ticket{}).
+			Where("priority_id = ?", priorityID).
+			Count(&count).Error; err != nil {
+			return 0, 0, 0, nil, err
+		}
+		priorityCounts[priorityID] = int(count)
+	}
+
+	return int(totalCount), int(inProgressCount), int(resolvedCount), priorityCounts, nil
+}

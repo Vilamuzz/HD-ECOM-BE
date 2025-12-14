@@ -45,6 +45,7 @@ type AppRepository interface {
 
 	// Ticket notifications
 	GetOpenTicketCountsByType() (customerCount int, sellerCount int, err error)
+	GetTicketStatistics() (total int, inProgress int, resolved int, priorityCounts map[int]int, err error)
 
 	// Ticket Category
 	CreateTicketCategory(category *models.TicketCategory) error
