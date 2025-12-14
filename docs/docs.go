@@ -109,14 +109,14 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get a list of conversation states for admin",
+                "description": "Get a list of conversation states for admin with open ticket counts by type",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "admin_conversation_states"
                 ],
-                "summary": "Get admin list conversation states",
+                "summary": "Get admin list conversation states and ticket notifications",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -129,7 +129,8 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.AdminConversationState"
+                                            "type": "object",
+                                            "additionalProperties": true
                                         }
                                     }
                                 }

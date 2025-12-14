@@ -588,7 +588,8 @@ paths:
       - conversations
   /conversations/notifications:
     get:
-      description: Get a list of conversation states for admin
+      description: Get a list of conversation states for admin with open ticket counts
+        by type
       produces:
       - application/json
       responses:
@@ -599,7 +600,8 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/models.AdminConversationState'
+                  additionalProperties: true
+                  type: object
               type: object
         "500":
           description: Internal Server Error
@@ -607,7 +609,7 @@ paths:
             $ref: '#/definitions/helpers.Response'
       security:
       - BearerAuth: []
-      summary: Get admin list conversation states
+      summary: Get admin list conversation states and ticket notifications
       tags:
       - admin_conversation_states
   /me:

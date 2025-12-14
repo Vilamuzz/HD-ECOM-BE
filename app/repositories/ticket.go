@@ -102,3 +102,24 @@ func (r *appRepository) GetTicketsCursor(limit int, cursor string, tipePengaduan
 
 	return tickets, nextCursor, nil
 }
+
+func (r *appRepository) GetOpenTicketCountsByType() (customerCount int, sellerCount int, err error) {
+	var customerResult int64
+	var sellerResult int64
+
+	// Count tickets with tipe_pengaduan = customer and status_id = 1
+	if err := r.Conn.Model(&models.Ticket{}).
+		Where("tipe_pengaduan = ? AND status_id = ?", models.RoleCustomer, 1).
+		Count(&customerResult).Error; err != nil {
+		return 0, 0, err
+	}
+
+	// Count tickets with tipe_pengaduan = seller and status_id = 1
+	if err := r.Conn.Model(&models.Ticket{}).
+		Where("tipe_pengaduan = ? AND status_id = ?", models.RoleSeller, 1).
+		Count(&sellerResult).Error; err != nil {
+		return 0, 0, err
+	}
+
+	return int(customerResult), int(sellerResult), nil
+}

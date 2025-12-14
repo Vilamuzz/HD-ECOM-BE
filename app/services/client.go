@@ -380,3 +380,21 @@ func (s *appService) handleAdminNotification(c *domain.Client, conversationID ui
 		s.sendDirect(adminClient, "admin_notification", notification)
 	}
 }
+
+func (s *appService) GetTicketNotifications() map[string]interface{} {
+	customerCount, sellerCount, err := s.repo.GetOpenTicketCountsByType()
+	if err != nil {
+		return map[string]interface{}{
+			"customer_open_tickets": 0,
+			"seller_open_tickets":   0,
+			"total_open_tickets":    0,
+			"error":                 err.Error(),
+		}
+	}
+
+	return map[string]interface{}{
+		"customer_open_tickets": customerCount,
+		"seller_open_tickets":   sellerCount,
+		"total_open_tickets":    customerCount + sellerCount,
+	}
+}

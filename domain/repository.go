@@ -42,6 +42,10 @@ type AppRepository interface {
 	GetAdminConversationStatesByAdminID(adminID uint64) ([]models.AdminConversationState, error)
 	IncrementUnreadCount(state *models.AdminConversationState) error
 	ResetState(state *models.AdminConversationState, lastMessageID uint64) error
+
+	// Ticket notifications
+	GetOpenTicketCountsByType() (customerCount int, sellerCount int, err error)
+
 	// Ticket Category
 	CreateTicketCategory(category *models.TicketCategory) error
 	GetTicketCategories() ([]models.TicketCategory, error)
