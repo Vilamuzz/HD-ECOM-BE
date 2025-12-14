@@ -1465,6 +1465,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new activity log for a ticket",
                 "consumes": [
                     "application/json"
@@ -1603,6 +1608,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new ticket priority",
                 "consumes": [
                     "application/json"
@@ -1688,6 +1698,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a ticket priority by its ID",
                 "consumes": [
                     "application/json"
@@ -1739,6 +1754,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a ticket priority by its ID",
                 "produces": [
                     "application/json"
@@ -1801,6 +1821,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new ticket status",
                 "consumes": [
                     "application/json"
@@ -1886,6 +1911,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a ticket status by its ID",
                 "consumes": [
                     "application/json"
@@ -1937,6 +1967,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a ticket status by its ID",
                 "produces": [
                     "application/json"

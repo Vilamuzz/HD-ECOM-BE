@@ -1359,6 +1359,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Create a new ticket log
       tags:
       - ticket-logs
@@ -1433,6 +1435,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketPriority'
               type: object
+      security:
+      - BearerAuth: []
       summary: Create a new ticket priority
       tags:
       - ticket-priorities
@@ -1452,6 +1456,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket priority
       tags:
       - ticket-priorities
@@ -1506,6 +1512,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketPriority'
               type: object
+      security:
+      - BearerAuth: []
       summary: Update a ticket priority
       tags:
       - ticket-priorities
@@ -1552,6 +1560,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketStatus'
               type: object
+      security:
+      - BearerAuth: []
       summary: Create a new ticket status
       tags:
       - ticket-statuses
@@ -1571,6 +1581,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket status
       tags:
       - ticket-statuses
@@ -1625,6 +1637,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketStatus'
               type: object
+      security:
+      - BearerAuth: []
       summary: Update a ticket status
       tags:
       - ticket-statuses

@@ -39,7 +39,17 @@ func (r *appRepository) GetTicketByID(id int) (*models.Ticket, error) {
 }
 
 func (r *appRepository) UpdateTicket(ticket *models.Ticket) error {
-	return r.Conn.Save(ticket).Error
+	return r.Conn.Model(&models.Ticket{}).Where("id_ticket = ?", ticket.ID).Updates(map[string]interface{}{
+		"kode_tiket":         ticket.KodeTiket,
+		"id_user":            ticket.UserID,
+		"judul":              ticket.Judul,
+		"deskripsi":          ticket.Deskripsi,
+		"category_id":        ticket.CategoryID,
+		"priority_id":        ticket.PriorityID,
+		"status_id":          ticket.StatusID,
+		"tipe_pengaduan":     ticket.TipePengaduan,
+		"tanggal_diperbarui": ticket.TanggalDiperbarui,
+	}).Error
 }
 
 func (r *appRepository) DeleteTicket(id int) error {
