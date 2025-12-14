@@ -1151,7 +1151,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/models.TicketComment"
+                                                "$ref": "#/definitions/app_domain_requests.TicketCommentResponse"
                                             }
                                         }
                                     }
@@ -1220,6 +1220,12 @@
                             "$ref": "#/definitions/helpers.Response"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
@@ -1271,11 +1277,17 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.TicketComment"
+                                            "$ref": "#/definitions/app_domain_requests.TicketCommentResponse"
                                         }
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
                         }
                     },
                     "404": {
@@ -1340,6 +1352,18 @@
                             ]
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
@@ -1386,6 +1410,12 @@
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/helpers.Response"
                         }
@@ -2378,14 +2408,12 @@
         },
         "app_domain_requests.CreateTicketCommentRequest": {
             "type": "object",
+            "required": [
+                "isi_pesan",
+                "ticket_id"
+            ],
             "properties": {
-                "id_user": {
-                    "type": "integer"
-                },
                 "isi_pesan": {
-                    "type": "string"
-                },
-                "tanggal_dibuat": {
                     "type": "string"
                 },
                 "ticket_id": {
@@ -2423,6 +2451,9 @@
                 "id_comment": {
                     "type": "integer"
                 },
+                "id_ticket": {
+                    "type": "integer"
+                },
                 "id_user": {
                     "type": "integer"
                 },
@@ -2431,9 +2462,6 @@
                 },
                 "tanggal_dibuat": {
                     "type": "string"
-                },
-                "ticket_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -2482,14 +2510,12 @@
         },
         "app_domain_requests.UpdateTicketCommentRequest": {
             "type": "object",
+            "required": [
+                "isi_pesan",
+                "ticket_id"
+            ],
             "properties": {
-                "id_user": {
-                    "type": "integer"
-                },
                 "isi_pesan": {
-                    "type": "string"
-                },
-                "tanggal_dibuat": {
                     "type": "string"
                 },
                 "ticket_id": {

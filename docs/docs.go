@@ -1162,7 +1162,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/models.TicketComment"
+                                                "$ref": "#/definitions/app_domain_requests.TicketCommentResponse"
                                             }
                                         }
                                     }
@@ -1231,6 +1231,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/helpers.Response"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
@@ -1282,11 +1288,17 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.TicketComment"
+                                            "$ref": "#/definitions/app_domain_requests.TicketCommentResponse"
                                         }
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
                         }
                     },
                     "404": {
@@ -1351,6 +1363,18 @@ const docTemplate = `{
                             ]
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
@@ -1397,6 +1421,12 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/helpers.Response"
                         }
@@ -2389,14 +2419,12 @@ const docTemplate = `{
         },
         "app_domain_requests.CreateTicketCommentRequest": {
             "type": "object",
+            "required": [
+                "isi_pesan",
+                "ticket_id"
+            ],
             "properties": {
-                "id_user": {
-                    "type": "integer"
-                },
                 "isi_pesan": {
-                    "type": "string"
-                },
-                "tanggal_dibuat": {
                     "type": "string"
                 },
                 "ticket_id": {
@@ -2434,6 +2462,9 @@ const docTemplate = `{
                 "id_comment": {
                     "type": "integer"
                 },
+                "id_ticket": {
+                    "type": "integer"
+                },
                 "id_user": {
                     "type": "integer"
                 },
@@ -2442,9 +2473,6 @@ const docTemplate = `{
                 },
                 "tanggal_dibuat": {
                     "type": "string"
-                },
-                "ticket_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -2493,14 +2521,12 @@ const docTemplate = `{
         },
         "app_domain_requests.UpdateTicketCommentRequest": {
             "type": "object",
+            "required": [
+                "isi_pesan",
+                "ticket_id"
+            ],
             "properties": {
-                "id_user": {
-                    "type": "integer"
-                },
                 "isi_pesan": {
-                    "type": "string"
-                },
-                "tanggal_dibuat": {
                     "type": "string"
                 },
                 "ticket_id": {

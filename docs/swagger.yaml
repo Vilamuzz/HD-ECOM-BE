@@ -18,14 +18,13 @@ definitions:
     type: object
   app_domain_requests.CreateTicketCommentRequest:
     properties:
-      id_user:
-        type: integer
       isi_pesan:
-        type: string
-      tanggal_dibuat:
         type: string
       ticket_id:
         type: integer
+    required:
+    - isi_pesan
+    - ticket_id
     type: object
   app_domain_requests.TicketAssignmentResponse:
     description: TicketAssignmentResponse represents a ticket assignment with related
@@ -48,14 +47,14 @@ definitions:
     properties:
       id_comment:
         type: integer
+      id_ticket:
+        type: integer
       id_user:
         type: integer
       isi_pesan:
         type: string
       tanggal_dibuat:
         type: string
-      ticket_id:
-        type: integer
     type: object
   app_domain_requests.TicketResponse:
     properties:
@@ -88,14 +87,13 @@ definitions:
     type: object
   app_domain_requests.UpdateTicketCommentRequest:
     properties:
-      id_user:
-        type: integer
       isi_pesan:
-        type: string
-      tanggal_dibuat:
         type: string
       ticket_id:
         type: integer
+    required:
+    - isi_pesan
+    - ticket_id
     type: object
   helpers.Response:
     properties:
@@ -1144,7 +1142,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/models.TicketComment'
+                    $ref: '#/definitions/app_domain_requests.TicketCommentResponse'
                   type: array
               type: object
         "500":
@@ -1183,6 +1181,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/helpers.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Response'
         "403":
           description: Forbidden
           schema:
@@ -1210,6 +1212,10 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/helpers.Response'
         "403":
@@ -1243,8 +1249,12 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/models.TicketComment'
+                  $ref: '#/definitions/app_domain_requests.TicketCommentResponse'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
         "404":
           description: Not Found
           schema:
@@ -1282,6 +1292,14 @@ paths:
                 data:
                   $ref: '#/definitions/app_domain_requests.TicketCommentResponse'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Response'
         "403":
           description: Forbidden
           schema:

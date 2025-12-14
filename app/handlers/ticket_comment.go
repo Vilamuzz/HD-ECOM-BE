@@ -6,6 +6,7 @@ import (
 	"app/helpers"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,50 +34,51 @@ func (r *appRoute) TicketCommentRoutes(rg *gin.RouterGroup) {
 // @Param comment body requests.CreateTicketCommentRequest true "Comment Data"
 // @Success 201 {object} helpers.Response{data=requests.TicketCommentResponse}
 // @Failure 400 {object} helpers.Response
+// @Failure 401 {object} helpers.Response
 // @Failure 403 {object} helpers.Response
 // @Failure 500 {object} helpers.Response
 // @Router /ticket-comments [post]
 func (r *appRoute) createTicketComment(c *gin.Context) {
-	var req requests.CreateTicketCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, helpers.NewResponse(http.StatusBadRequest, "Invalid request body", nil, nil))
-		return
-	}
+    var req requests.CreateTicketCommentRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, helpers.NewResponse(http.StatusBadRequest, "Invalid request body", nil, nil))
+        return
+    }
 
-	// Get user from context (required - no fallback)
-	userData, exists := c.Get("userData")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "User authentication required", nil, nil))
-		return
-	}
+    // Get user from context (required - no fallback)
+    userData, exists := c.Get("userData")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "User authentication required", nil, nil))
+        return
+    }
 
-	user, ok := userData.(models.User)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid user data", nil, nil))
-		return
-	}
+    user, ok := userData.(models.User)
+    if !ok {
+        c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid user data", nil, nil))
+        return
+    }
 
-	comment := models.TicketComment{
-		TicketID: req.TicketID,
-		UserID:   int(user.ID), // Use authenticated user's ID
-		IsiPesan: req.IsiPesan,
-		// TanggalDibuat will be set by database (CURRENT_TIMESTAMP) or service layer
-	}
+    comment := models.TicketComment{
+        TicketID:      req.TicketID,
+        UserID:        int(user.ID), // Use authenticated user's ID from JWT
+        IsiPesan:      req.IsiPesan,
+        TanggalDibuat: time.Now(), // Set current timestamp
+    }
 
-	if err := r.Service.CreateTicketComment(&comment); err != nil {
-		c.JSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create comment: "+err.Error(), nil, nil))
-		return
-	}
+    if err := r.Service.CreateTicketComment(&comment); err != nil {
+        c.JSON(http.StatusInternalServerError, helpers.NewResponse(http.StatusInternalServerError, "Failed to create comment: "+err.Error(), nil, nil))
+        return
+    }
 
-	resp := requests.TicketCommentResponse{
-		CommentID:     comment.ID,
-		TicketID:      comment.TicketID,
-		UserID:        comment.UserID,
-		IsiPesan:      comment.IsiPesan,
-		TanggalDibuat: comment.TanggalDibuat,
-	}
+    resp := requests.TicketCommentResponse{
+        CommentID:     comment.ID,
+        TicketID:      comment.TicketID,
+        UserID:        comment.UserID,
+        IsiPesan:      comment.IsiPesan,
+        TanggalDibuat: comment.TanggalDibuat,
+    }
 
-	c.JSON(http.StatusCreated, helpers.NewResponse(http.StatusCreated, "Comment created successfully", nil, resp))
+    c.JSON(http.StatusCreated, helpers.NewResponse(http.StatusCreated, "Comment created successfully", nil, resp))
 }
 
 // GetTicketComments godoc
@@ -86,7 +88,7 @@ func (r *appRoute) createTicketComment(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param ticket_id query int false "Filter by Ticket ID"
-// @Success 200 {object} helpers.Response{data=[]models.TicketComment}
+// @Success 200 {object} helpers.Response{data=[]requests.TicketCommentResponse}
 // @Failure 500 {object} helpers.Response
 // @Router /ticket-comments [get]
 func (r *appRoute) getTicketComments(c *gin.Context) {
@@ -106,7 +108,19 @@ func (r *appRoute) getTicketComments(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, helpers.NewResponse(http.StatusOK, "Comments retrieved successfully", nil, comments))
+	// Map to response DTOs
+	var respList []requests.TicketCommentResponse
+	for _, comment := range comments {
+		respList = append(respList, requests.TicketCommentResponse{
+			CommentID:     comment.ID,
+			TicketID:      comment.TicketID,
+			UserID:        comment.UserID,
+			IsiPesan:      comment.IsiPesan,
+			TanggalDibuat: comment.TanggalDibuat,
+		})
+	}
+
+	c.JSON(http.StatusOK, helpers.NewResponse(http.StatusOK, "Comments retrieved successfully", nil, respList))
 }
 
 // GetTicketCommentByID godoc
@@ -116,7 +130,8 @@ func (r *appRoute) getTicketComments(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Comment ID"
-// @Success 200 {object} helpers.Response{data=models.TicketComment}
+// @Success 200 {object} helpers.Response{data=requests.TicketCommentResponse}
+// @Failure 400 {object} helpers.Response
 // @Failure 404 {object} helpers.Response
 // @Router /ticket-comments/{id} [get]
 func (r *appRoute) getTicketCommentByID(c *gin.Context) {
@@ -132,7 +147,15 @@ func (r *appRoute) getTicketCommentByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, helpers.NewResponse(http.StatusOK, "Comment retrieved successfully", nil, comment))
+	resp := requests.TicketCommentResponse{
+		CommentID:     comment.ID,
+		TicketID:      comment.TicketID,
+		UserID:        comment.UserID,
+		IsiPesan:      comment.IsiPesan,
+		TanggalDibuat: comment.TanggalDibuat,
+	}
+
+	c.JSON(http.StatusOK, helpers.NewResponse(http.StatusOK, "Comment retrieved successfully", nil, resp))
 }
 
 // UpdateTicketComment godoc
@@ -145,6 +168,8 @@ func (r *appRoute) getTicketCommentByID(c *gin.Context) {
 // @Param id path int true "Comment ID"
 // @Param comment body requests.UpdateTicketCommentRequest true "Updated Comment Data"
 // @Success 200 {object} helpers.Response{data=requests.TicketCommentResponse}
+// @Failure 400 {object} helpers.Response
+// @Failure 401 {object} helpers.Response
 // @Failure 403 {object} helpers.Response
 // @Failure 404 {object} helpers.Response
 // @Failure 500 {object} helpers.Response
@@ -207,6 +232,7 @@ func (r *appRoute) updateTicketComment(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Comment ID"
 // @Success 200 {object} helpers.Response
+// @Failure 400 {object} helpers.Response
 // @Failure 403 {object} helpers.Response
 // @Failure 500 {object} helpers.Response
 // @Router /ticket-comments/{id} [delete]

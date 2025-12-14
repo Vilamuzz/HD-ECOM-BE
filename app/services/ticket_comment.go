@@ -1,9 +1,32 @@
 package services
 
-import "app/domain/models"
+import (
+	"app/domain/models"
+	"fmt"
+	"time"
+)
 
 func (s *appService) CreateTicketComment(comment *models.TicketComment) error {
-	return s.repo.CreateTicketComment(comment)
+	// Get the ticket first to ensure it exists
+	ticket, err := s.repo.GetTicketByID(comment.TicketID)
+	if err != nil {
+		return fmt.Errorf("ticket not found: %v", err)
+	}
+
+	// Create the comment first
+	if err := s.repo.CreateTicketComment(comment); err != nil {
+		return fmt.Errorf("failed to create comment: %v", err)
+	}
+
+	// Update ticket status to 3 (status after comment is added)
+	ticket.StatusID = 3
+	ticket.TanggalDiperbarui = time.Now()
+	
+	if err := s.repo.UpdateTicket(ticket); err != nil {
+		return fmt.Errorf("failed to update ticket status: %v", err)
+	}
+
+	return nil
 }
 
 func (s *appService) GetTicketComments() ([]models.TicketComment, error) {
