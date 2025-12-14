@@ -34,6 +34,10 @@ func (s *appService) GetTickets() ([]models.Ticket, error) {
 	return s.repo.GetTickets()
 }
 
+func (s *appService) GetTicketsPaginated(limit, offset int) ([]models.Ticket, int, error) {
+    return s.repo.GetTicketsPaginated(limit, offset)
+}
+
 func (s *appService) GetTicketByID(id int) (*models.Ticket, error) {
 	return s.repo.GetTicketByID(id)
 }
@@ -48,4 +52,8 @@ func (s *appService) DeleteTicket(id int) error {
 
 func (s *appService) GetTicketsByUserID(userID int) ([]models.Ticket, error) {
 	return s.repo.GetTicketsByUserID(userID)
+}
+
+func (s *appService) GetTicketsCursor(limit int, cursor string, tipePengaduan string, statusID, priorityID, categoryID int) ([]models.Ticket, string, error) {
+    return s.repo.GetTicketsCursor(limit, cursor, tipePengaduan, statusID, priorityID, categoryID)
 }

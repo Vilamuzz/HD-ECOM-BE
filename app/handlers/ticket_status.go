@@ -11,11 +11,11 @@ import (
 
 func (r *appRoute) TicketStatusRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/ticket-statuses")
-	api.POST("", r.createTicketStatus)
-	api.GET("", r.getTicketStatuses)
+	api.POST("", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.createTicketStatus)
+	api.GET("", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.getTicketStatuses)
 	api.GET("/:id", r.getTicketStatusByID)
-	api.PUT("/:id", r.updateTicketStatus)
-	api.DELETE("/:id", r.deleteTicketStatus)
+	api.PUT("/:id", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.updateTicketStatus)
+	api.DELETE("/:id", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.deleteTicketStatus)
 }
 
 // CreateTicketStatus godoc
@@ -23,6 +23,7 @@ func (r *appRoute) TicketStatusRoutes(rg *gin.RouterGroup) {
 // @Description Create a new ticket status
 // @Tags ticket-statuses
 // @Accept json
+// @Security BearerAuth
 // @Produce json
 // @Param status body models.TicketStatus true "Ticket Status Data"
 // @Success 201 {object} helpers.Response{data=models.TicketStatus}
@@ -96,6 +97,7 @@ func (r *appRoute) getTicketStatusByID(c *gin.Context) {
 // @Description Update a ticket status by its ID
 // @Tags ticket-statuses
 // @Accept json
+// @Security BearerAuth
 // @Produce json
 // @Param id path int true "Status ID"
 // @Param status body models.TicketStatus true "Updated Status Data"
@@ -132,6 +134,7 @@ func (r *appRoute) updateTicketStatus(c *gin.Context) {
 // @Description Delete a ticket status by its ID
 // @Tags ticket-statuses
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Status ID"
 // @Success 200 {object} helpers.Response
 // @Router /ticket-statuses/{id} [delete]

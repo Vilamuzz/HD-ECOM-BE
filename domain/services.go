@@ -5,11 +5,13 @@ import (
 	"app/helpers"
 	"context"
 	"mime/multipart"
-
 	"github.com/gin-gonic/gin"
 )
 
 type AppService interface {
+	// User management
+	GetSupportUsers() helpers.Response
+
 	// WebSocket management
 	Run()
 	RegisterClient(client *Client)
@@ -56,8 +58,10 @@ type AppService interface {
 	// Ticket
 	CreateTicket(ticket *models.Ticket) error
 	GetTickets() ([]models.Ticket, error)
+	GetTicketsPaginated(limit, offset int) ([]models.Ticket, int, error)
 	GetTicketByID(id int) (*models.Ticket, error)
 	GetTicketsByUserID(userID int) ([]models.Ticket, error)
+	GetTicketsCursor(limit int, cursor string, tipePengaduan string, statusID, priorityID, categoryID int) ([]models.Ticket, string, error)
 	UpdateTicket(ticket *models.Ticket) error
 	DeleteTicket(id int) error
 
@@ -89,4 +93,7 @@ type AppService interface {
 	GetTicketLogs() ([]models.TicketLog, error)
 	GetTicketLogByID(id int) (*models.TicketLog, error)
 	GetTicketLogsByTicketID(ticketID int) ([]models.TicketLog, error)
+
+	// Email
+	SendTicketCommentEmail(toEmail, userName, ticketId, ticketTitle, resolution string) error
 }

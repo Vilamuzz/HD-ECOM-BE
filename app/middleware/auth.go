@@ -75,6 +75,7 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 			0: models.RoleAdmin,
 			1: models.RoleSeller,
 			2: models.RoleCustomer,
+			3: models.RoleSupport,
 		}
 		if roleVal, exists := roleMap[r]; exists {
 			role = roleVal
@@ -129,4 +130,46 @@ func (m *appMiddleware) Auth() gin.HandlerFunc {
 		c.Set("userData", user)
 		c.Next()
 	}
+}
+
+// RequireRole middleware checks if the authenticated user has one of the required roles
+func (m *appMiddleware) RequireRole(allowedRoles ...models.UserRole) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Get user data from context (set by Auth middleware)
+		userData, exists := c.Get("userData")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Unauthorized", nil, nil))
+			c.Abort()
+			return
+		}
+
+		user, ok := userData.(models.User)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, helpers.NewResponse(http.StatusUnauthorized, "Invalid user data", nil, nil))
+			c.Abort()
+			return
+		}
+
+		// Check if user's role is in the allowed roles
+		hasPermission := false
+		for _, role := range allowedRoles {
+			if user.Role == role {
+				hasPermission = true
+				break
+			}
+		}
+
+		if !hasPermission {
+			c.JSON(http.StatusForbidden, helpers.NewResponse(http.StatusForbidden, "Access denied. Insufficient permissions", nil, nil))
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// RequireAdminOrSupport is a convenience middleware that allows only admin or support roles
+func (m *appMiddleware) RequireAdminOrSupport() gin.HandlerFunc {
+	return m.RequireRole(models.RoleAdmin, models.RoleSupport)
 }

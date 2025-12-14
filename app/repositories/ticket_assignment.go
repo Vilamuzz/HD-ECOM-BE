@@ -25,3 +25,12 @@ func (r *appRepository) UpdateTicketAssignment(assignment *models.TicketAssignme
 func (r *appRepository) DeleteTicketAssignment(id int) error {
 	return r.Conn.Delete(&models.TicketAssignment{}, id).Error
 }
+
+func (r *appRepository) GetTicketAssignmentByTicketID(ticketID int) (*models.TicketAssignment, error) {
+	var assignment models.TicketAssignment
+	err := r.Conn.Preload("Ticket").Preload("Admin").Where("ticket_id = ?", ticketID).First(&assignment).Error
+	if err != nil {
+		return nil, err
+	}
+	return &assignment, nil
+}

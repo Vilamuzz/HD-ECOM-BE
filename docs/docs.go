@@ -109,14 +109,14 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get a list of conversation states for admin",
+                "description": "Get a list of conversation states for admin with open ticket counts by type",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "admin_conversation_states"
                 ],
-                "summary": "Get admin list conversation states",
+                "summary": "Get admin list conversation states and ticket notifications",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -129,7 +129,8 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.AdminConversationState"
+                                            "type": "object",
+                                            "additionalProperties": true
                                         }
                                     }
                                 }
@@ -297,6 +298,11 @@ const docTemplate = `{
         },
         "/ticket-assignments": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a list of all ticket assignments",
                 "produces": [
                     "application/json"
@@ -319,7 +325,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                                "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
                                             }
                                         }
                                     }
@@ -330,6 +336,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new ticket assignment",
                 "consumes": [
                     "application/json"
@@ -364,7 +375,47 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/ticket-assignments/my-assignments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get ticket assignments where the admin_id matches the authenticated support user's ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-assignments"
+                ],
+                "summary": "Get my ticket assignments as support user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -376,6 +427,11 @@ const docTemplate = `{
         },
         "/ticket-assignments/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a ticket assignment by its ID",
                 "produces": [
                     "application/json"
@@ -405,7 +461,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
                                         }
                                     }
                                 }
@@ -415,6 +471,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a ticket assignment by its ID",
                 "consumes": [
                     "application/json"
@@ -456,7 +517,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketAssignmentResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
                                         }
                                     }
                                 }
@@ -466,6 +527,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a ticket assignment by its ID",
                 "produces": [
                     "application/json"
@@ -495,6 +561,11 @@ const docTemplate = `{
         },
         "/ticket-attachments": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a list of all ticket attachments",
                 "produces": [
                     "application/json"
@@ -542,6 +613,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new ticket attachment",
                 "consumes": [
                     "multipart/form-data"
@@ -605,6 +681,11 @@ const docTemplate = `{
         },
         "/ticket-attachments/ticket/{ticket_id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all attachments for a specific ticket",
                 "produces": [
                     "application/json"
@@ -661,6 +742,11 @@ const docTemplate = `{
         },
         "/ticket-attachments/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a ticket attachment by its ID",
                 "produces": [
                     "application/json"
@@ -706,6 +792,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a ticket attachment by its ID",
                 "consumes": [
                     "multipart/form-data"
@@ -778,6 +869,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a ticket attachment by its ID",
                 "produces": [
                     "application/json"
@@ -852,6 +948,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new ticket category",
                 "consumes": [
                     "application/json"
@@ -937,6 +1038,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a ticket category by its ID",
                 "consumes": [
                     "application/json"
@@ -988,6 +1094,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a ticket category by its ID",
                 "produces": [
                     "application/json"
@@ -1017,6 +1128,11 @@ const docTemplate = `{
         },
         "/ticket-comments": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all comments, optionally filtered by ticket ID",
                 "produces": [
                     "application/json"
@@ -1047,7 +1163,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/models.TicketComment"
+                                                "$ref": "#/definitions/app_domain_requests.TicketCommentResponse"
                                             }
                                         }
                                     }
@@ -1064,7 +1180,12 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new comment on a ticket",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new comment on a ticket (Admin and Support only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1082,7 +1203,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.CreateTicketCommentRequest"
+                            "$ref": "#/definitions/app_domain_requests.CreateTicketCommentRequest"
                         }
                     }
                 ],
@@ -1098,7 +1219,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketCommentResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketCommentResponse"
                                         }
                                     }
                                 }
@@ -1107,6 +1228,18 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/helpers.Response"
                         }
@@ -1122,6 +1255,11 @@ const docTemplate = `{
         },
         "/ticket-comments/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a specific comment by its ID",
                 "produces": [
                     "application/json"
@@ -1151,11 +1289,17 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/models.TicketComment"
+                                            "$ref": "#/definitions/app_domain_requests.TicketCommentResponse"
                                         }
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
                         }
                     },
                     "404": {
@@ -1167,7 +1311,12 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update an existing comment",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing comment (Admin and Support only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1192,7 +1341,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.UpdateTicketCommentRequest"
+                            "$ref": "#/definitions/app_domain_requests.UpdateTicketCommentRequest"
                         }
                     }
                 ],
@@ -1208,11 +1357,29 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketCommentResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketCommentResponse"
                                         }
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
                         }
                     },
                     "404": {
@@ -1230,7 +1397,12 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete an existing comment",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete an existing comment (Admin and Support only)",
                 "produces": [
                     "application/json"
                 ],
@@ -1250,6 +1422,18 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/helpers.Response"
                         }
@@ -1312,6 +1496,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new activity log for a ticket",
                 "consumes": [
                     "application/json"
@@ -1450,6 +1639,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new ticket priority",
                 "consumes": [
                     "application/json"
@@ -1535,6 +1729,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a ticket priority by its ID",
                 "consumes": [
                     "application/json"
@@ -1586,6 +1785,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a ticket priority by its ID",
                 "produces": [
                     "application/json"
@@ -1648,6 +1852,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new ticket status",
                 "consumes": [
                     "application/json"
@@ -1733,6 +1942,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a ticket status by its ID",
                 "consumes": [
                     "application/json"
@@ -1784,6 +1998,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a ticket status by its ID",
                 "produces": [
                     "application/json"
@@ -1813,7 +2032,12 @@ const docTemplate = `{
         },
         "/tickets": {
             "get": {
-                "description": "Get a list of all tickets",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a list of all tickets (Admin only), cursor-based pagination",
                 "produces": [
                     "application/json"
                 ],
@@ -1821,6 +2045,44 @@ const docTemplate = `{
                     "tickets"
                 ],
                 "summary": "Get all tickets",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by tipe_pengaduan (customer, seller, admin, support)",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by status ID",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by priority ID",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by category ID",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cursor for next page",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1833,10 +2095,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/requests.TicketResponse"
-                                            }
+                                            "$ref": "#/definitions/requests.TicketListResponse"
                                         }
                                     }
                                 }
@@ -1885,7 +2144,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketResponse"
                                         }
                                     }
                                 }
@@ -1924,7 +2183,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/requests.TicketResponse"
+                                                "$ref": "#/definitions/app_domain_requests.TicketResponse"
                                             }
                                         }
                                     }
@@ -1978,7 +2237,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketResponse"
                                         }
                                     }
                                 }
@@ -2034,7 +2293,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/requests.TicketResponse"
+                                            "$ref": "#/definitions/app_domain_requests.TicketResponse"
                                         }
                                     }
                                 }
@@ -2070,9 +2329,212 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/support": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all users with the support role",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get support users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "user_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "username": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "app_app_domain_requests.TicketResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "app_domain_requests.CreateTicketCommentRequest": {
+            "type": "object",
+            "required": [
+                "isi_pesan",
+                "ticket_id"
+            ],
+            "properties": {
+                "isi_pesan": {
+                    "type": "string"
+                },
+                "ticket_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "app_domain_requests.TicketAssignmentResponse": {
+            "description": "TicketAssignmentResponse represents a ticket assignment with related ticket and admin info (no null fields)",
+            "type": "object",
+            "properties": {
+                "admin": {
+                    "$ref": "#/definitions/requests.UserSimpleResponse"
+                },
+                "id_admin": {
+                    "type": "integer"
+                },
+                "id_assignment": {
+                    "type": "integer"
+                },
+                "id_ticket": {
+                    "type": "integer"
+                },
+                "tanggal_ditugaskan": {
+                    "type": "string"
+                },
+                "ticket": {
+                    "$ref": "#/definitions/app_domain_requests.TicketResponse"
+                }
+            }
+        },
+        "app_domain_requests.TicketCommentResponse": {
+            "type": "object",
+            "properties": {
+                "id_comment": {
+                    "type": "integer"
+                },
+                "id_ticket": {
+                    "type": "integer"
+                },
+                "id_user": {
+                    "type": "integer"
+                },
+                "isi_pesan": {
+                    "type": "string"
+                },
+                "tanggal_dibuat": {
+                    "type": "string"
+                }
+            }
+        },
+        "app_domain_requests.TicketResponse": {
+            "type": "object",
+            "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "id_category": {
+                    "type": "integer"
+                },
+                "id_priority": {
+                    "type": "integer"
+                },
+                "id_status": {
+                    "type": "integer"
+                },
+                "id_ticket": {
+                    "type": "integer"
+                },
+                "id_user": {
+                    "description": "Tetap kirim ID jika diperlukan",
+                    "type": "integer"
+                },
+                "judul": {
+                    "type": "string"
+                },
+                "kode_tiket": {
+                    "type": "string"
+                },
+                "tanggal_dibuat": {
+                    "type": "string"
+                },
+                "tanggal_diperbarui": {
+                    "type": "string"
+                },
+                "tipe_pengaduan": {
+                    "$ref": "#/definitions/models.UserRole"
+                },
+                "username": {
+                    "description": "Tambahkan field ini",
+                    "type": "string"
+                }
+            }
+        },
+        "app_domain_requests.UpdateTicketCommentRequest": {
+            "type": "object",
+            "required": [
+                "isi_pesan",
+                "ticket_id"
+            ],
+            "properties": {
+                "isi_pesan": {
+                    "type": "string"
+                },
+                "ticket_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "helpers.Response": {
             "type": "object",
             "properties": {
@@ -2536,12 +2998,14 @@ const docTemplate = `{
             "enum": [
                 "admin",
                 "seller",
-                "customer"
+                "customer",
+                "support"
             ],
             "x-enum-varnames": [
                 "RoleAdmin",
                 "RoleSeller",
-                "RoleCustomer"
+                "RoleCustomer",
+                "RoleSupport"
             ]
         },
         "requests.CreateTicketAssignmentRequest": {
@@ -2558,67 +3022,6 @@ const docTemplate = `{
                 "tanggal_ditugaskan": {
                     "type": "string",
                     "example": "2025-11-07T10:00:00Z"
-                }
-            }
-        },
-        "requests.CreateTicketCommentRequest": {
-            "type": "object",
-            "properties": {
-                "id_ticket": {
-                    "type": "integer"
-                },
-                "id_user": {
-                    "type": "integer"
-                },
-                "isi_pesan": {
-                    "type": "string"
-                },
-                "tanggal_dibuat": {
-                    "type": "string"
-                }
-            }
-        },
-        "requests.TicketAssignmentResponse": {
-            "description": "TicketAssignmentResponse represents a ticket assignment with related ticket and admin info (no null fields)",
-            "type": "object",
-            "properties": {
-                "admin": {
-                    "$ref": "#/definitions/requests.UserSimpleResponse"
-                },
-                "id_admin": {
-                    "type": "integer"
-                },
-                "id_assignment": {
-                    "type": "integer"
-                },
-                "id_ticket": {
-                    "type": "integer"
-                },
-                "tanggal_ditugaskan": {
-                    "type": "string"
-                },
-                "ticket": {
-                    "$ref": "#/definitions/requests.TicketResponse"
-                }
-            }
-        },
-        "requests.TicketCommentResponse": {
-            "type": "object",
-            "properties": {
-                "id_comment": {
-                    "type": "integer"
-                },
-                "id_ticket": {
-                    "type": "integer"
-                },
-                "id_user": {
-                    "type": "integer"
-                },
-                "isi_pesan": {
-                    "type": "string"
-                },
-                "tanggal_dibuat": {
-                    "type": "string"
                 }
             }
         },
@@ -2655,63 +3058,28 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.TicketResponse": {
+        "requests.TicketListMeta": {
             "type": "object",
             "properties": {
-                "deskripsi": {
-                    "type": "string"
-                },
-                "id_category": {
+                "limit": {
                     "type": "integer"
                 },
-                "id_priority": {
-                    "type": "integer"
-                },
-                "id_status": {
-                    "type": "integer"
-                },
-                "id_ticket": {
-                    "type": "integer"
-                },
-                "id_user": {
-                    "description": "Tetap kirim ID jika diperlukan",
-                    "type": "integer"
-                },
-                "judul": {
-                    "type": "string"
-                },
-                "kode_tiket": {
-                    "type": "string"
-                },
-                "tanggal_dibuat": {
-                    "type": "string"
-                },
-                "tanggal_diperbarui": {
-                    "type": "string"
-                },
-                "tipe_pengaduan": {
-                    "$ref": "#/definitions/models.UserRole"
-                },
-                "username": {
-                    "description": "Tambahkan field ini",
+                "next_cursor": {
                     "type": "string"
                 }
             }
         },
-        "requests.UpdateTicketCommentRequest": {
+        "requests.TicketListResponse": {
             "type": "object",
             "properties": {
-                "id_ticket": {
-                    "type": "integer"
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/app_app_domain_requests.TicketResponse"
+                    }
                 },
-                "id_user": {
-                    "type": "integer"
-                },
-                "isi_pesan": {
-                    "type": "string"
-                },
-                "tanggal_dibuat": {
-                    "type": "string"
+                "meta": {
+                    "$ref": "#/definitions/requests.TicketListMeta"
                 }
             }
         },

@@ -12,12 +12,18 @@ import (
 
 func (r *appRoute) TicketRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/tickets")
-	api.POST("", r.Middleware.Auth(), r.createTicket)
-	api.GET("", r.getTickets)
-	api.GET("/my-tickets", r.Middleware.Auth(), r.getMyTickets) // New endpoint
+
+	// Public endpoints (no auth required)
 	api.GET("/:id", r.getTicketByID)
+
+	// Authenticated user endpoints
+	api.POST("", r.Middleware.Auth(), r.createTicket)
+	api.GET("/my-tickets", r.Middleware.Auth(), r.getMyTickets)
 	api.PUT("/:id", r.Middleware.Auth(), r.updateTicket)
-	api.DELETE("/:id", r.deleteTicket)
+	api.DELETE("/:id", r.Middleware.Auth(), r.deleteTicket)
+
+	// Admin-only endpoints
+	api.GET("", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.getTickets)
 }
 
 // CreateTicket godoc
@@ -96,26 +102,46 @@ func (r *appRoute) createTicket(c *gin.Context) {
 
 // GetTickets godoc
 // @Summary Get all tickets
-// @Description Get a list of all tickets
+// @Description Get a list of all tickets (Admin only), cursor-based pagination
 // @Tags tickets
 // @Produce json
-// @Success 200 {object} helpers.Response{data=[]requests.TicketResponse}
+// @Security BearerAuth
+// @Param role query string false "Filter by tipe_pengaduan (customer, seller, admin, support)"
+// @Param status query int false "Filter by status ID"
+// @Param priority query int false "Filter by priority ID"
+// @Param category query int false "Filter by category ID"
+// @Param limit query int false "Items per page (default: 10)"
+// @Param cursor query string false "Cursor for next page"
+// @Success 200 {object} helpers.Response{data=requests.TicketListResponse}
 // @Router /tickets [get]
 func (r *appRoute) getTickets(c *gin.Context) {
-	tickets, err := r.Service.GetTickets()
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+	cursor := c.Query("cursor")
+	filterType := c.Query("role")
+
+	// Get filter params for status, priority, and category
+	statusID, _ := strconv.Atoi(c.Query("status"))
+	priorityID, _ := strconv.Atoi(c.Query("priority"))
+	categoryID, _ := strconv.Atoi(c.Query("category"))
+
+	// Call service with all filters - filtering happens at DB level
+	tickets, nextCursor, err := r.Service.GetTicketsCursor(limit, cursor, filterType, statusID, priorityID, categoryID)
 	if err != nil {
-		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to get tickets", nil, nil)
-		c.JSON(http.StatusInternalServerError, response)
+		response := helpers.NewResponse(500, "Failed to get tickets", nil, nil)
+		c.JSON(500, response)
 		return
 	}
 
+	// No need to filter here anymore - already filtered by database
 	var resp []requests.TicketResponse
 	for _, ticket := range tickets {
 		username := ""
 		if ticket.User.Username != "" {
 			username = ticket.User.Username
 		}
-
 		resp = append(resp, requests.TicketResponse{
 			ID:                ticket.ID,
 			KodeTiket:         ticket.KodeTiket,
@@ -132,8 +158,15 @@ func (r *appRoute) getTickets(c *gin.Context) {
 		})
 	}
 
-	response := helpers.NewResponse(http.StatusOK, "Tickets retrieved successfully", nil, resp)
-	c.JSON(http.StatusOK, response)
+	responseData := map[string]interface{}{
+		"data": resp,
+		"meta": map[string]interface{}{
+			"next_cursor": nextCursor,
+			"limit":       limit,
+		},
+	}
+	response := helpers.NewResponse(200, "Tickets retrieved successfully", nil, responseData)
+	c.JSON(200, response)
 }
 
 // GetTicketByID godoc

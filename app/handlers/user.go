@@ -23,3 +23,18 @@ func (r *appRoute) GetCurrentUser(c *gin.Context) {
     }
     c.JSON(http.StatusOK, helpers.NewResponse(http.StatusOK, "Current user info", nil, user))
 }
+
+// GetSupportUsers godoc
+// @Summary      Get support users
+// @Description  Get all users with the support role
+// @Tags         users
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200 {object} helpers.Response{data=[]object{user_id=int,username=string}}
+// @Failure      401 {object} helpers.Response
+// @Failure      500 {object} helpers.Response
+// @Router       /users/support [get]
+func (r *appRoute) GetSupportUsers(c *gin.Context) {
+    response := r.Service.GetSupportUsers()
+    c.JSON(response.Status, response)
+}
