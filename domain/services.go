@@ -93,4 +93,7 @@ type AppService interface {
 	GetTicketLogs() ([]models.TicketLog, error)
 	GetTicketLogByID(id int) (*models.TicketLog, error)
 	GetTicketLogsByTicketID(ticketID int) ([]models.TicketLog, error)
+
+	// Email
+	SendTicketCommentEmail(toEmail, userName, ticketId, ticketTitle, resolution string) error
 }
