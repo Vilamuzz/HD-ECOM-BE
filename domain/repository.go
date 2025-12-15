@@ -85,6 +85,9 @@ type AppRepository interface {
 	GetTicketAssignmentByTicketID(ticketID int) (*models.TicketAssignment, error)
 	UpdateTicketAssignment(assignment *models.TicketAssignment) error
 	DeleteTicketAssignment(id int) error
+	GetTicketAssignmentsByAdminIDCursor(adminID int, limit int, cursor string, statusName string) ([]models.TicketAssignment, string, error)
+	GetAssignedTicketCountByAdminID(adminID int) (int, error)
+	GetAssignedTicketCountByAdminIDAndStatus(adminID int, statusID int) (int, error)
 
 	// Ticket Attachment
 	CreateTicketAttachment(attachment *models.TicketAttachment) error

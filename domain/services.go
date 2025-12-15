@@ -71,6 +71,9 @@ type AppService interface {
 	GetTicketAssignmentByID(id int) (*models.TicketAssignment, error)
 	UpdateTicketAssignment(assignment *models.TicketAssignment) error
 	DeleteTicketAssignment(id int) error
+	GetTicketAssignmentsByAdminIDCursor(adminID int, limit int, cursor string, statusName string) ([]models.TicketAssignment, string, error)
+	GetAssignedTicketCountByAdminID(adminID int) (int, error)
+	GetAssignedTicketCountByAdminIDAndStatus(adminID int, statusID int) (int, error)
 
 	// Ticket Attachment
 	CreateTicketAttachment(ticketID int, file *multipart.FileHeader) (*models.TicketAttachment, error)

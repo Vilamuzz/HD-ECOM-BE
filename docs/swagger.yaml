@@ -768,7 +768,47 @@ paths:
   /ticket-assignments/my-assignments:
     get:
       description: Get ticket assignments where the admin_id matches the authenticated
-        support user's ID
+        support user's ID, with cursor pagination and optional status filter
+      parameters:
+      - description: 'Items per page (default: 10)'
+        in: query
+        name: limit
+        type: integer
+      - description: Cursor for next page
+        in: query
+        name: cursor
+        type: string
+      - description: Filter by ticket status name (e.g., 'Open')
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                ' meta':
+                  additionalProperties: true
+                  type: object
+                data:
+                  items:
+                    additionalProperties: true
+                    type: object
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get my ticket assignments as support user
+      tags:
+      - ticket-assignments
+  /ticket-assignments/my-counts:
+    get:
+      description: Get total and in-progress assigned ticket counts for the authenticated
+        support user
       produces:
       - application/json
       responses:
@@ -779,13 +819,13 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/app_domain_requests.TicketAssignmentResponse'
-                  type: array
+                  additionalProperties:
+                    type: integer
+                  type: object
               type: object
       security:
       - BearerAuth: []
-      summary: Get my ticket assignments as support user
+      summary: Get assigned ticket counts for support user
       tags:
       - ticket-assignments
   /ticket-attachments:

@@ -88,3 +88,18 @@ func (s *appService) DeleteTicketAssignment(id int) error {
 func (s *appService) GetTicketAssignmentByTicketID(ticketID int) (*models.TicketAssignment, error) {
     return s.repo.GetTicketAssignmentByTicketID(ticketID)
 }
+
+// New method for cursor-based pagination and status filtering
+func (s *appService) GetTicketAssignmentsByAdminIDCursor(adminID int, limit int, cursor string, statusName string) ([]models.TicketAssignment, string, error) {
+    return s.repo.GetTicketAssignmentsByAdminIDCursor(adminID, limit, cursor, statusName)
+}
+
+// New method to get total assigned ticket count by admin ID
+func (s *appService) GetAssignedTicketCountByAdminID(adminID int) (int, error) {
+    return s.repo.GetAssignedTicketCountByAdminID(adminID)
+}
+
+// New method to get assigned ticket count by admin ID and status ID
+func (s *appService) GetAssignedTicketCountByAdminIDAndStatus(adminID int, statusID int) (int, error) {
+    return s.repo.GetAssignedTicketCountByAdminIDAndStatus(adminID, statusID)
+}
