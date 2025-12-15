@@ -17,6 +17,7 @@ func (r *appRoute) TicketAssignmentRoutes(rg *gin.RouterGroup) {
 	api.POST("", r.createTicketAssignment)
 	api.GET("", r.getTicketAssignments)
 	api.GET("/my-assignments", r.getMySupportAssignments)
+	api.GET("/my-counts", r.Middleware.RequireRole(models.RoleSupport), r.getMyAssignedTicketCounts) // New route for support users
 	api.GET("/:id", r.getTicketAssignmentByID)
 	api.PUT("/:id", r.updateTicketAssignment)
 	api.DELETE("/:id", r.deleteTicketAssignment)
@@ -91,11 +92,14 @@ func (r *appRoute) getTicketAssignments(c *gin.Context) {
 
 // GetMySupportAssignments godoc
 // @Summary Get my ticket assignments as support user
-// @Description Get ticket assignments where the admin_id matches the authenticated support user's ID
+// @Description Get ticket assignments where the admin_id matches the authenticated support user's ID, with cursor pagination and optional status filter
 // @Tags ticket-assignments
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} helpers.Response{data=[]requests.TicketAssignmentResponse}
+// @Param limit query int false "Items per page (default: 10)"
+// @Param cursor query string false "Cursor for next page"
+// @Param status query string false "Filter by ticket status name (e.g., 'Open')"
+// @Success 200 {object} helpers.Response{data=[]map[string]interface{}, meta=map[string]interface{}}
 // @Router /ticket-assignments/my-assignments [get]
 func (r *appRoute) getMySupportAssignments(c *gin.Context) {
 	userInterface, exists := c.Get("userData")
@@ -117,7 +121,16 @@ func (r *appRoute) getMySupportAssignments(c *gin.Context) {
 		return
 	}
 
-	assignments, err := r.Service.GetTicketAssignments()
+	// Parse query params
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+	cursor := c.Query("cursor")
+	statusName := c.Query("status") // Changed to string for status name
+
+	// Call service with cursor pagination and status filter
+	assignments, nextCursor, err := r.Service.GetTicketAssignmentsByAdminIDCursor(int(user.ID), limit, cursor, statusName) // Pass statusName
 	if err != nil {
 		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to get ticket assignments", nil, nil)
 		c.JSON(http.StatusInternalServerError, response)
@@ -126,65 +139,113 @@ func (r *appRoute) getMySupportAssignments(c *gin.Context) {
 
 	var respList []map[string]interface{}
 	for _, a := range assignments {
-		if a.AdminID == int(user.ID) {
-			ticket, err := r.Service.GetTicketByID(a.TicketID)
-			if err != nil {
-				continue
-			}
-
-			// Fetch category - try Nama field (Indonesian naming)
-			categoryName := ""
-			if ticket.CategoryID > 0 {
-				category, err := r.Service.GetTicketCategoryByID(ticket.CategoryID)
-				if err == nil && category != nil {
-					categoryName = category.NamaCategory // Change from Name to Nama
-				}
-			}
-
-			// Fetch priority - try Nama field
-			priorityName := ""
-			if ticket.PriorityID > 0 {
-				priority, err := r.Service.GetTicketPriorityByID(ticket.PriorityID)
-				if err == nil && priority != nil {
-					priorityName = priority.NamaPriority // Change from Name to Nama
-				}
-			}
-
-			// Fetch status - try Nama field
-			statusName := ""
-			if ticket.StatusID > 0 {
-				status, err := r.Service.GetTicketStatusByID(ticket.StatusID)
-				if err == nil && status != nil {
-					statusName = status.NamaStatus // Change from Name to Nama
-				}
-			}
-
-			username := ""
-			if ticket.User.Username != "" {
-				username = ticket.User.Username
-			}
-
-			respList = append(respList, map[string]interface{}{
-				"id_assignment":      a.ID,
-				"id_ticket":          a.TicketID,
-				"id_admin":           a.AdminID,
-				"tanggal_ditugaskan": a.TanggalDitugaskan.Format("2006-01-02T15:04:05Z"),
-				"ticket": map[string]interface{}{
-					"id_ticket":      ticket.ID,
-					"kode_ticket":    ticket.KodeTiket,
-					"username":       username,
-					"judul":          ticket.Judul,
-					"deskripsi":      ticket.Deskripsi,
-					"category_name":  categoryName,
-					"priority_name":  priorityName,
-					"status_name":    statusName,
-					"tipe_pengaduan": ticket.TipePengaduan,
-				},
-			})
+		ticket, err := r.Service.GetTicketByID(a.TicketID)
+		if err != nil {
+			continue
 		}
+
+		// Fetch category - try Nama field (Indonesian naming)
+		categoryName := ""
+		if ticket.CategoryID > 0 {
+			category, err := r.Service.GetTicketCategoryByID(ticket.CategoryID)
+			if err == nil && category != nil {
+				categoryName = category.NamaCategory // Change from Name to Nama
+			}
+		}
+
+		// Fetch priority - try Nama field
+		priorityName := ""
+		if ticket.PriorityID > 0 {
+			priority, err := r.Service.GetTicketPriorityByID(ticket.PriorityID)
+			if err == nil && priority != nil {
+				priorityName = priority.NamaPriority // Change from Name to Nama
+			}
+		}
+
+		// Fetch status - try Nama field
+		statusName := ""
+		if ticket.StatusID > 0 {
+			status, err := r.Service.GetTicketStatusByID(ticket.StatusID)
+			if err == nil && status != nil {
+				statusName = status.NamaStatus // Change from Name to Nama
+			}
+		}
+
+		username := ""
+		if ticket.User.Username != "" {
+			username = ticket.User.Username
+		}
+
+		respList = append(respList, map[string]interface{}{
+			"id_assignment":      a.ID,
+			"id_ticket":          a.TicketID,
+			"id_admin":           a.AdminID,
+			"tanggal_ditugaskan": a.TanggalDitugaskan.Format("2006-01-02T15:04:05Z"),
+			"ticket": map[string]interface{}{
+				"id_ticket":      ticket.ID,
+				"kode_ticket":    ticket.KodeTiket,
+				"username":       username,
+				"judul":          ticket.Judul,
+				"deskripsi":      ticket.Deskripsi,
+				"category_name":  categoryName,
+				"priority_name":  priorityName,
+				"status_name":    statusName,
+				"tipe_pengaduan": ticket.TipePengaduan,
+			},
+		})
 	}
 
-	response := helpers.NewResponse(http.StatusOK, "My ticket assignments retrieved successfully", nil, respList)
+	responseData := map[string]interface{}{
+		"data": respList,
+		"meta": map[string]interface{}{
+			"next_cursor": nextCursor,
+			"limit":       limit,
+		},
+	}
+	response := helpers.NewResponse(http.StatusOK, "My ticket assignments retrieved successfully", nil, responseData)
+	c.JSON(http.StatusOK, response)
+}
+
+// GetMyAssignedTicketCounts godoc
+// @Summary Get assigned ticket counts for support user
+// @Description Get total and in-progress assigned ticket counts for the authenticated support user
+// @Tags ticket-assignments
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} helpers.Response{data=map[string]int}
+// @Router /ticket-assignments/my-counts [get]
+func (r *appRoute) getMyAssignedTicketCounts(c *gin.Context) {
+	userInterface, exists := c.Get("userData")
+	if !exists || userInterface == nil {
+		response := helpers.NewResponse(http.StatusUnauthorized, "User not authenticated", nil, nil)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+	user, ok := userInterface.(models.User)
+	if !ok {
+		response := helpers.NewResponse(http.StatusUnauthorized, "Invalid user data", nil, nil)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	// Get counts
+	totalAssigned, assignedErr := r.Service.GetAssignedTicketCountByAdminID(int(user.ID))
+	inProgressAssigned, inProgressAssignedErr := r.Service.GetAssignedTicketCountByAdminIDAndStatus(int(user.ID), 2) // Status ID 2 = "In Progress"
+
+	responseData := map[string]int{
+		"total":        totalAssigned,
+		"in_progress":  inProgressAssigned,
+	}
+
+	// Add error info if counts failed
+	if assignedErr != nil {
+		responseData["total_error"] = 1 // Simple error flag
+	}
+	if inProgressAssignedErr != nil {
+		responseData["in_progress_error"] = 1 // Simple error flag
+	}
+
+	response := helpers.NewResponse(http.StatusOK, "Assigned ticket counts retrieved successfully", nil, responseData)
 	c.JSON(http.StatusOK, response)
 }
 

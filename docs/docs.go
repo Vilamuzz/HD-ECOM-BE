@@ -392,7 +392,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get ticket assignments where the admin_id matches the authenticated support user's ID",
+                "description": "Get ticket assignments where the admin_id matches the authenticated support user's ID, with cursor pagination and optional status filter",
                 "produces": [
                     "application/json"
                 ],
@@ -400,6 +400,71 @@ const docTemplate = `{
                     "ticket-assignments"
                 ],
                 "summary": "Get my ticket assignments as support user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cursor for next page",
+                        "name": "cursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by ticket status name (e.g., 'Open')",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        " meta": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/ticket-assignments/my-counts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get total and in-progress assigned ticket counts for the authenticated support user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ticket-assignments"
+                ],
+                "summary": "Get assigned ticket counts for support user",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -412,9 +477,9 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/app_domain_requests.TicketAssignmentResponse"
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "integer"
                                             }
                                         }
                                     }
