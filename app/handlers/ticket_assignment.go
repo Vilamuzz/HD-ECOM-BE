@@ -47,6 +47,7 @@ func (r *appRoute) createTicketAssignment(c *gin.Context) {
 	assignment := models.TicketAssignment{
 		TicketID:          req.TicketID,
 		AdminID:           req.AdminID,
+		PriorityID:        req.PriorityID,
 		TanggalDitugaskan: tglDitugaskan,
 	}
 
@@ -119,6 +120,7 @@ func mapTicketAssignmentToResponse(a *models.TicketAssignment) requests.TicketAs
 		AssignmentID:      a.ID,
 		TicketID:          a.TicketID,
 		AdminID:           a.AdminID,
+		PriorityID:        a.PriorityID,
 		TanggalDitugaskan: a.TanggalDitugaskan.Format("2006-01-02T15:04:05Z"),
 	}
 }
@@ -159,6 +161,7 @@ func (r *appRoute) updateTicketAssignment(c *gin.Context) {
 		ID:                id,
 		TicketID:          req.TicketID,
 		AdminID:           req.AdminID,
+		PriorityID:        req.PriorityID,
 		TanggalDitugaskan: tglDitugaskan,
 	}
 

@@ -2201,8 +2201,14 @@ const docTemplate = `{
                 "id_assignment": {
                     "type": "integer"
                 },
+                "id_priority": {
+                    "type": "integer"
+                },
                 "id_ticket": {
                     "type": "integer"
+                },
+                "priority": {
+                    "$ref": "#/definitions/models.TicketPriority"
                 },
                 "tanggal_ditugaskan": {
                     "type": "string"
@@ -2441,7 +2447,11 @@ const docTemplate = `{
             "properties": {
                 "id_admin": {
                     "type": "integer",
-                    "example": 2
+                    "example": 1
+                },
+                "id_priority": {
+                    "type": "integer",
+                    "example": 3
                 },
                 "id_ticket": {
                     "type": "integer",
@@ -2449,7 +2459,7 @@ const docTemplate = `{
                 },
                 "tanggal_ditugaskan": {
                     "type": "string",
-                    "example": "2025-11-07T10:00:00Z"
+                    "example": "2025-12-18T10:00:00Z"
                 }
             }
         },
@@ -2470,6 +2480,18 @@ const docTemplate = `{
                 }
             }
         },
+        "requests.PriorityResponse": {
+            "description": "PriorityResponse represents priority info for assignment",
+            "type": "object",
+            "properties": {
+                "id_priority": {
+                    "type": "integer"
+                },
+                "nama_priority": {
+                    "type": "string"
+                }
+            }
+        },
         "requests.TicketAssignmentResponse": {
             "description": "TicketAssignmentResponse represents a ticket assignment with related ticket and admin info (no null fields)",
             "type": "object",
@@ -2483,8 +2505,14 @@ const docTemplate = `{
                 "id_assignment": {
                     "type": "integer"
                 },
+                "id_priority": {
+                    "type": "integer"
+                },
                 "id_ticket": {
                     "type": "integer"
+                },
+                "priority": {
+                    "$ref": "#/definitions/requests.PriorityResponse"
                 },
                 "tanggal_ditugaskan": {
                     "type": "string"
