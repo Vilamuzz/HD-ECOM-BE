@@ -38,6 +38,19 @@ func (r *appRoute) GetMessageHistory(c *gin.Context) {
 	claim, _ := c.MustGet("userData").(models.User)
 	isAdmin := claim.Role == models.RoleAdmin
 
+	// Authorization check - verify user can access this conversation
+	conversation, err := r.Service.GetConversationByID(conversationID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, helpers.NewResponse(http.StatusNotFound, "Conversation not found", nil, nil))
+		return
+	}
+
+	// Check if user has permission to access this conversation
+	if !isAdmin && conversation.CustomerID != claim.ID {
+		c.JSON(http.StatusForbidden, helpers.NewResponse(http.StatusForbidden, "Access denied - not your conversation", nil, nil))
+		return
+	}
+
 	// parse query params for cursor pagination
 	limit := 50
 	if l := c.Query("limit"); l != "" {

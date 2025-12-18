@@ -1,4 +1,100 @@
 definitions:
+  app_app_domain_requests.TicketResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      priority:
+        type: string
+      status:
+        type: string
+      subject:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  app_domain_requests.CreateTicketCommentRequest:
+    properties:
+      isi_pesan:
+        type: string
+      ticket_id:
+        type: integer
+    required:
+    - isi_pesan
+    - ticket_id
+    type: object
+  app_domain_requests.TicketAssignmentResponse:
+    description: TicketAssignmentResponse represents a ticket assignment with related
+      ticket and admin info (no null fields)
+    properties:
+      admin:
+        $ref: '#/definitions/requests.UserSimpleResponse'
+      id_admin:
+        type: integer
+      id_assignment:
+        type: integer
+      id_ticket:
+        type: integer
+      tanggal_ditugaskan:
+        type: string
+      ticket:
+        $ref: '#/definitions/app_domain_requests.TicketResponse'
+    type: object
+  app_domain_requests.TicketCommentResponse:
+    properties:
+      id_comment:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        type: integer
+      isi_pesan:
+        type: string
+      tanggal_dibuat:
+        type: string
+    type: object
+  app_domain_requests.TicketResponse:
+    properties:
+      deskripsi:
+        type: string
+      id_category:
+        type: integer
+      id_priority:
+        type: integer
+      id_status:
+        type: integer
+      id_ticket:
+        type: integer
+      id_user:
+        description: Tetap kirim ID jika diperlukan
+        type: integer
+      judul:
+        type: string
+      kode_tiket:
+        type: string
+      tanggal_dibuat:
+        type: string
+      tanggal_diperbarui:
+        type: string
+      tipe_pengaduan:
+        $ref: '#/definitions/models.UserRole'
+      username:
+        description: Tambahkan field ini
+        type: string
+    type: object
+  app_domain_requests.UpdateTicketCommentRequest:
+    properties:
+      isi_pesan:
+        type: string
+      ticket_id:
+        type: integer
+    required:
+    - isi_pesan
+    - ticket_id
+    type: object
   helpers.Response:
     properties:
       data: {}
@@ -299,11 +395,13 @@ definitions:
     - admin
     - seller
     - customer
+    - support
     type: string
     x-enum-varnames:
     - RoleAdmin
     - RoleSeller
     - RoleCustomer
+    - RoleSupport
   requests.CreateTicketAssignmentRequest:
     properties:
       id_admin:
@@ -314,47 +412,6 @@ definitions:
         type: integer
       tanggal_ditugaskan:
         example: "2025-11-07T10:00:00Z"
-        type: string
-    type: object
-  requests.CreateTicketCommentRequest:
-    properties:
-      id_ticket:
-        type: integer
-      id_user:
-        type: integer
-      isi_pesan:
-        type: string
-      tanggal_dibuat:
-        type: string
-    type: object
-  requests.TicketAssignmentResponse:
-    description: TicketAssignmentResponse represents a ticket assignment with related
-      ticket and admin info (no null fields)
-    properties:
-      admin:
-        $ref: '#/definitions/requests.UserSimpleResponse'
-      id_admin:
-        type: integer
-      id_assignment:
-        type: integer
-      id_ticket:
-        type: integer
-      tanggal_ditugaskan:
-        type: string
-      ticket:
-        $ref: '#/definitions/requests.TicketResponse'
-    type: object
-  requests.TicketCommentResponse:
-    properties:
-      id_comment:
-        type: integer
-      id_ticket:
-        type: integer
-      id_user:
-        type: integer
-      isi_pesan:
-        type: string
-      tanggal_dibuat:
         type: string
     type: object
   requests.TicketCreateRequest:
@@ -381,41 +438,21 @@ definitions:
         example: TCKT-001
         type: string
     type: object
-  requests.TicketResponse:
+  requests.TicketListMeta:
     properties:
-      deskripsi:
-        type: string
-      id_category:
+      limit:
         type: integer
-      id_priority:
-        type: integer
-      id_status:
-        type: integer
-      id_ticket:
-        type: integer
-      id_user:
-        type: integer
-      judul:
+      next_cursor:
         type: string
-      kode_tiket:
-        type: string
-      tanggal_dibuat:
-        type: string
-      tanggal_diperbarui:
-        type: string
-      tipe_pengaduan:
-        $ref: '#/definitions/models.UserRole'
     type: object
-  requests.UpdateTicketCommentRequest:
+  requests.TicketListResponse:
     properties:
-      id_ticket:
-        type: integer
-      id_user:
-        type: integer
-      isi_pesan:
-        type: string
-      tanggal_dibuat:
-        type: string
+      data:
+        items:
+          $ref: '#/definitions/app_app_domain_requests.TicketResponse'
+        type: array
+      meta:
+        $ref: '#/definitions/requests.TicketListMeta'
     type: object
   requests.UserSimpleResponse:
     description: UserSimpleResponse represents a minimal user info for assignment
@@ -551,7 +588,8 @@ paths:
       - conversations
   /conversations/notifications:
     get:
-      description: Get a list of conversation states for admin
+      description: Get a list of conversation states for admin with open ticket counts
+        by type
       produces:
       - application/json
       responses:
@@ -562,7 +600,8 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/models.AdminConversationState'
+                  additionalProperties: true
+                  type: object
               type: object
         "500":
           description: Internal Server Error
@@ -570,7 +609,7 @@ paths:
             $ref: '#/definitions/helpers.Response'
       security:
       - BearerAuth: []
-      summary: Get admin list conversation states
+      summary: Get admin list conversation states and ticket notifications
       tags:
       - admin_conversation_states
   /me:
@@ -611,9 +650,11 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/requests.TicketAssignmentResponse'
+                    $ref: '#/definitions/app_domain_requests.TicketAssignmentResponse'
                   type: array
               type: object
+      security:
+      - BearerAuth: []
       summary: Get all ticket assignments
       tags:
       - ticket-assignments
@@ -638,8 +679,10 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/requests.TicketAssignmentResponse'
+                  $ref: '#/definitions/app_domain_requests.TicketAssignmentResponse'
               type: object
+      security:
+      - BearerAuth: []
       summary: Create a new ticket assignment
       tags:
       - ticket-assignments
@@ -659,6 +702,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket assignment
       tags:
       - ticket-assignments
@@ -680,8 +725,10 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/requests.TicketAssignmentResponse'
+                  $ref: '#/definitions/app_domain_requests.TicketAssignmentResponse'
               type: object
+      security:
+      - BearerAuth: []
       summary: Get a ticket assignment by ID
       tags:
       - ticket-assignments
@@ -711,9 +758,74 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/requests.TicketAssignmentResponse'
+                  $ref: '#/definitions/app_domain_requests.TicketAssignmentResponse'
               type: object
+      security:
+      - BearerAuth: []
       summary: Update a ticket assignment
+      tags:
+      - ticket-assignments
+  /ticket-assignments/my-assignments:
+    get:
+      description: Get ticket assignments where the admin_id matches the authenticated
+        support user's ID, with cursor pagination and optional status filter
+      parameters:
+      - description: 'Items per page (default: 10)'
+        in: query
+        name: limit
+        type: integer
+      - description: Cursor for next page
+        in: query
+        name: cursor
+        type: string
+      - description: Filter by ticket status name (e.g., 'Open')
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                ' meta':
+                  additionalProperties: true
+                  type: object
+                data:
+                  items:
+                    additionalProperties: true
+                    type: object
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get my ticket assignments as support user
+      tags:
+      - ticket-assignments
+  /ticket-assignments/my-counts:
+    get:
+      description: Get total and in-progress assigned ticket counts for the authenticated
+        support user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: integer
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get assigned ticket counts for support user
       tags:
       - ticket-assignments
   /ticket-attachments:
@@ -742,6 +854,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Get all ticket attachments
       tags:
       - ticket-attachments
@@ -780,6 +894,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Create a new ticket attachment
       tags:
       - ticket-attachments
@@ -807,6 +923,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket attachment
       tags:
       - ticket-attachments
@@ -834,6 +952,8 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Get a ticket attachment by ID
       tags:
       - ticket-attachments
@@ -879,7 +999,45 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Update a ticket attachment
+      tags:
+      - ticket-attachments
+  /ticket-attachments/ticket/{ticket_id}:
+    get:
+      description: Get all attachments for a specific ticket
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticket_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.TicketAttachment'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get ticket attachments by ticket ID
       tags:
       - ticket-attachments
   /ticket-categories:
@@ -925,6 +1083,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketCategory'
               type: object
+      security:
+      - BearerAuth: []
       summary: Create a new ticket category
       tags:
       - ticket-categories
@@ -944,6 +1104,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket category
       tags:
       - ticket-categories
@@ -998,6 +1160,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketCategory'
               type: object
+      security:
+      - BearerAuth: []
       summary: Update a ticket category
       tags:
       - ticket-categories
@@ -1020,27 +1184,29 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/models.TicketComment'
+                    $ref: '#/definitions/app_domain_requests.TicketCommentResponse'
                   type: array
               type: object
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Get all ticket comments
       tags:
       - ticket-comments
     post:
       consumes:
       - application/json
-      description: Create a new comment on a ticket
+      description: Create a new comment on a ticket (Admin and Support only)
       parameters:
       - description: Comment Data
         in: body
         name: comment
         required: true
         schema:
-          $ref: '#/definitions/requests.CreateTicketCommentRequest'
+          $ref: '#/definitions/app_domain_requests.CreateTicketCommentRequest'
       produces:
       - application/json
       responses:
@@ -1051,22 +1217,32 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/requests.TicketCommentResponse'
+                  $ref: '#/definitions/app_domain_requests.TicketCommentResponse'
               type: object
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/helpers.Response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Create a new ticket comment
       tags:
       - ticket-comments
   /ticket-comments/{id}:
     delete:
-      description: Delete an existing comment
+      description: Delete an existing comment (Admin and Support only)
       parameters:
       - description: Comment ID
         in: path
@@ -1080,10 +1256,20 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/helpers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.Response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket comment
       tags:
       - ticket-comments
@@ -1105,19 +1291,25 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/models.TicketComment'
+                  $ref: '#/definitions/app_domain_requests.TicketCommentResponse'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Get a ticket comment by ID
       tags:
       - ticket-comments
     put:
       consumes:
       - application/json
-      description: Update an existing comment
+      description: Update an existing comment (Admin and Support only)
       parameters:
       - description: Comment ID
         in: path
@@ -1129,7 +1321,7 @@ paths:
         name: comment
         required: true
         schema:
-          $ref: '#/definitions/requests.UpdateTicketCommentRequest'
+          $ref: '#/definitions/app_domain_requests.UpdateTicketCommentRequest'
       produces:
       - application/json
       responses:
@@ -1140,8 +1332,20 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/requests.TicketCommentResponse'
+                  $ref: '#/definitions/app_domain_requests.TicketCommentResponse'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.Response'
         "404":
           description: Not Found
           schema:
@@ -1150,6 +1354,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Update a ticket comment
       tags:
       - ticket-comments
@@ -1213,6 +1419,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Create a new ticket log
       tags:
       - ticket-logs
@@ -1287,6 +1495,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketPriority'
               type: object
+      security:
+      - BearerAuth: []
       summary: Create a new ticket priority
       tags:
       - ticket-priorities
@@ -1306,6 +1516,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket priority
       tags:
       - ticket-priorities
@@ -1360,6 +1572,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketPriority'
               type: object
+      security:
+      - BearerAuth: []
       summary: Update a ticket priority
       tags:
       - ticket-priorities
@@ -1406,6 +1620,8 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketStatus'
               type: object
+      security:
+      - BearerAuth: []
       summary: Create a new ticket status
       tags:
       - ticket-statuses
@@ -1425,6 +1641,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
       summary: Delete a ticket status
       tags:
       - ticket-statuses
@@ -1479,12 +1697,39 @@ paths:
                 data:
                   $ref: '#/definitions/models.TicketStatus'
               type: object
+      security:
+      - BearerAuth: []
       summary: Update a ticket status
       tags:
       - ticket-statuses
   /tickets:
     get:
-      description: Get a list of all tickets
+      description: Get a list of all tickets (Admin only), cursor-based pagination
+      parameters:
+      - description: Filter by tipe_pengaduan (customer, seller, admin, support)
+        in: query
+        name: role
+        type: string
+      - description: Filter by status ID
+        in: query
+        name: status
+        type: integer
+      - description: Filter by priority ID
+        in: query
+        name: priority
+        type: integer
+      - description: Filter by category ID
+        in: query
+        name: category
+        type: integer
+      - description: 'Items per page (default: 10)'
+        in: query
+        name: limit
+        type: integer
+      - description: Cursor for next page
+        in: query
+        name: cursor
+        type: string
       produces:
       - application/json
       responses:
@@ -1495,10 +1740,10 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/requests.TicketResponse'
-                  type: array
+                  $ref: '#/definitions/requests.TicketListResponse'
               type: object
+      security:
+      - BearerAuth: []
       summary: Get all tickets
       tags:
       - tickets
@@ -1524,7 +1769,7 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/requests.TicketResponse'
+                  $ref: '#/definitions/app_domain_requests.TicketResponse'
               type: object
       security:
       - BearerAuth: []
@@ -1568,7 +1813,7 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/requests.TicketResponse'
+                  $ref: '#/definitions/app_domain_requests.TicketResponse'
               type: object
       summary: Get a ticket by ID
       tags:
@@ -1600,13 +1845,78 @@ paths:
             - $ref: '#/definitions/helpers.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/requests.TicketResponse'
+                  $ref: '#/definitions/app_domain_requests.TicketResponse'
               type: object
       security:
       - BearerAuth: []
       summary: Update a ticket
       tags:
       - tickets
+  /tickets/my-tickets:
+    get:
+      description: Get all tickets belonging to the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/app_domain_requests.TicketResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get current user's tickets
+      tags:
+      - tickets
+  /users/support:
+    get:
+      description: Get all users with the support role
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    properties:
+                      user_id:
+                        type: integer
+                      username:
+                        type: string
+                    type: object
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get support users
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

@@ -3,12 +3,15 @@ package domain
 import (
 	"app/domain/models"
 	"context"
+	"mime/multipart"
+	"time"
 )
 
 type AppRepository interface {
 	// User operations
 	GetUserByID(id uint64) (*models.User, error)
 	CreateUser(user *models.User) error
+	GetUsersByRole(role models.UserRole) ([]models.User, error)
 
 	// Conversation operations
 	CreateConversation(ctx context.Context, conversation *models.Conversation) error
@@ -39,12 +42,18 @@ type AppRepository interface {
 	GetAdminConversationStatesByAdminID(adminID uint64) ([]models.AdminConversationState, error)
 	IncrementUnreadCount(state *models.AdminConversationState) error
 	ResetState(state *models.AdminConversationState, lastMessageID uint64) error
+
+	// Ticket notifications
+	GetOpenTicketCountsByType() (customerCount int, sellerCount int, err error)
+	GetTicketStatistics() (total int, inProgress int, resolved int, priorityCounts map[int]int, err error)
+
 	// Ticket Category
 	CreateTicketCategory(category *models.TicketCategory) error
 	GetTicketCategories() ([]models.TicketCategory, error)
 	GetTicketCategoryByID(id int) (*models.TicketCategory, error)
 	UpdateTicketCategory(category *models.TicketCategory) error
 	DeleteTicketCategory(id int) error
+	GetTicketsPaginated(limit, offset int) ([]models.Ticket, int, error)
 
 	// Ticket Priority
 	CreateTicketPriority(priority *models.TicketPriority) error
@@ -64,15 +73,21 @@ type AppRepository interface {
 	CreateTicket(ticket *models.Ticket) error
 	GetTickets() ([]models.Ticket, error)
 	GetTicketByID(id int) (*models.Ticket, error)
+	GetTicketsByUserID(userID int) ([]models.Ticket, error)
 	UpdateTicket(ticket *models.Ticket) error
 	DeleteTicket(id int) error
+	GetTicketsCursor(limit int, cursor string, tipePengaduan string, statusID, priorityID, categoryID int) ([]models.Ticket, string, error)
 
 	// Ticket Assignment
 	CreateTicketAssignment(assignment *models.TicketAssignment) error
 	GetTicketAssignments() ([]models.TicketAssignment, error)
 	GetTicketAssignmentByID(id int) (*models.TicketAssignment, error)
+	GetTicketAssignmentByTicketID(ticketID int) (*models.TicketAssignment, error)
 	UpdateTicketAssignment(assignment *models.TicketAssignment) error
 	DeleteTicketAssignment(id int) error
+	GetTicketAssignmentsByAdminIDCursor(adminID int, limit int, cursor string, statusName string) ([]models.TicketAssignment, string, error)
+	GetAssignedTicketCountByAdminID(adminID int) (int, error)
+	GetAssignedTicketCountByAdminIDAndStatus(adminID int, statusID int) (int, error)
 
 	// Ticket Attachment
 	CreateTicketAttachment(attachment *models.TicketAttachment) error
@@ -95,4 +110,10 @@ type AppRepository interface {
 	GetTicketLogs() ([]models.TicketLog, error)
 	GetTicketLogByID(id int) (*models.TicketLog, error)
 	GetTicketLogsByTicketID(ticketID int) ([]models.TicketLog, error)
+}
+
+type S3Repository interface {
+	UploadFile(ctx context.Context, file *multipart.FileHeader) (string, error)
+	DeleteFile(ctx context.Context, filePath string) error
+	GetFileURL(ctx context.Context, filePath string, expiry time.Duration) (string, error)
 }

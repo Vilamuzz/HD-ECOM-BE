@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"app/domain/models"
+	"app/helpers"
+	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -63,6 +66,30 @@ func (r *appRoute) CloseConversation(c *gin.Context) {
 	claim, _ := c.MustGet("userData").(models.User)
 	ctx := c.Request.Context()
 	id := c.Param("id")
+
+	// Parse conversation ID
+	conversationID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, helpers.NewResponse(http.StatusBadRequest, "Invalid conversation ID", nil, nil))
+		return
+	}
+
+	// Authorization check - verify user can close this conversation
+	conversation, err := r.Service.GetConversationByID(conversationID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, helpers.NewResponse(http.StatusNotFound, "Conversation not found", nil, nil))
+		return
+	}
+
+	// Only admins or conversation participants can close conversations
+	isAdmin := claim.Role == models.RoleAdmin
+	isParticipant := conversation.CustomerID == claim.ID || conversation.AdminID == claim.ID
+
+	if !isAdmin && !isParticipant {
+		c.JSON(http.StatusForbidden, helpers.NewResponse(http.StatusForbidden, "Access denied - not your conversation", nil, nil))
+		return
+	}
+
 	response := r.Service.CloseConversation(ctx, claim, id)
 	c.JSON(response.Status, response)
 }

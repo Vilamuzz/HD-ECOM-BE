@@ -11,7 +11,7 @@ import (
 
 func (r *appRoute) TicketLogRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/ticket-logs")
-	api.POST("", r.createTicketLog)
+	api.POST("", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.createTicketLog)
 	api.GET("", r.getTicketLogs)
 	api.GET("/:id", r.getTicketLogByID)
 }
@@ -21,6 +21,7 @@ func (r *appRoute) TicketLogRoutes(rg *gin.RouterGroup) {
 // @Description Create a new activity log for a ticket
 // @Tags ticket-logs
 // @Accept json
+// @Security BearerAuth
 // @Produce json
 // @Param log body models.TicketLog true "Log Data"
 // @Success 201 {object} helpers.Response{data=models.TicketLog}

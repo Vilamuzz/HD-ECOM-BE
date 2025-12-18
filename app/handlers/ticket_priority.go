@@ -11,11 +11,11 @@ import (
 
 func (r *appRoute) TicketPriorityRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/ticket-priorities")
-	api.POST("", r.createTicketPriority)
+	api.POST("", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.createTicketPriority)
 	api.GET("", r.getTicketPriorities)
 	api.GET("/:id", r.getTicketPriorityByID)
-	api.PUT("/:id", r.updateTicketPriority)
-	api.DELETE("/:id", r.deleteTicketPriority)
+	api.PUT("/:id", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.updateTicketPriority)
+	api.DELETE("/:id", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.deleteTicketPriority)
 }
 
 // CreateTicketPriority godoc
@@ -23,6 +23,7 @@ func (r *appRoute) TicketPriorityRoutes(rg *gin.RouterGroup) {
 // @Description Create a new ticket priority
 // @Tags ticket-priorities
 // @Accept json
+// @Security BearerAuth
 // @Produce json
 // @Param priority body models.TicketPriority true "Ticket Priority Data"
 // @Success 201 {object} helpers.Response{data=models.TicketPriority}
@@ -96,6 +97,7 @@ func (r *appRoute) getTicketPriorityByID(c *gin.Context) {
 // @Description Update a ticket priority by its ID
 // @Tags ticket-priorities
 // @Accept json
+// @Security BearerAuth
 // @Produce json
 // @Param id path int true "Priority ID"
 // @Param priority body models.TicketPriority true "Updated Priority Data"
@@ -132,6 +134,7 @@ func (r *appRoute) updateTicketPriority(c *gin.Context) {
 // @Description Delete a ticket priority by its ID
 // @Tags ticket-priorities
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Priority ID"
 // @Success 200 {object} helpers.Response
 // @Router /ticket-priorities/{id} [delete]

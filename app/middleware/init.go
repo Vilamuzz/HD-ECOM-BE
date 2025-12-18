@@ -3,8 +3,6 @@ package middleware
 import (
 	"app/domain"
 	"os"
-
-	"github.com/gin-gonic/gin"
 )
 
 type appMiddleware struct {
@@ -12,9 +10,6 @@ type appMiddleware struct {
 	repository domain.AppRepository
 }
 
-type AppMiddleware interface {
-	Auth() gin.HandlerFunc
-}
 
 func NewAppMiddleware(repo domain.AppRepository) AppMiddleware {
 	return &appMiddleware{

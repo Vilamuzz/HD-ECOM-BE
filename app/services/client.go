@@ -109,6 +109,28 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 		return
 	}
 
+	// Authorization check - verify user can subscribe to this conversation
+	conversation, err := c.Repository.GetConversationByID(convID)
+	if err != nil {
+		sendErrorToClient(c, "Conversation not found")
+		return
+	}
+
+	user, err := c.Repository.GetUserByID(c.UserID)
+	if err != nil {
+		sendErrorToClient(c, "Failed to get user")
+		return
+	}
+
+	// Check if user has permission (admin or conversation participant)
+	isAdmin := user.Role == models.RoleAdmin
+	isParticipant := conversation.CustomerID == c.UserID || conversation.AdminID == c.UserID
+
+	if !isAdmin && !isParticipant {
+		sendErrorToClient(c, "Access denied - not your conversation")
+		return
+	}
+
 	if c.ConversationIDs == nil {
 		c.ConversationIDs = make(map[uint64]bool)
 	}
@@ -116,7 +138,8 @@ func (s *appService) handleSubscribe(c *domain.Client, payload map[string]interf
 	s.JoinConversation(c, convID)
 
 	// Reset unread count if subscriber is admin
-	if user, uErr := c.Repository.GetUserByID(c.UserID); uErr == nil && user != nil && user.Role == models.RoleAdmin {
+	if user.Role == models.RoleAdmin {
+
 		if state, sErr := c.Repository.GetAdminConversationState(user.ID, convID); sErr == nil && state != nil {
 			// Get latest message ID (if any) to set LastMessageID
 			msgs, _, mErr := c.Repository.GetMessageHistoryForAdmin(convID, 1, "")
@@ -224,20 +247,36 @@ func (s *appService) handleSendMessage(c *domain.Client, payload map[string]inte
 		return
 	}
 
+	// Check if conversation exists and user has access
+	conversation, err := c.Repository.GetConversationByID(conversationID)
+	if err != nil {
+		sendErrorToClient(c, "Conversation not found")
+		return
+	}
+
+	// Authorization check - verify user can send to this conversation
+	user, err := c.Repository.GetUserByID(c.UserID)
+	if err != nil {
+		sendErrorToClient(c, "Failed to get user")
+		return
+	}
+
+	// Check if user has permission (admin or conversation participant)
+	isAdmin := user.Role == models.RoleAdmin
+	isParticipant := conversation.CustomerID == c.UserID || conversation.AdminID == c.UserID
+
+	if !isAdmin && !isParticipant {
+		sendErrorToClient(c, "Access denied - not your conversation")
+		return
+	}
+
 	// require subscription to prevent unauthorized sends / avoid silent broadcasts
 	if c.ConversationIDs == nil || !c.ConversationIDs[conversationID] {
 		sendErrorToClient(c, "You are not subscribed to this conversation")
 		return
 	}
 
-	// Check if conversation is closed and reopen it
-	conversation, err := c.Repository.GetConversationByID(conversationID)
-	if err != nil {
-		sendErrorToClient(c, "Failed to get conversation")
-		return
-	}
-
-	// If conversation is closed, reopen it
+	// If conversation is closed and reopen it
 	if conversation.Status == models.StatusClosed {
 		ctx := context.Background()
 		if err := s.ReopenConversation(ctx, conversationID); err != nil {
@@ -339,5 +378,23 @@ func (s *appService) handleAdminNotification(c *domain.Client, conversationID ui
 			"in_room":         adminInRoom,
 		}
 		s.sendDirect(adminClient, "admin_notification", notification)
+	}
+}
+
+func (s *appService) GetTicketNotifications() map[string]interface{} {
+	customerCount, sellerCount, err := s.repo.GetOpenTicketCountsByType()
+	if err != nil {
+		return map[string]interface{}{
+			"customer_open_tickets": 0,
+			"seller_open_tickets":   0,
+			"total_open_tickets":    0,
+			"error":                 err.Error(),
+		}
+	}
+
+	return map[string]interface{}{
+		"customer_open_tickets": customerCount,
+		"seller_open_tickets":   sellerCount,
+		"total_open_tickets":    customerCount + sellerCount,
 	}
 }

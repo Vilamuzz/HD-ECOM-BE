@@ -3,6 +3,8 @@ package handlers
 import (
 	"app/domain/models"
 	"app/helpers"
+	"log"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 
@@ -11,11 +13,11 @@ import (
 
 func (r *appRoute) TicketAttachmentRoutes(rg *gin.RouterGroup) {
 	api := rg.Group("/ticket-attachments")
-	api.POST("", r.createTicketAttachment)
-	api.GET("", r.getTicketAttachments)
-	api.GET("/:id", r.getTicketAttachmentByID)
-	api.PUT("/:id", r.updateTicketAttachment)
-	api.DELETE("/:id", r.deleteTicketAttachment)
+	api.POST("", r.Middleware.Auth(), r.createTicketAttachment)
+	api.GET("/ticket/:ticket_id", r.getTicketAttachmentsByTicketID) // New dedicated endpoint
+	api.GET("/:id", r.Middleware.Auth(), r.getTicketAttachmentByID)
+	api.PUT("/:id", r.Middleware.Auth(), r.updateTicketAttachment)
+	api.DELETE("/:id", r.Middleware.Auth(), r.Middleware.RequireRole(models.RoleAdmin), r.deleteTicketAttachment)
 }
 
 // CreateTicketAttachment godoc
@@ -24,6 +26,7 @@ func (r *appRoute) TicketAttachmentRoutes(rg *gin.RouterGroup) {
 // @Tags ticket-attachments
 // @Accept multipart/form-data
 // @Produce json
+// @Security BearerAuth
 // @Param id_ticket formData int true "Ticket ID"
 // @Param file formData file true "Attachment file"
 // @Success 201 {object} helpers.Response{data=models.TicketAttachment}
@@ -33,33 +36,26 @@ func (r *appRoute) TicketAttachmentRoutes(rg *gin.RouterGroup) {
 func (r *appRoute) createTicketAttachment(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
+		log.Printf("[ticket-attachment] no file uploaded: %v", err)
 		response := helpers.NewResponse(http.StatusBadRequest, "No file uploaded", nil, nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
+	// Log incoming file info for debugging
+	log.Printf("[ticket-attachment] incoming file: name=%s size=%d header=%v", file.Filename, file.Size, file.Header)
+
 	ticketID, err := strconv.Atoi(c.PostForm("id_ticket"))
 	if err != nil {
+		log.Printf("[ticket-attachment] invalid ticket id: %v", err)
 		response := helpers.NewResponse(http.StatusBadRequest, "Invalid ticket ID", nil, nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	// Save file and create attachment record
-	filePath := "uploads/" + file.Filename // You might want to generate a unique filename
-	if err := c.SaveUploadedFile(file, filePath); err != nil {
-		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to save file", nil, nil)
-		c.JSON(http.StatusInternalServerError, response)
-		return
-	}
-
-	attachment := &models.TicketAttachment{
-		TicketID: ticketID,
-		FilePath: filePath,
-	}
-
-	if err := r.Service.CreateTicketAttachment(attachment); err != nil {
-		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to create attachment record", nil, nil)
+	attachment, err := r.Service.CreateTicketAttachment(ticketID, file)
+	if err != nil {
+		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to create attachment", nil, nil)
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -73,6 +69,7 @@ func (r *appRoute) createTicketAttachment(c *gin.Context) {
 // @Description Get a list of all ticket attachments
 // @Tags ticket-attachments
 // @Produce json
+// @Security BearerAuth
 // @Param ticket_id query int false "Filter by ticket ID"
 // @Success 200 {object} helpers.Response{data=[]models.TicketAttachment}
 // @Failure 500 {object} helpers.Response
@@ -99,11 +96,58 @@ func (r *appRoute) getTicketAttachments(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// GetTicketAttachmentsByTicketID godoc
+// @Summary Get ticket attachments by ticket ID
+// @Description Get all attachments for a specific ticket
+// @Tags ticket-attachments
+// @Produce json
+// @Security BearerAuth
+// @Param ticket_id path int true "Ticket ID"
+// @Success 200 {object} helpers.Response{data=[]models.TicketAttachment}
+// @Failure 400 {object} helpers.Response
+// @Failure 500 {object} helpers.Response
+// @Router /ticket-attachments/ticket/{ticket_id} [get]
+func (r *appRoute) getTicketAttachmentsByTicketID(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("ticket_id"))
+	if err != nil {
+		response := helpers.NewResponse(http.StatusBadRequest, "Invalid ticket ID", nil, nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	attachments, err := r.Service.GetTicketAttachmentsByTicketID(ticketID)
+	if err != nil {
+		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to get attachments", nil, nil)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Create response data with download URLs for each attachment
+	var responseData []map[string]interface{}
+	for _, attachment := range attachments {
+		_, downloadURL, err := r.Service.GetTicketAttachmentByID(attachment.ID)
+		if err != nil {
+			log.Printf("[ticket-attachment] failed to get download URL for attachment %d: %v", attachment.ID, err)
+			downloadURL = ""
+		}
+
+		data := map[string]interface{}{
+			"attachment":   attachment,
+			"download_url": downloadURL,
+		}
+		responseData = append(responseData, data)
+	}
+
+	response := helpers.NewResponse(http.StatusOK, "Attachments retrieved successfully", nil, responseData)
+	c.JSON(http.StatusOK, response)
+}
+
 // GetTicketAttachmentByID godoc
 // @Summary Get a ticket attachment by ID
 // @Description Get a ticket attachment by its ID
 // @Tags ticket-attachments
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Attachment ID"
 // @Success 200 {object} helpers.Response{data=models.TicketAttachment}
 // @Failure 404 {object} helpers.Response
@@ -116,14 +160,25 @@ func (r *appRoute) getTicketAttachmentByID(c *gin.Context) {
 		return
 	}
 
-	attachment, err := r.Service.GetTicketAttachmentByID(id)
+	attachment, downloadURL, err := r.Service.GetTicketAttachmentByID(id)
 	if err != nil {
 		response := helpers.NewResponse(http.StatusNotFound, "Attachment not found", nil, nil)
 		c.JSON(http.StatusNotFound, response)
 		return
 	}
 
-	response := helpers.NewResponse(http.StatusOK, "Attachment retrieved successfully", nil, attachment)
+	if downloadURL == "" {
+		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to generate download URL", nil, nil)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	data := map[string]interface{}{
+		"attachment":   attachment,
+		"download_url": downloadURL,
+	}
+
+	response := helpers.NewResponse(http.StatusOK, "Attachment retrieved successfully", nil, data)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -133,6 +188,7 @@ func (r *appRoute) getTicketAttachmentByID(c *gin.Context) {
 // @Tags ticket-attachments
 // @Accept multipart/form-data
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Attachment ID"
 // @Param id_ticket formData int false "Ticket ID"
 // @Param file formData file false "New attachment file"
@@ -149,34 +205,27 @@ func (r *appRoute) updateTicketAttachment(c *gin.Context) {
 		return
 	}
 
-	attachment, err := r.Service.GetTicketAttachmentByID(id)
+	var ticketID *int
+	if ticketIDStr := c.PostForm("id_ticket"); ticketIDStr != "" {
+		if parsedID, err := strconv.Atoi(ticketIDStr); err == nil {
+			ticketID = &parsedID
+		}
+	}
+
+	var file *multipart.FileHeader
+	if f, err := c.FormFile("file"); err == nil {
+		file = f
+	}
+
+	attachment, err := r.Service.UpdateTicketAttachment(id, ticketID, file)
 	if err != nil {
-		response := helpers.NewResponse(http.StatusNotFound, "Attachment not found", nil, nil)
-		c.JSON(http.StatusNotFound, response)
-		return
-	}
-
-	// Update ticket ID if provided
-	if ticketID := c.PostForm("id_ticket"); ticketID != "" {
-		if id, err := strconv.Atoi(ticketID); err == nil {
-			attachment.TicketID = id
-		}
-	}
-
-	// Update file if provided
-	if file, err := c.FormFile("file"); err == nil {
-		filePath := "uploads/" + file.Filename // You might want to generate a unique filename
-		if err := c.SaveUploadedFile(file, filePath); err != nil {
-			response := helpers.NewResponse(http.StatusInternalServerError, "Failed to save file", nil, nil)
+		if err.Error() == "record not found" {
+			response := helpers.NewResponse(http.StatusNotFound, "Attachment not found", nil, nil)
+			c.JSON(http.StatusNotFound, response)
+		} else {
+			response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update attachment", nil, nil)
 			c.JSON(http.StatusInternalServerError, response)
-			return
 		}
-		attachment.FilePath = filePath
-	}
-
-	if err := r.Service.UpdateTicketAttachment(attachment); err != nil {
-		response := helpers.NewResponse(http.StatusInternalServerError, "Failed to update attachment", nil, nil)
-		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
@@ -189,6 +238,7 @@ func (r *appRoute) updateTicketAttachment(c *gin.Context) {
 // @Description Delete a ticket attachment by its ID
 // @Tags ticket-attachments
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "Attachment ID"
 // @Success 200 {object} helpers.Response
 // @Failure 400 {object} helpers.Response
