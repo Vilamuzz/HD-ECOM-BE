@@ -2514,6 +2514,12 @@ const docTemplate = `{
                 "id_ticket": {
                     "type": "integer"
                 },
+                "priority": {
+                    "$ref": "#/definitions/requests.PriorityResponse"
+                },
+                "priority_id": {
+                    "type": "integer"
+                },
                 "tanggal_ditugaskan": {
                     "type": "string"
                 },
@@ -2839,6 +2845,12 @@ const docTemplate = `{
                 "id_ticket": {
                     "type": "integer"
                 },
+                "priority": {
+                    "$ref": "#/definitions/models.TicketPriority"
+                },
+                "priority_id": {
+                    "type": "integer"
+                },
                 "tanggal_ditugaskan": {
                     "type": "string"
                 },
@@ -3084,9 +3096,25 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
+                "priority_id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "tanggal_ditugaskan": {
                     "type": "string",
                     "example": "2025-11-07T10:00:00Z"
+                }
+            }
+        },
+        "requests.PriorityResponse": {
+            "description": "PriorityResponse represents ticket priority information",
+            "type": "object",
+            "properties": {
+                "id_priority": {
+                    "type": "integer"
+                },
+                "nama_priority": {
+                    "type": "string"
                 }
             }
         },

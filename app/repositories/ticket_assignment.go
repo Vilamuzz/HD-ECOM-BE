@@ -12,13 +12,13 @@ func (r *appRepository) CreateTicketAssignment(assignment *models.TicketAssignme
 
 func (r *appRepository) GetTicketAssignments() ([]models.TicketAssignment, error) {
 	var assignments []models.TicketAssignment
-	err := r.Conn.Preload("Ticket").Preload("Admin").Find(&assignments).Error
+	err := r.Conn.Preload("Ticket").Preload("Admin").Preload("Priority").Find(&assignments).Error
 	return assignments, err
 }
 
 func (r *appRepository) GetTicketAssignmentByID(id int) (*models.TicketAssignment, error) {
 	var assignment models.TicketAssignment
-	err := r.Conn.Preload("Ticket").Preload("Admin").First(&assignment, id).Error
+	err := r.Conn.Preload("Ticket").Preload("Admin").Preload("Priority").First(&assignment, id).Error
 	return &assignment, err
 }
 
@@ -32,7 +32,7 @@ func (r *appRepository) DeleteTicketAssignment(id int) error {
 
 func (r *appRepository) GetTicketAssignmentByTicketID(ticketID int) (*models.TicketAssignment, error) {
 	var assignment models.TicketAssignment
-	err := r.Conn.Preload("Ticket").Preload("Admin").Where("id_ticket = ?", ticketID).First(&assignment).Error // Fixed column name
+	err := r.Conn.Preload("Ticket").Preload("Admin").Preload("Priority").Where("id_ticket = ?", ticketID).First(&assignment).Error // Fixed column name
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (r *appRepository) GetTicketAssignmentByTicketID(ticketID int) (*models.Tic
 func (r *appRepository) GetTicketAssignmentsByAdminIDCursor(adminID int, limit int, cursor string, statusName string) ([]models.TicketAssignment, string, error) {
 	var assignments []models.TicketAssignment
 
-	db := r.Conn.Preload("Ticket").Preload("Admin").Where("id_admin = ?", adminID)
+	db := r.Conn.Preload("Ticket").Preload("Admin").Preload("Priority").Where("id_admin = ?", adminID)
 
 	// Join with tickets and ticket_statuses tables to filter by status name if provided
 	if statusName != "" {
