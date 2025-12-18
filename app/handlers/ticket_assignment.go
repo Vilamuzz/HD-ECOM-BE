@@ -51,6 +51,7 @@ func (r *appRoute) createTicketAssignment(c *gin.Context) {
 	assignment := models.TicketAssignment{
 		TicketID:          req.TicketID,
 		AdminID:           req.AdminID,
+		PriorityID:        req.PriorityID,
 		TanggalDitugaskan: tglDitugaskan,
 	}
 
@@ -280,20 +281,32 @@ func (r *appRoute) getTicketAssignmentByID(c *gin.Context) {
 
 // mapTicketAssignmentToResponse maps TicketAssignment model to TicketAssignmentResponse DTO
 func mapTicketAssignmentToResponse(a *models.TicketAssignment) requests.TicketAssignmentResponse {
-	return requests.TicketAssignmentResponse{
+	response := requests.TicketAssignmentResponse{
 		AssignmentID:      a.ID,
 		TicketID:          a.TicketID,
 		AdminID:           a.AdminID,
+		PriorityID:        a.PriorityID,
 		TanggalDitugaskan: a.TanggalDitugaskan.Format("2006-01-02T15:04:05Z"),
 	}
+
+	// Map Priority if exists
+	if a.Priority != nil {
+		response.Priority = &requests.PriorityResponse{
+			ID:           a.Priority.ID,
+			NamaPriority: a.Priority.NamaPriority,
+		}
+	}
+
+	return response
 }
 
 // mapTicketAssignmentToResponseWithTicket maps TicketAssignment with Ticket data to response DTO
 func mapTicketAssignmentToResponseWithTicket(a *models.TicketAssignment, ticket *models.Ticket) requests.TicketAssignmentResponse {
-	return requests.TicketAssignmentResponse{
+	response := requests.TicketAssignmentResponse{
 		AssignmentID:      a.ID,
 		TicketID:          a.TicketID,
 		AdminID:           a.AdminID,
+		PriorityID:        a.PriorityID,
 		TanggalDitugaskan: a.TanggalDitugaskan.Format("2006-01-02T15:04:05Z"),
 		Ticket: &requests.TicketResponse{
 			ID:                ticket.ID,
@@ -309,6 +322,16 @@ func mapTicketAssignmentToResponseWithTicket(a *models.TicketAssignment, ticket 
 			TanggalDiperbarui: ticket.TanggalDiperbarui.Format("2006-01-02T15:04:05Z07:00"),
 		},
 	}
+
+	// Map Priority if exists
+	if a.Priority != nil {
+		response.Priority = &requests.PriorityResponse{
+			ID:           a.Priority.ID,
+			NamaPriority: a.Priority.NamaPriority,
+		}
+	}
+
+	return response
 }
 
 // UpdateTicketAssignment godoc
@@ -348,6 +371,7 @@ func (r *appRoute) updateTicketAssignment(c *gin.Context) {
 		ID:                id,
 		TicketID:          req.TicketID,
 		AdminID:           req.AdminID,
+		PriorityID:        req.PriorityID,
 		TanggalDitugaskan: tglDitugaskan,
 	}
 

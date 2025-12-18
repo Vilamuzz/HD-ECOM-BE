@@ -24,6 +24,12 @@ func NewS3Repository(contextTimeout time.Duration) *s3Repository {
 	secret := os.Getenv("MINIO_SECRET_KEY")
 	useSSL := os.Getenv("MINIO_USE_SSL") == "true"
 
+	// Return nil if MinIO is not configured
+	if endpoint == "" {
+		log.Println("MinIO endpoint not configured, S3 repository will be disabled")
+		return nil
+	}
+
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:        credentials.NewStaticV4(access, secret, ""),
 		Secure:       useSSL,

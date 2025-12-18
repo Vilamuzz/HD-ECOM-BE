@@ -3,12 +3,18 @@ package services
 import (
 	"app/domain/models"
 	"context"
+	"fmt"
 	"log"
 	"mime/multipart"
 	"time"
 )
 
 func (s *appService) CreateTicketAttachment(ticketID int, file *multipart.FileHeader) (*models.TicketAttachment, error) {
+	// Check if S3 is available
+	if s.s3Repo == nil {
+		return nil, fmt.Errorf("file storage service is not configured")
+	}
+
 	// Upload to MinIO
 	ctx := context.Background()
 

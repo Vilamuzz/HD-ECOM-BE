@@ -24,8 +24,11 @@ func (s *appService) CreateTicketAssignment(assignment *models.TicketAssignment)
         return fmt.Errorf("ticket not found: %v", err)
     }
 
-    // Update ticket status to "In Progress" (ID 2) BEFORE creating assignment
+    // Update ticket status to "In Progress" (ID 2) and priority if provided BEFORE creating assignment
     ticket.StatusID = 2
+    if assignment.PriorityID != nil {
+        ticket.PriorityID = *assignment.PriorityID
+    }
     ticket.TanggalDiperbarui = time.Now()
     
     if err := s.repo.UpdateTicket(ticket); err != nil {
@@ -65,8 +68,11 @@ func (s *appService) UpdateTicketAssignment(assignment *models.TicketAssignment)
         return fmt.Errorf("ticket not found: %v", err)
     }
 
-    // Update ticket status to "In Progress" (ID 2) BEFORE updating assignment
+    // Update ticket status to "In Progress" (ID 2) and priority if provided BEFORE updating assignment
     ticket.StatusID = 2
+    if assignment.PriorityID != nil {
+        ticket.PriorityID = *assignment.PriorityID
+    }
     ticket.TanggalDiperbarui = time.Now()
     
     if err := s.repo.UpdateTicket(ticket); err != nil {

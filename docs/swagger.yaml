@@ -38,6 +38,10 @@ definitions:
         type: integer
       id_ticket:
         type: integer
+      priority:
+        $ref: '#/definitions/requests.PriorityResponse'
+      priority_id:
+        type: integer
       tanggal_ditugaskan:
         type: string
       ticket:
@@ -252,6 +256,10 @@ definitions:
         type: integer
       id_ticket:
         type: integer
+      priority:
+        $ref: '#/definitions/models.TicketPriority'
+      priority_id:
+        type: integer
       tanggal_ditugaskan:
         type: string
       ticket:
@@ -410,8 +418,19 @@ definitions:
       id_ticket:
         example: 1
         type: integer
+      priority_id:
+        example: 1
+        type: integer
       tanggal_ditugaskan:
         example: "2025-11-07T10:00:00Z"
+        type: string
+    type: object
+  requests.PriorityResponse:
+    description: PriorityResponse represents ticket priority information
+    properties:
+      id_priority:
+        type: integer
+      nama_priority:
         type: string
     type: object
   requests.TicketCreateRequest:
