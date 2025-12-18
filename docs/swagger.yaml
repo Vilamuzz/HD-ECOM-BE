@@ -154,12 +154,8 @@ definitions:
         type: integer
       id_assignment:
         type: integer
-      id_priority:
-        type: integer
       id_ticket:
         type: integer
-      priority:
-        $ref: '#/definitions/models.TicketPriority'
       tanggal_ditugaskan:
         type: string
       ticket:
@@ -311,16 +307,13 @@ definitions:
   requests.CreateTicketAssignmentRequest:
     properties:
       id_admin:
-        example: 1
-        type: integer
-      id_priority:
-        example: 3
+        example: 2
         type: integer
       id_ticket:
         example: 1
         type: integer
       tanggal_ditugaskan:
-        example: "2025-12-18T10:00:00Z"
+        example: "2025-11-07T10:00:00Z"
         type: string
     type: object
   requests.CreateTicketCommentRequest:
@@ -334,14 +327,6 @@ definitions:
       tanggal_dibuat:
         type: string
     type: object
-  requests.PriorityResponse:
-    description: PriorityResponse represents priority info for assignment
-    properties:
-      id_priority:
-        type: integer
-      nama_priority:
-        type: string
-    type: object
   requests.TicketAssignmentResponse:
     description: TicketAssignmentResponse represents a ticket assignment with related
       ticket and admin info (no null fields)
@@ -352,12 +337,8 @@ definitions:
         type: integer
       id_assignment:
         type: integer
-      id_priority:
-        type: integer
       id_ticket:
         type: integer
-      priority:
-        $ref: '#/definitions/requests.PriorityResponse'
       tanggal_ditugaskan:
         type: string
       ticket:
